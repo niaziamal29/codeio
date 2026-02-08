@@ -970,6 +970,10 @@ class TestLiveStatusAppConversationService:
             side_effect=Exception('Skills loading failed')
         )
 
+        # Mock hooks loading to return None (no hooks found)
+        # This isolates the test to focus on skills loading failure
+        self.service._load_hooks_from_workspace = AsyncMock(return_value=None)
+
         # Act
         with patch(
             'openhands.app_server.app_conversation.live_status_app_conversation_service._logger'
