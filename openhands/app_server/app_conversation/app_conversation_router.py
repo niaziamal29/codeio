@@ -41,6 +41,10 @@ from openhands.app_server.app_conversation.app_conversation_models import (
     AppConversationStartTaskPage,
     AppConversationStartTaskSortOrder,
     AppConversationUpdateRequest,
+    GetHooksResponse,
+    HookDefinitionResponse,
+    HookEventResponse,
+    HookMatcherResponse,
     SkillResponse,
 )
 from openhands.app_server.app_conversation.app_conversation_service import (
@@ -585,6 +589,147 @@ async def get_conversation_skills(
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={'error': f'Error getting skills: {str(e)}'},
+        )
+
+
+@router.get('/{conversation_id}/hooks')
+async def get_conversation_hooks(
+    conversation_id: UUID,
+    app_conversation_service: AppConversationService = (
+        app_conversation_service_dependency
+    ),
+    sandbox_service: SandboxService = sandbox_service_dependency,
+    sandbox_spec_service: SandboxSpecService = sandbox_spec_service_dependency,
+) -> JSONResponse:
+    """Get all hooks associated with the conversation.
+
+    This endpoint returns all hooks that are loaded for the v1 conversation.
+    Hooks are loaded from the workspace's .openhands/hooks.json file.
+
+    Returns:
+        JSONResponse: A JSON response containing the list of hooks.
+    """
+    try:
+        # Get the conversation info
+        conversation = await app_conversation_service.get_app_conversation(
+            conversation_id
+        )
+        if not conversation:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'error': f'Conversation {conversation_id} not found'},
+            )
+
+        # Get the sandbox info
+        sandbox = await sandbox_service.get_sandbox(conversation.sandbox_id)
+        if not sandbox or sandbox.status != SandboxStatus.RUNNING:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    'error': f'Sandbox not found or not running for conversation {conversation_id}'
+                },
+            )
+
+        # Get the sandbox spec to find the working directory
+        sandbox_spec = await sandbox_spec_service.get_sandbox_spec(
+            sandbox.sandbox_spec_id
+        )
+        if not sandbox_spec:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'error': 'Sandbox spec not found'},
+            )
+
+        # Get the agent server URL
+        if not sandbox.exposed_urls:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'error': 'No agent server URL found for sandbox'},
+            )
+
+        agent_server_url = None
+        for exposed_url in sandbox.exposed_urls:
+            if exposed_url.name == AGENT_SERVER:
+                agent_server_url = exposed_url.url
+                break
+
+        if not agent_server_url:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'error': 'Agent server URL not found in sandbox'},
+            )
+
+        agent_server_url = replace_localhost_hostname_for_docker(agent_server_url)
+
+        # Load hooks from agent-server
+        logger.info(f'Loading hooks for conversation {conversation_id}')
+
+        from openhands.app_server.app_conversation.hook_loader import (
+            load_hooks_from_agent_server,
+        )
+
+        hook_config = await load_hooks_from_agent_server(
+            agent_server_url=agent_server_url,
+            session_api_key=sandbox.session_api_key,
+            project_dir=sandbox_spec.working_dir,
+        )
+
+        # Transform hook_config to response format
+        hooks_response: list[HookEventResponse] = []
+
+        if hook_config:
+            # Define the event types to check
+            event_types = [
+                ('pre_tool_use', 'Pre Tool Use'),
+                ('post_tool_use', 'Post Tool Use'),
+                ('user_prompt_submit', 'User Prompt Submit'),
+                ('session_start', 'Session Start'),
+                ('session_end', 'Session End'),
+                ('stop', 'Stop'),
+            ]
+
+            for field_name, display_name in event_types:
+                matchers = getattr(hook_config, field_name, [])
+                if matchers:
+                    matcher_responses = []
+                    for matcher in matchers:
+                        hook_defs = [
+                            HookDefinitionResponse(
+                                type=hook.type.value
+                                if hasattr(hook.type, 'value')
+                                else str(hook.type),
+                                command=hook.command,
+                                timeout=hook.timeout,
+                            )
+                            for hook in matcher.hooks
+                        ]
+                        matcher_responses.append(
+                            HookMatcherResponse(
+                                matcher=matcher.matcher,
+                                hooks=hook_defs,
+                            )
+                        )
+                    hooks_response.append(
+                        HookEventResponse(
+                            event_type=field_name,
+                            matchers=matcher_responses,
+                        )
+                    )
+
+        logger.info(
+            f'Loaded {len(hooks_response)} hook event types for conversation {conversation_id}'
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=GetHooksResponse(hooks=hooks_response).model_dump(),
+        )
+
+    except Exception as e:
+        logger.error(f'Error getting hooks for conversation {conversation_id}: {e}')
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={'error': f'Error getting hooks: {str(e)}'},
         )
 
 
