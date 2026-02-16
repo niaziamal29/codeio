@@ -12610,14 +12610,14 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "resend"
-version = "2.19.0"
+version = "2.21.0"
 description = "Resend Python SDK"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "resend-2.19.0-py2.py3-none-any.whl", hash = "sha256:1a8b9fcacbe058876ebce757ac2542103ed7227caec10e5c58613ee58615acaa"},
-    {file = "resend-2.19.0.tar.gz", hash = "sha256:b11191561cdb0ed7aa193212b7c8865bf635013c4d11bd81caf471d1b362be02"},
+    {file = "resend-2.21.0-py2.py3-none-any.whl", hash = "sha256:906d1916298e7b6b9a0f2a8e81a123f12cda5fd07683ecbfa53b54e8ec58f5f4"},
+    {file = "resend-2.21.0.tar.gz", hash = "sha256:765288c2015c2c4dd0fb3c8596af4007709b790336eda2966593194377546d11"},
 ]
 
 [package.dependencies]
@@ -14917,4 +14917,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12,<3.14"
-content-hash = "1cad6029269393af67155e930c72eae2c03da02e4b3a3699823f6168c14a4218"
+content-hash = "2f8d3560e0811b7efdec1e7f2714f281363ba7333942ab2e6dc3657ce3f09a4c"
