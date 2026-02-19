@@ -2,6 +2,7 @@ import axios from "axios";
 import { openHands } from "../open-hands-axios";
 import { ConversationTrigger, GetVSCodeUrlResponse } from "../open-hands.types";
 import { Provider } from "#/types/settings";
+import { SuggestedTask } from "#/utils/types";
 import { buildHttpBaseUrl } from "#/utils/websocket-url";
 import { buildSessionHeaders } from "#/utils/utils";
 import type {
@@ -61,6 +62,7 @@ class V1ConversationService {
     initialUserMsg?: string,
     selected_branch?: string,
     conversationInstructions?: string,
+    suggestedTask?: SuggestedTask,
     trigger?: ConversationTrigger,
     parent_conversation_id?: string,
     agent_type?: "default" | "plan",
@@ -69,14 +71,15 @@ class V1ConversationService {
       selected_repository: selectedRepository,
       git_provider,
       selected_branch,
+      suggested_task: suggestedTask,
       title: conversationInstructions,
       trigger,
       parent_conversation_id: parent_conversation_id || null,
       agent_type,
     };
 
-    // Add initial message if provided
-    if (initialUserMsg) {
+    // suggested_task implies the backend will construct the initial_message
+    if (!suggestedTask && initialUserMsg) {
       body.initial_message = {
         role: "user",
         content: [
@@ -319,12 +322,12 @@ class V1ConversationService {
   /**
    * Read a file from a specific conversation's sandbox workspace
    * @param conversationId The conversation ID
-   * @param filePath Path to the file to read within the sandbox workspace (defaults to /workspace/project/PLAN.md)
+   * @param filePath Path to the file to read within the sandbox workspace (defaults to /workspace/project/.agents_tmp/PLAN.md)
    * @returns The content of the file or an empty string if the file doesn't exist
    */
   static async readConversationFile(
     conversationId: string,
-    filePath: string = "/workspace/project/PLAN.md",
+    filePath: string = "/workspace/project/.agents_tmp/PLAN.md",
   ): Promise<string> {
     const params = new URLSearchParams();
     params.append("file_path", filePath);
