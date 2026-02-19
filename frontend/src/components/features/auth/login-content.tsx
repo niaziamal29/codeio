@@ -72,6 +72,7 @@ export function LoginContent({
     // Build base state data
     let stateData: Record<string, string> = {
       redirect_url: currentState,
+      login_method: provider,
     };
 
     // Add invitation token if present
