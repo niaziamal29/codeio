@@ -1192,9 +1192,11 @@ async def test_maybe_run_setup_script_uses_repo_subdirectory():
 
         call_args = mock_workspace.execute_command.call_args
         command = call_args[0][0]
+        cwd = call_args[0][1]
         # Bug fix: script is at /workspace/project/my-repo/.openhands/setup.sh
         # NOT at /workspace/project/.openhands/setup.sh
         assert '/workspace/project/my-repo/.openhands/setup.sh' in command
+        assert cwd == '/workspace/project/my-repo'
 
 
 @pytest.mark.asyncio
@@ -1219,3 +1221,38 @@ async def test_maybe_setup_git_hooks_uses_repo_subdirectory():
         # Bug fix: hooks are set up in /workspace/project/my-repo
         # NOT in /workspace/project
         assert cwd == '/workspace/project/my-repo'
+
+
+@pytest.mark.asyncio
+async def test_maybe_setup_git_hooks_uses_absolute_paths_for_remote_file_ops():
+    """Remote file upload/download APIs require absolute paths."""
+    mock_user_context = Mock(spec=UserContext)
+    with patch.object(AppConversationServiceBase, '__abstractmethods__', set()):
+        service = AppConversationServiceBase(
+            init_git_in_empty_workspace=True, user_context=mock_user_context
+        )
+        mock_workspace = MockWorkspace(working_dir='/workspace/project')
+        mock_workspace.execute_command = AsyncMock(
+            side_effect=[MockCommandResult(exit_code=0), MockCommandResult(exit_code=0)]
+        )
+        mock_workspace.file_download = AsyncMock(return_value=Mock(success=False))
+        mock_workspace.file_upload = AsyncMock(
+            return_value=Mock(success=True, error=None)
+        )
+
+        await service.maybe_setup_git_hooks(
+            mock_workspace, selected_repository='owner/my-repo'
+        )
+
+        mock_workspace.file_download.assert_awaited_once()
+        file_download_args = mock_workspace.file_download.await_args[0]
+        assert (
+            file_download_args[0] == '/workspace/project/my-repo/.git/hooks/pre-commit'
+        )
+
+        mock_workspace.file_upload.assert_awaited_once()
+        file_upload_kwargs = mock_workspace.file_upload.await_args[1]
+        assert (
+            file_upload_kwargs['destination_path']
+            == '/workspace/project/my-repo/.git/hooks/pre-commit'
+        )
