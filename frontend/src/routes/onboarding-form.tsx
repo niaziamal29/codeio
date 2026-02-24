@@ -226,7 +226,11 @@ function OnboardingForm() {
             isFirstStep ? "w-1/2" : "flex-1", // keep "Next" button to the right. Even if "Back" button is not rendered
           )}
         >
-          {t(I18nKey.ONBOARDING$NEXT_BUTTON)}
+          {t(
+            isLastStep
+              ? I18nKey.ONBOARDING$FINISH_BUTTON
+              : I18nKey.ONBOARDING$NEXT_BUTTON,
+          )}
         </BrandButton>
       </div>
     </div>

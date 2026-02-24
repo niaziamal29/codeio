@@ -16574,5 +16574,21 @@
     "es": "Atrás",
     "tr": "Geri",
     "uk": "Назад"
+  },
+  "ONBOARDING$FINISH_BUTTON": {
+    "en": "Finish",
+    "ja": "完了",
+    "zh-CN": "完成",
+    "zh-TW": "完成",
+    "ko-KR": "완료",
+    "no": "Fullfør",
+    "ar": "إنهاء",
+    "de": "Fertig",
+    "fr": "Terminer",
+    "it": "Fine",
+    "pt": "Concluir",
+    "es": "Finalizar",
+    "tr": "Bitir",
+    "uk": "Завершити"
   }
 }
