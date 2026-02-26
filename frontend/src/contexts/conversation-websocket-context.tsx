@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-js/react";
+import { useTranslation } from "react-i18next";
 import { useWebSocket, WebSocketHookOptions } from "#/hooks/use-websocket";
 import { useEventStore } from "#/stores/use-event-store";
 import { useErrorMessageStore } from "#/stores/error-message-store";
@@ -72,7 +73,6 @@ export function ConversationWebSocketProvider({
   sessionApiKey,
   subConversations,
   subConversationIds,
-  onDisconnect,
 }: {
   children: React.ReactNode;
   conversationId?: string;
@@ -80,7 +80,6 @@ export function ConversationWebSocketProvider({
   sessionApiKey?: string | null;
   subConversations?: V1AppConversation[];
   subConversationIds?: string[];
-  onDisconnect?: () => void;
 }) {
   // Separate connection state tracking for each WebSocket
   const [mainConnectionState, setMainConnectionState] =
@@ -101,6 +100,8 @@ export function ConversationWebSocketProvider({
   const { setExecutionStatus } = useV1ConversationStateStore();
   const { appendInput, appendOutput } = useCommandStore();
   const { trackCreditLimitReached } = useTracking();
+
+  const { t } = useTranslation();
 
   // History loading state - separate per connection
   const [isLoadingHistoryMain, setIsLoadingHistoryMain] = useState(true);
@@ -701,10 +702,13 @@ export function ConversationWebSocketProvider({
       },
       onClose: (event: CloseEvent) => {
         setMainConnectionState("CLOSED");
-        // Trigger silent recovery on unexpected disconnect
-        // Do NOT show error message - recovery happens automatically
+        // Show error message on unexpected disconnect
+        // Recovery is handled by useSandboxRecovery based on user intent (tab focus, page refresh)
+        // NOT on WebSocket disconnect (server pauses sandboxes after 20 min inactivity)
         if (event.code !== 1000 && hasConnectedRefMain.current) {
-          onDisconnect?.();
+          setErrorMessage(
+            `${t(I18nKey.STATUS$CONNECTION_LOST)}: ${event.reason || t(I18nKey.STATUS$DISCONNECTED_REFRESH_PAGE)}`,
+          );
         }
       },
       onError: () => {
@@ -723,7 +727,6 @@ export function ConversationWebSocketProvider({
     sessionApiKey,
     conversationId,
     conversationUrl,
-    onDisconnect,
   ]);
 
   // Separate WebSocket options for planning agent connection
@@ -772,10 +775,13 @@ export function ConversationWebSocketProvider({
       },
       onClose: (event: CloseEvent) => {
         setPlanningConnectionState("CLOSED");
-        // Trigger silent recovery on unexpected disconnect
-        // Do NOT show error message - recovery happens automatically
+        // Show error message on unexpected disconnect
+        // Recovery is handled by useSandboxRecovery based on user intent (tab focus, page refresh)
+        // NOT on WebSocket disconnect (server pauses sandboxes after 20 min inactivity)
         if (event.code !== 1000 && hasConnectedRefPlanning.current) {
-          onDisconnect?.();
+          setErrorMessage(
+            `${t(I18nKey.STATUS$CONNECTION_LOST)}: ${event.reason || t(I18nKey.STATUS$DISCONNECTED_REFRESH_PAGE)}`,
+          );
         }
       },
       onError: () => {
@@ -793,7 +799,6 @@ export function ConversationWebSocketProvider({
     removeErrorMessage,
     sessionApiKey,
     subConversations,
-    onDisconnect,
   ]);
 
   // Only attempt WebSocket connection when we have a valid URL

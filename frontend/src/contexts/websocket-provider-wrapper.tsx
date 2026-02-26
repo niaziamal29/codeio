@@ -3,7 +3,7 @@ import { WsClientProvider } from "#/context/ws-client-provider";
 import { ConversationWebSocketProvider } from "#/contexts/conversation-websocket-context";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useSubConversations } from "#/hooks/query/use-sub-conversations";
-import { useWebSocketRecovery } from "#/hooks/use-websocket-recovery";
+import { useSandboxRecovery } from "#/hooks/use-sandbox-recovery";
 
 interface WebSocketProviderWrapperProps {
   children: React.ReactNode;
@@ -48,9 +48,12 @@ export function WebSocketProviderWrapper({
     (subConversation) => subConversation !== null,
   );
 
-  // Silent recovery for V1 WebSocket disconnections
-  const { reconnectKey, handleDisconnect } =
-    useWebSocketRecovery(conversationId);
+  // Recovery for V1 conversations - handles page refresh and tab focus
+  // Does NOT resume on WebSocket disconnect (server pauses after 20 min inactivity)
+  useSandboxRecovery({
+    conversationId,
+    conversationStatus: conversation?.status,
+  });
 
   if (version === 0) {
     return (
@@ -63,13 +66,11 @@ export function WebSocketProviderWrapper({
   if (version === 1) {
     return (
       <ConversationWebSocketProvider
-        key={reconnectKey}
         conversationId={conversationId}
         conversationUrl={conversation?.url}
         sessionApiKey={conversation?.session_api_key}
         subConversationIds={conversation?.sub_conversation_ids}
         subConversations={filteredSubConversations}
-        onDisconnect={handleDisconnect}
       >
         {children}
       </ConversationWebSocketProvider>
