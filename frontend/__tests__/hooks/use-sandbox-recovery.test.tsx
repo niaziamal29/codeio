@@ -171,10 +171,7 @@ describe("useSandboxRecovery", () => {
         expect.any(Object),
       );
 
-      // Navigate to a different conversation - need two rerenders:
-      // 1st rerender: triggers the reset effect (isInitialLoadRef = true)
-      // 2nd rerender: triggers the initial load effect with new conversation
-      rerender({ conversationId: "conv-456" });
+      // Navigate to a different conversation
       rerender({ conversationId: "conv-456" });
 
       await waitFor(() => {

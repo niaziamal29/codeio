@@ -80,15 +80,20 @@ export function useSandboxRecovery({
     t,
   ]);
 
-  // Handle page refresh (initial load)
+  // Handle page refresh (initial load) and conversation navigation
   React.useEffect(() => {
     if (!conversationId || !conversationStatus) return;
 
+    const isNewConversation =
+      hasAttemptedRecoveryRef.current !== conversationId;
+
+    // Reset initial load tracking when navigating to a different conversation
+    if (isNewConversation && hasAttemptedRecoveryRef.current !== null) {
+      isInitialLoadRef.current = true;
+    }
+
     // Only attempt recovery on initial load, and only once per conversation
-    if (
-      isInitialLoadRef.current &&
-      hasAttemptedRecoveryRef.current !== conversationId
-    ) {
+    if (isInitialLoadRef.current && isNewConversation) {
       isInitialLoadRef.current = false;
       hasAttemptedRecoveryRef.current = conversationId;
 
@@ -117,17 +122,6 @@ export function useSandboxRecovery({
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [conversationId, conversationStatus, attemptRecovery]);
-
-  // Reset initial load tracking when navigating to a different conversation
-  React.useEffect(() => {
-    if (
-      conversationId &&
-      hasAttemptedRecoveryRef.current !== conversationId &&
-      hasAttemptedRecoveryRef.current !== null
-    ) {
-      isInitialLoadRef.current = true;
-    }
-  }, [conversationId]);
 
   return { isResuming, attemptRecovery };
 }
