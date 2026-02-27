@@ -99,6 +99,15 @@ async def install_callback(
         bot_access_token = oauth_response.get('access_token')
         team_id = oauth_response.get('team', {}).get('id')
         authed_user = oauth_response.get('authed_user') or {}
+        slack_user_id = authed_user.get('id')
+
+        if not slack_user_id:
+            logger.error('slack_install_callback_missing_user_id')
+            return _html_response(
+                title='Error',
+                description='Failed to get Slack user ID. Please try again.',
+                status_code=400,
+            )
 
         # Create a state variable for keycloak oauth
         payload = {}
@@ -106,7 +115,7 @@ async def install_callback(
             payload = jwt.decode(
                 state, config.jwt_secret.get_secret_value(), algorithms=['HS256']
             )
-        payload['slack_user_id'] = authed_user.get('id')
+        payload['slack_user_id'] = slack_user_id
         payload['bot_access_token'] = bot_access_token
         payload['team_id'] = team_id
 
