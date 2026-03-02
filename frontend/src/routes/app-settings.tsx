@@ -6,7 +6,7 @@ import { useSettings } from "#/hooks/query/use-settings";
 import { AvailableLanguages } from "#/i18n";
 import {
   DEFAULT_SETTINGS,
-  DEFAULT_MARKETPLACE_PATH,
+  MARKETPLACE_PATH_PLACEHOLDER,
 } from "#/services/settings";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { SettingsSwitch } from "#/components/features/settings/settings-switch";
@@ -21,7 +21,11 @@ import {
 import { retrieveAxiosErrorMessage } from "#/utils/retrieve-axios-error-message";
 import { AppSettingsInputsSkeleton } from "#/components/features/settings/app-settings/app-settings-inputs-skeleton";
 import { useConfig } from "#/hooks/query/use-config";
-import { parseMaxBudgetPerTask } from "#/utils/settings-utils";
+import {
+  parseMaxBudgetPerTask,
+  parseMarketplacePath,
+  isValidMarketplacePath,
+} from "#/utils/settings-utils";
 
 function AppSettingsScreen() {
   const posthog = usePostHog();
@@ -55,6 +59,9 @@ function AppSettingsScreen() {
     React.useState(false);
   const [marketplacePathHasChanged, setMarketplacePathHasChanged] =
     React.useState(false);
+  const [marketplacePathError, setMarketplacePathError] = React.useState<
+    string | null
+  >(null);
 
   const formAction = (formData: FormData) => {
     const languageLabel = formData.get("language-input")?.toString();
@@ -90,11 +97,15 @@ function AppSettingsScreen() {
     const marketplacePathValue = formData
       .get("marketplace-path-input")
       ?.toString();
-    // Empty string means no marketplace filtering, null means use default
-    const marketplacePath =
-      marketplacePathValue === ""
-        ? null
-        : marketplacePathValue || DEFAULT_MARKETPLACE_PATH;
+
+    // Validate marketplace path before saving
+    if (!isValidMarketplacePath(marketplacePathValue || "")) {
+      displayErrorToast(t(I18nKey.SETTINGS$MARKETPLACE_PATH_INVALID));
+      return;
+    }
+
+    // Parse marketplace path: empty/whitespace = null (load all skills)
+    const marketplacePath = parseMarketplacePath(marketplacePathValue);
 
     saveSettings(
       {
@@ -187,10 +198,18 @@ function AppSettingsScreen() {
   };
 
   const checkIfMarketplacePathHasChanged = (value: string) => {
-    const currentValue = settings?.marketplace_path || DEFAULT_MARKETPLACE_PATH;
-    // Empty string means no marketplace filtering
-    const newValue = value === "" ? null : value;
+    // Current value from settings (null means "load all skills")
+    const currentValue = settings?.marketplace_path ?? null;
+    // New value: empty string → null (load all skills)
+    const newValue = parseMarketplacePath(value);
     setMarketplacePathHasChanged(newValue !== currentValue);
+
+    // Validate and set error state for UI feedback
+    if (!isValidMarketplacePath(value)) {
+      setMarketplacePathError(t(I18nKey.SETTINGS$MARKETPLACE_PATH_INVALID));
+    } else {
+      setMarketplacePathError(null);
+    }
   };
 
   const formIsClean =
@@ -203,6 +222,8 @@ function AppSettingsScreen() {
     !gitUserNameHasChanged &&
     !gitUserEmailHasChanged &&
     !marketplacePathHasChanged;
+
+  const hasValidationErrors = !!marketplacePathError;
 
   const shouldBeLoading = !settings || isLoading || isPending;
 
@@ -317,18 +338,23 @@ function AppSettingsScreen() {
               {t(I18nKey.SETTINGS$SKILLS_SETTINGS_DESCRIPTION)}
             </p>
             <div className="flex flex-col gap-6">
-              <SettingsInput
-                testId="marketplace-path-input"
-                name="marketplace-path-input"
-                type="text"
-                label={t(I18nKey.SETTINGS$MARKETPLACE_PATH)}
-                defaultValue={
-                  settings.marketplace_path || DEFAULT_MARKETPLACE_PATH
-                }
-                onChange={checkIfMarketplacePathHasChanged}
-                placeholder={DEFAULT_MARKETPLACE_PATH}
-                className="w-full max-w-[680px]"
-              />
+              <div>
+                <SettingsInput
+                  testId="marketplace-path-input"
+                  name="marketplace-path-input"
+                  type="text"
+                  label={t(I18nKey.SETTINGS$MARKETPLACE_PATH)}
+                  defaultValue={settings.marketplace_path || ""}
+                  onChange={checkIfMarketplacePathHasChanged}
+                  placeholder={MARKETPLACE_PATH_PLACEHOLDER}
+                  className="w-full max-w-[680px]"
+                />
+                {marketplacePathError && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {marketplacePathError}
+                  </p>
+                )}
+              </div>
               <p className="text-xs text-gray-500">
                 {t(I18nKey.SETTINGS$MARKETPLACE_PATH_DESCRIPTION)}
               </p>
@@ -342,7 +368,7 @@ function AppSettingsScreen() {
           testId="submit-button"
           variant="primary"
           type="submit"
-          isDisabled={isPending || formIsClean}
+          isDisabled={isPending || formIsClean || hasValidationErrors}
         >
           {!isPending && t("SETTINGS$SAVE_CHANGES")}
           {isPending && t("SETTINGS$SAVING")}

@@ -67,6 +67,51 @@ export const parseMaxBudgetPerTask = (value: string): number | null => {
     : null;
 };
 
+/**
+ * Regex patterns for validating marketplace_path.
+ * Supports two formats:
+ * 1. Simple path: "marketplaces/default.json" or "path/to/file.json"
+ * 2. Cross-repo path: "owner/repo:path/to/marketplace.json"
+ */
+const MARKETPLACE_PATH_SIMPLE_PATTERN =
+  /^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_.-]+)*\.json$/;
+const MARKETPLACE_PATH_CROSS_REPO_PATTERN =
+  /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+:[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_.-]+)*\.json$/;
+
+/**
+ * Validates a marketplace path value.
+ * @param value - The marketplace path to validate
+ * @returns true if valid or empty, false otherwise
+ */
+export const isValidMarketplacePath = (value: string): boolean => {
+  // Empty string is valid (means no marketplace filtering)
+  if (!value || value.trim() === "") {
+    return true;
+  }
+
+  const trimmedValue = value.trim();
+
+  // Check against both patterns
+  return (
+    MARKETPLACE_PATH_SIMPLE_PATTERN.test(trimmedValue) ||
+    MARKETPLACE_PATH_CROSS_REPO_PATTERN.test(trimmedValue)
+  );
+};
+
+/**
+ * Parses marketplace path input.
+ * @param value - The input string value
+ * @returns The trimmed value if non-empty, null otherwise (null = load all skills)
+ */
+export const parseMarketplacePath = (
+  value: string | undefined,
+): string | null => {
+  if (!value || value.trim() === "") {
+    return null;
+  }
+  return value.trim();
+};
+
 export const extractSettings = (formData: FormData): Partial<Settings> => {
   const { LLM_MODEL, LLM_API_KEY, AGENT, LANGUAGE } =
     extractBasicFormData(formData);

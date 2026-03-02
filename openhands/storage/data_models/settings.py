@@ -55,8 +55,9 @@ class Settings(BaseModel):
     git_user_email: str | None = None
     v1_enabled: bool = True
     # Path to the marketplace JSON file for public skills loading
-    # Defaults to 'marketplaces/default.json' in the public skills repository
-    marketplace_path: str | None = 'marketplaces/default.json'
+    # None = Load all skills without marketplace filtering
+    # String value = Use that marketplace path (e.g., 'marketplaces/default.json')
+    marketplace_path: str | None = None
 
     model_config = ConfigDict(
         validate_assignment=True,

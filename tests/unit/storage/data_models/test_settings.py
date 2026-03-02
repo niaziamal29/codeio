@@ -127,3 +127,21 @@ def test_settings_no_pydantic_frozen_field_warning():
         assert len(frozen_warnings) == 0, (
             f'Pydantic frozen field warnings found: {[str(w.message) for w in frozen_warnings]}'
         )
+
+
+def test_settings_marketplace_path_default():
+    """Test that marketplace_path defaults to None (load all skills)."""
+    settings = Settings()
+    assert settings.marketplace_path is None
+
+
+def test_settings_marketplace_path_custom():
+    """Test that marketplace_path can be set to a custom value."""
+    settings = Settings(marketplace_path='marketplaces/custom.json')
+    assert settings.marketplace_path == 'marketplaces/custom.json'
+
+
+def test_settings_marketplace_path_none_explicit():
+    """Test that marketplace_path can be explicitly set to None."""
+    settings = Settings(marketplace_path=None)
+    assert settings.marketplace_path is None

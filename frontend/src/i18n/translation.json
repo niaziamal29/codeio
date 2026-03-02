@@ -13155,6 +13155,22 @@
     "de": "Pfad zur Marktplatz-JSON-Datei, die definiert, welche Fähigkeiten geladen werden. Unterstützt Formate: 'marketplaces/default.json' (Standard-Repo) oder 'owner/repo:path/to/marketplace.json' (benutzerdefiniertes Repo mit Cross-Repo-Fähigkeitsladung). Leer lassen, um alle Fähigkeiten ohne Filterung zu laden.",
     "uk": "Шлях до JSON-файлу маркетплейсу, який визначає, які навички завантажуються. Підтримує формати: 'marketplaces/default.json' (репозиторій за замовчуванням) або 'owner/repo:path/to/marketplace.json' (користувацький репозиторій із завантаженням навичок з інших репозиторіїв). Залиште порожнім, щоб завантажити всі навички без фільтрації."
   },
+  "SETTINGS$MARKETPLACE_PATH_INVALID": {
+    "en": "Invalid marketplace path format. Use 'path/to/file.json' or 'owner/repo:path/to/file.json'.",
+    "ja": "無効なマーケットプレイスパス形式です。'path/to/file.json'または'owner/repo:path/to/file.json'を使用してください。",
+    "zh-CN": "无效的市场路径格式。请使用 'path/to/file.json' 或 'owner/repo:path/to/file.json'。",
+    "zh-TW": "無效的市場路徑格式。請使用 'path/to/file.json' 或 'owner/repo:path/to/file.json'。",
+    "ko-KR": "잘못된 마켓플레이스 경로 형식입니다. 'path/to/file.json' 또는 'owner/repo:path/to/file.json'을 사용하세요.",
+    "no": "Ugyldig markedsplasstiformat. Bruk 'path/to/file.json' eller 'owner/repo:path/to/file.json'.",
+    "it": "Formato percorso marketplace non valido. Usa 'path/to/file.json' o 'owner/repo:path/to/file.json'.",
+    "pt": "Formato de caminho do marketplace inválido. Use 'path/to/file.json' ou 'owner/repo:path/to/file.json'.",
+    "es": "Formato de ruta de mercado inválido. Use 'path/to/file.json' o 'owner/repo:path/to/file.json'.",
+    "ar": "تنسيق مسار السوق غير صالح. استخدم 'path/to/file.json' أو 'owner/repo:path/to/file.json'.",
+    "fr": "Format de chemin de marketplace invalide. Utilisez 'path/to/file.json' ou 'owner/repo:path/to/file.json'.",
+    "tr": "Geçersiz pazar yeri yolu formatı. 'path/to/file.json' veya 'owner/repo:path/to/file.json' kullanın.",
+    "de": "Ungültiges Marktplatz-Pfadformat. Verwenden Sie 'path/to/file.json' oder 'owner/repo:path/to/file.json'.",
+    "uk": "Недійсний формат шляху маркетплейсу. Використовуйте 'path/to/file.json' або 'owner/repo:path/to/file.json'."
+  },
   "PROJECT_MANAGEMENT$TITLE": {
     "en": "Project Management",
     "ja": "プロジェクト管理",
