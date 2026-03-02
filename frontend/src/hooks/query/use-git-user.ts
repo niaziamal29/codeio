@@ -41,7 +41,7 @@ export const useGitUser = () => {
           user_email: user.data.email,
           user_name: user.data.login,
         });
-        sessionStorage.removeItem("oh_signup_pending");
+  }, [user.data, config, posthog]);
       }
     }
   }, [user.data]);
