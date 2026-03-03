@@ -8,10 +8,14 @@ from openhands.server.user_auth.user_auth import UserAuth
 
 async def get_saas_user_auth(
     keycloak_user_id: str, token_manager: TokenManager
-) -> UserAuth:
+) -> UserAuth | None:
     offline_token = await token_manager.load_offline_token(keycloak_user_id)
     if offline_token is None:
-        logger.info('no_offline_token_found')
+        logger.warning(
+            'no_offline_token_found',
+            extra={'keycloak_user_id': keycloak_user_id},
+        )
+        return None
 
     user_auth = SaasUserAuth(
         user_id=keycloak_user_id,
