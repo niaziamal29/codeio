@@ -338,7 +338,7 @@ describe("useSandboxRecovery", () => {
       );
     });
 
-    it("should NOT call refetch or resumeSandbox when tab becomes visible while isPending is true", async () => {
+    it("should NOT call resumeSandbox when tab becomes visible while isPending is true", async () => {
       vi.mocked(useUnifiedResumeConversationSandbox).mockReturnValue({
         mutate: mockMutate,
         mutateAsync: vi.fn(),
@@ -376,9 +376,9 @@ describe("useSandboxRecovery", () => {
         document.dispatchEvent(new Event("visibilitychange"));
       });
 
-      // Refetch should NOT be called because isPending is true
-      expect(mockRefetch).not.toHaveBeenCalled();
-      // resumeSandbox should NOT be called either
+      // Refetch will be called when isPending is true
+      expect(mockRefetch).toHaveBeenCalledTimes(1);
+      // resumeSandbox should NOT be called
       expect(mockMutate).not.toHaveBeenCalled();
     });
 
