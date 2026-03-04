@@ -318,7 +318,7 @@ async def device_verification_authenticated(
             try:
                 from storage.user_store import UserStore
 
-                user = await UserStore.get_user_by_id_async(user_id)
+                user = await UserStore.get_user_by_id(user_id)
                 if user:
                     consented = user.user_consents_to_analytics is True
 

@@ -162,7 +162,7 @@ async def on_conversation_update(
         if analytics and sandbox_info.created_by_user_id:
             from enterprise.storage.user_store import UserStore
 
-            user_obj = await UserStore.get_user_by_id_async(
+            user_obj = await UserStore.get_user_by_id(
                 sandbox_info.created_by_user_id
             )
             if user_obj:
@@ -232,7 +232,7 @@ async def on_event(
                         if analytics and sandbox_info.created_by_user_id:
                             from enterprise.storage.user_store import UserStore
 
-                            user_obj = await UserStore.get_user_by_id_async(
+                            user_obj = await UserStore.get_user_by_id(
                                 sandbox_info.created_by_user_id
                             )
                             if user_obj:
