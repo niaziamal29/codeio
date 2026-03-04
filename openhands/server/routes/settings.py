@@ -34,22 +34,22 @@ from openhands.storage.settings.settings_store import SettingsStore
 from openhands.utils.llm import get_provider_api_base, is_openhands_model
 
 LITE_LLM_API_URL = os.environ.get(
-    "LITE_LLM_API_URL", "https://llm-proxy.app.all-hands.dev"
+    'LITE_LLM_API_URL', 'https://llm-proxy.app.all-hands.dev'
 )
 
 # Check if DEFAULT_V1_ENABLED is explicitly set to false
-_DEFAULT_V1_ENABLED_VALUE = os.getenv("DEFAULT_V1_ENABLED", "true").lower()
-_FORCE_V0_CONVERSATIONS = _DEFAULT_V1_ENABLED_VALUE in ("0", "false")
+_DEFAULT_V1_ENABLED_VALUE = os.getenv('DEFAULT_V1_ENABLED', 'true').lower()
+_FORCE_V0_CONVERSATIONS = _DEFAULT_V1_ENABLED_VALUE in ('0', 'false')
 
-app = APIRouter(prefix="/api", dependencies=get_dependencies())
+app = APIRouter(prefix='/api', dependencies=get_dependencies())
 
 
 @app.get(
-    "/settings",
+    '/settings',
     response_model=GETSettingsModel,
     responses={
-        404: {"description": "Settings not found", "model": dict},
-        401: {"description": "Invalid token", "model": dict},
+        404: {'description': 'Settings not found', 'model': dict},
+        401: {'description': 'Invalid token', 'model': dict},
     },
 )
 async def load_settings(
@@ -62,7 +62,7 @@ async def load_settings(
         if not settings:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
-                content={"error": "Settings not found"},
+                content={'error': 'Settings not found'},
             )
 
         # On initial load, user secrets may not be populated with values migrated from settings store
@@ -82,7 +82,7 @@ async def load_settings(
                     provider_tokens_set[provider_type] = provider_token.host
 
         settings_with_token_data = GETSettingsModel(
-            **settings.model_dump(exclude={"secrets_store"}),
+            **settings.model_dump(exclude={'secrets_store'}),
             llm_api_key_set=settings.llm_api_key is not None
             and bool(settings.llm_api_key),
             search_api_key_set=settings.search_api_key is not None
@@ -110,33 +110,33 @@ async def load_settings(
 
         return settings_with_token_data
     except Exception as e:
-        logger.warning(f"Invalid token: {e}")
+        logger.warning(f'Invalid token: {e}')
         # Get user_id from settings if available
-        user_id = getattr(settings, "user_id", "unknown") if settings else "unknown"
+        user_id = getattr(settings, 'user_id', 'unknown') if settings else 'unknown'
         logger.info(
-            f"Returning 401 Unauthorized - Invalid token for user_id: {user_id}"
+            f'Returning 401 Unauthorized - Invalid token for user_id: {user_id}'
         )
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"error": "Invalid token"},
+            content={'error': 'Invalid token'},
         )
 
 
 @app.post(
-    "/reset-settings",
+    '/reset-settings',
     responses={
         410: {
-            "description": "Reset settings functionality has been removed",
-            "model": dict,
+            'description': 'Reset settings functionality has been removed',
+            'model': dict,
         }
     },
 )
 async def reset_settings() -> JSONResponse:
     """Resets user settings. (Deprecated)"""
-    logger.warning("Deprecated endpoint /api/reset-settings called by user")
+    logger.warning('Deprecated endpoint /api/reset-settings called by user')
     return JSONResponse(
         status_code=status.HTTP_410_GONE,
-        content={"error": "Reset settings functionality has been removed."},
+        content={'error': 'Reset settings functionality has been removed.'},
     )
 
 
@@ -163,11 +163,11 @@ async def store_llm_settings(
                         settings.llm_base_url = api_base
                     else:
                         logger.debug(
-                            f"No api_base found in litellm for model: {settings.llm_model}"
+                            f'No api_base found in litellm for model: {settings.llm_model}'
                         )
                 except Exception as e:
                     logger.error(
-                        f"Failed to get api_base from litellm for model {settings.llm_model}: {e}"
+                        f'Failed to get api_base from litellm for model {settings.llm_model}: {e}'
                     )
         # Keep search API key if missing or empty
         if not settings.search_api_key:
@@ -181,11 +181,11 @@ async def store_llm_settings(
 # a response object directly. We document the possible responses using the 'responses'
 # parameter and maintain proper type annotations for mypy.
 @app.post(
-    "/settings",
+    '/settings',
     response_model=None,
     responses={
-        200: {"description": "Settings stored successfully", "model": dict},
-        500: {"description": "Error storing settings", "model": dict},
+        200: {'description': 'Settings stored successfully', 'model': dict},
+        500: {'description': 'Error storing settings', 'model': dict},
     },
 )
 async def store_settings(
@@ -225,20 +225,20 @@ async def store_settings(
         # Existing sessions will continue with their current git configuration
         if git_config_updated:
             logger.info(
-                f"Updated global git configuration: name={config.git_user_name}, email={config.git_user_email}"
+                f'Updated global git configuration: name={config.git_user_name}, email={config.git_user_email}'
             )
 
         settings = convert_to_settings(settings)
         await settings_store.store(settings)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"message": "Settings stored"},
+            content={'message': 'Settings stored'},
         )
     except Exception as e:
-        logger.warning(f"Something went wrong storing settings: {e}")
+        logger.warning(f'Something went wrong storing settings: {e}')
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": "Something went wrong storing settings"},
+            content={'error': 'Something went wrong storing settings'},
         )
 
 
@@ -253,8 +253,8 @@ def convert_to_settings(settings_with_token_data: Settings) -> Settings:
     }
 
     # Convert the API keys to `SecretStr` instances
-    filtered_settings_data["llm_api_key"] = settings_with_token_data.llm_api_key
-    filtered_settings_data["search_api_key"] = settings_with_token_data.search_api_key
+    filtered_settings_data['llm_api_key'] = settings_with_token_data.llm_api_key
+    filtered_settings_data['search_api_key'] = settings_with_token_data.search_api_key
 
     # Create a new Settings instance
     settings = Settings(**filtered_settings_data)
