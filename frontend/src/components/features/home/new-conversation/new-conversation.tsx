@@ -10,7 +10,7 @@ export function NewConversation() {
   const { t } = useTranslation();
 
   return (
-    <Card>
+    <Card className="flex-col p-[20px] relative min-h-[286px] md:min-h-auto">
       <CardTitle icon={<PlusIcon width={17} height={14} />}>
         {t(I18nKey.COMMON$START_FROM_SCRATCH)}
       </CardTitle>
