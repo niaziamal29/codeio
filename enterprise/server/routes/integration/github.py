@@ -1,4 +1,3 @@
-import asyncio
 import hashlib
 import hmac
 import os
@@ -10,6 +9,7 @@ from integrations.github.github_manager import GithubManager
 from integrations.models import Message, SourceType
 from server.auth.constants import GITHUB_APP_WEBHOOK_SECRET
 from server.auth.token_manager import TokenManager
+from starlette.requests import ClientDisconnect
 
 from openhands.core.logger import openhands_logger as logger
 
@@ -59,8 +59,7 @@ async def github_events(
         )
 
     try:
-        # Add timeout to prevent hanging on slow/stalled clients
-        payload = await asyncio.wait_for(request.body(), timeout=15.0)
+        payload = await request.body()
         verify_github_signature(payload, x_hub_signature_256)
 
         payload_data = await request.json()
@@ -80,11 +79,11 @@ async def github_events(
             status_code=200,
             content={'message': 'GitHub events endpoint reached successfully.'},
         )
-    except asyncio.TimeoutError:
-        logger.warning('GitHub webhook request timed out waiting for request body')
+    except ClientDisconnect:
+        logger.debug('GitHub webhook client disconnected before completing request')
         return JSONResponse(
-            status_code=408,
-            content={'error': 'Request timeout - client took too long to send data.'},
+            status_code=499,
+            content={'error': 'Client disconnected.'},
         )
     except Exception as e:
         logger.exception(f'Error processing GitHub event: {e}')
