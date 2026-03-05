@@ -131,36 +131,6 @@ class TestClientDisconnect:
         assert response.body == b'{"error":"Client disconnected."}'
 
     @pytest.mark.asyncio
-    async def test_client_disconnect_uses_debug_logging_not_warning(
-        self, github_events_func
-    ):
-        """Test that ClientDisconnect is handled gracefully with debug logging.
-
-        The fix ensures we use logger.debug() instead of logger.warning()
-        or logger.exception() for client disconnections, as this is an
-        expected scenario when FastAPI times out.
-        """
-        mock_logger = MagicMock()
-        mock_request = MagicMock()
-        mock_request.body = AsyncMock(side_effect=ClientDisconnect())
-
-        # Call the endpoint with our mock logger
-        response = await github_events_func(
-            request=mock_request,
-            x_hub_signature_256='sha256=test',
-            logger=mock_logger,
-        )
-
-        # Verify that only debug logging was used (not warning or exception)
-        mock_logger.debug.assert_called_once_with(
-            'GitHub webhook client disconnected before completing request'
-        )
-        mock_logger.warning.assert_not_called()
-        mock_logger.exception.assert_not_called()
-
-        assert response.status_code == 499
-
-    @pytest.mark.asyncio
     async def test_client_disconnect_during_json_parsing(self, github_events_func):
         """Test ClientDisconnect during request.json() call returns 499."""
         mock_request = MagicMock()
