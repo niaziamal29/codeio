@@ -161,6 +161,9 @@ def config_from_env() -> AppServerConfig:
     from openhands.app_server.sandbox.e2b_sandbox_spec_service import (
         E2BSandboxSpecServiceInjector,
     )
+    from openhands.app_server.sandbox.kata_sandbox_service import (
+        KataSandboxServiceInjector,
+    )
     from openhands.app_server.sandbox.process_sandbox_service import (
         ProcessSandboxServiceInjector,
     )
@@ -219,6 +222,32 @@ def config_from_env() -> AppServerConfig:
             config.sandbox = E2BSandboxServiceInjector(**e2b_kwargs)
         elif os.getenv('RUNTIME') in ('local', 'process'):
             config.sandbox = ProcessSandboxServiceInjector()
+        elif os.getenv('RUNTIME') == 'kata':
+            # Kata Containers sandbox - runs agent-server inside lightweight VMs
+            kata_sandbox_kwargs: dict = {}
+            if os.getenv('KATA_RUNTIME_TYPE'):
+                kata_sandbox_kwargs['runtime_type'] = os.environ['KATA_RUNTIME_TYPE']
+            if os.getenv('KATA_CONTAINERD_NAMESPACE'):
+                kata_sandbox_kwargs['containerd_namespace'] = os.environ[
+                    'KATA_CONTAINERD_NAMESPACE'
+                ]
+            if os.getenv('KATA_CONTAINER_URL_PATTERN'):
+                kata_sandbox_kwargs['container_url_pattern'] = os.environ[
+                    'KATA_CONTAINER_URL_PATTERN'
+                ]
+            if os.getenv('KATA_MAX_NUM_SANDBOXES'):
+                kata_sandbox_kwargs['max_num_sandboxes'] = int(
+                    os.environ['KATA_MAX_NUM_SANDBOXES']
+                )
+            if os.getenv('KATA_STARTUP_TIMEOUT'):
+                kata_sandbox_kwargs['startup_timeout'] = int(
+                    os.environ['KATA_STARTUP_TIMEOUT']
+                )
+            if os.getenv('KATA_ENABLE_HOST_NETWORK'):
+                kata_sandbox_kwargs['enable_host_network'] = os.environ[
+                    'KATA_ENABLE_HOST_NETWORK'
+                ].lower() in ('true', '1', 'yes')
+            config.sandbox = KataSandboxServiceInjector(**kata_sandbox_kwargs)
         else:
             # Support legacy environment variables for Docker sandbox configuration
             docker_sandbox_kwargs: dict = {}
