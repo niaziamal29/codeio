@@ -1,8 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, redirect } from "react-router";
-import OptionService from "#/api/option-service/option-service.api";
-import { queryClient } from "#/query-client-config";
 import StepHeader from "#/components/features/onboarding/step-header";
 import { StepContent } from "#/components/features/onboarding/step-content";
 import { BrandButton } from "#/components/features/settings/brand-button";
@@ -13,154 +11,105 @@ import { useTracking } from "#/hooks/use-tracking";
 import { ENABLE_ONBOARDING } from "#/utils/feature-flags";
 import { cn } from "#/utils/utils";
 import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
+import { useConfig } from "#/hooks/query/use-config";
+import { ONBOARDING_FORM } from "#/constants/onboarding";
 
 export const clientLoader = async () => {
-  const config = await queryClient.ensureQueryData({
-    queryKey: ["config"],
-    queryFn: OptionService.getConfig,
-  });
-
-  if (config.app_mode !== "saas" || !ENABLE_ONBOARDING()) {
+  if (!ENABLE_ONBOARDING()) {
     return redirect("/");
   }
 
   return null;
 };
 
-interface StepOption {
-  id: string;
-  labelKey?: I18nKey;
-  label?: string;
-}
-
-interface FormStep {
-  id: string;
-  titleKey: I18nKey;
-  options: StepOption[];
-}
-
-const steps: FormStep[] = [
-  {
-    id: "step1",
-    titleKey: I18nKey.ONBOARDING$STEP1_TITLE,
-    options: [
-      {
-        id: "software_engineer",
-        labelKey: I18nKey.ONBOARDING$SOFTWARE_ENGINEER,
-      },
-      {
-        id: "engineering_manager",
-        labelKey: I18nKey.ONBOARDING$ENGINEERING_MANAGER,
-      },
-      {
-        id: "cto_founder",
-        labelKey: I18nKey.ONBOARDING$CTO_FOUNDER,
-      },
-      {
-        id: "product_operations",
-        labelKey: I18nKey.ONBOARDING$PRODUCT_OPERATIONS,
-      },
-      {
-        id: "student_hobbyist",
-        labelKey: I18nKey.ONBOARDING$STUDENT_HOBBYIST,
-      },
-      {
-        id: "other",
-        labelKey: I18nKey.ONBOARDING$OTHER,
-      },
-    ],
-  },
-  {
-    id: "step2",
-    titleKey: I18nKey.ONBOARDING$STEP2_TITLE,
-    options: [
-      {
-        id: "solo",
-        labelKey: I18nKey.ONBOARDING$SOLO,
-      },
-      {
-        id: "org_2_10",
-        labelKey: I18nKey.ONBOARDING$ORG_2_10,
-      },
-      {
-        id: "org_11_50",
-        labelKey: I18nKey.ONBOARDING$ORG_11_50,
-      },
-      {
-        id: "org_51_200",
-        labelKey: I18nKey.ONBOARDING$ORG_51_200,
-      },
-      {
-        id: "org_200_1000",
-        labelKey: I18nKey.ONBOARDING$ORG_200_1000,
-      },
-      {
-        id: "org_1000_plus",
-        labelKey: I18nKey.ONBOARDING$ORG_1000_PLUS,
-      },
-    ],
-  },
-  {
-    id: "step3",
-    titleKey: I18nKey.ONBOARDING$STEP3_TITLE,
-    options: [
-      {
-        id: "new_features",
-        labelKey: I18nKey.ONBOARDING$NEW_FEATURES,
-      },
-      {
-        id: "app_from_scratch",
-        labelKey: I18nKey.ONBOARDING$APP_FROM_SCRATCH,
-      },
-      {
-        id: "fixing_bugs",
-        labelKey: I18nKey.ONBOARDING$FIXING_BUGS,
-      },
-      {
-        id: "refactoring",
-        labelKey: I18nKey.ONBOARDING$REFACTORING,
-      },
-      {
-        id: "automating_tasks",
-        labelKey: I18nKey.ONBOARDING$AUTOMATING_TASKS,
-      },
-      {
-        id: "not_sure",
-        labelKey: I18nKey.ONBOARDING$NOT_SURE,
-      },
-    ],
-  },
-];
-
 function OnboardingForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const config = useConfig();
   const { mutate: submitOnboarding } = useSubmitOnboarding();
   const { trackOnboardingCompleted } = useTracking();
 
+  const appMode = config.data?.app_mode ?? "oss";
+
+  const steps = React.useMemo(
+    () =>
+      ONBOARDING_FORM.filter((step) =>
+        step.app_mode.includes(appMode as "oss" | "saas"),
+      ),
+    [appMode],
+  );
+
   const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
-  const [selections, setSelections] = React.useState<Record<string, string>>(
+  const [selections, setSelections] = React.useState<
+    Record<string, string | string[]>
+  >({});
+  const [inputValues, setInputValues] = React.useState<Record<string, string>>(
     {},
   );
 
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
   const isFirstStep = currentStepIndex === 0;
-  const currentSelection = selections[currentStep.id] || null;
+  const stepId = `step${currentStepIndex + 1}`;
+
+  const currentSelections = React.useMemo(() => {
+    const selection = selections[stepId];
+    if (!selection) return [];
+    return Array.isArray(selection) ? selection : [selection];
+  }, [selections, stepId]);
+
+  const isStepComplete = React.useMemo(() => {
+    if (!currentStep) return false;
+
+    if (currentStep.type === "input") {
+      return currentStep.inputOptions!.every((field) =>
+        inputValues[field.id]?.trim(),
+      );
+    }
+    return currentSelections.length > 0;
+  }, [currentStep, inputValues, currentSelections]);
 
   const handleSelectOption = (optionId: string) => {
-    setSelections((prev) => ({
+    if (!currentStep) return;
+
+    if (currentStep.type === "multi") {
+      setSelections((prev) => {
+        const current = prev[stepId];
+        const currentArray = Array.isArray(current) ? current : [];
+
+        if (currentArray.includes(optionId)) {
+          return {
+            ...prev,
+            [stepId]: currentArray.filter((id) => id !== optionId),
+          };
+        }
+        return {
+          ...prev,
+          [stepId]: [...currentArray, optionId],
+        };
+      });
+    } else {
+      setSelections((prev) => ({
+        ...prev,
+        [stepId]: optionId,
+      }));
+    }
+  };
+
+  const handleInputChange = (fieldId: string, value: string) => {
+    setInputValues((prev) => ({
       ...prev,
-      [currentStep.id]: optionId,
+      [fieldId]: value,
     }));
   };
 
   const handleNext = () => {
     if (isLastStep) {
-      submitOnboarding({ selections });
+      const allSelections = { ...selections, ...inputValues };
+      submitOnboarding({ selections: allSelections });
       try {
         trackOnboardingCompleted({
-          role: selections.step1,
+          role: selections.step1 || inputValues.org_name,
           orgSize: selections.step2,
           useCase: selections.step3,
         });
@@ -180,9 +129,18 @@ function OnboardingForm() {
     }
   };
 
-  const translatedOptions = currentStep.options.map((option) => ({
+  if (!currentStep) {
+    return null;
+  }
+
+  const translatedOptions = currentStep.answerOptions?.map((option) => ({
     id: option.id,
-    label: option.labelKey ? t(option.labelKey) : option.label!,
+    label: t(option.key),
+  }));
+
+  const translatedInputFields = currentStep.inputOptions?.map((field) => ({
+    id: field.id,
+    label: t(field.key),
   }));
 
   return (
@@ -195,14 +153,20 @@ function OnboardingForm() {
           <OpenHandsLogoWhite width={55} height={55} />
         </div>
         <StepHeader
-          title={t(currentStep.titleKey)}
+          title={t(currentStep.questionKey)}
+          subtitle={
+            currentStep.subtitleKey ? t(currentStep.subtitleKey) : undefined
+          }
           currentStep={currentStepIndex + 1}
           totalSteps={steps.length}
         />
         <StepContent
           options={translatedOptions}
-          selectedOptionId={currentSelection}
+          inputFields={translatedInputFields}
+          selectedOptionIds={currentSelections}
+          inputValues={inputValues}
           onSelectOption={handleSelectOption}
+          onInputChange={handleInputChange}
         />
         <div
           data-testid="step-actions"
@@ -222,10 +186,10 @@ function OnboardingForm() {
             type="button"
             variant="primary"
             onClick={handleNext}
-            isDisabled={!currentSelection}
+            isDisabled={!isStepComplete}
             className={cn(
               "px-4 sm:px-6 py-2.5 bg-white text-black hover:bg-white/90",
-              isFirstStep ? "w-1/2" : "flex-1", // keep "Next" button to the right. Even if "Back" button is not rendered
+              isFirstStep ? "w-1/2" : "flex-1",
             )}
           >
             {t(
