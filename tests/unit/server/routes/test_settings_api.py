@@ -82,6 +82,31 @@ def test_client():
 @pytest.mark.asyncio
 async def test_settings_api_endpoints(test_client):
     """Test that the settings API endpoints work with the new auth system."""
+    sdk_settings_schema = {
+        'model_name': 'SDKSettings',
+        'sections': [
+            {
+                'key': 'llm',
+                'label': 'LLM',
+                'fields': [
+                    {'key': 'llm_timeout'},
+                    {'key': 'llm_api_key', 'secret': True},
+                ],
+            },
+            {
+                'key': 'critic',
+                'label': 'Critic',
+                'fields': [
+                    {'key': 'enable_critic'},
+                    {'key': 'critic_mode'},
+                    {'key': 'enable_iterative_refinement'},
+                    {'key': 'critic_threshold'},
+                    {'key': 'max_refinement_iterations'},
+                ],
+            },
+        ],
+    }
+
     # Test data with remote_runtime_resource_factor
     settings_data = {
         'language': 'en',
@@ -101,42 +126,48 @@ async def test_settings_api_endpoints(test_client):
         'max_refinement_iterations': 4,
     }
 
-    # Make the POST request to store settings
-    response = test_client.post('/api/settings', json=settings_data)
+    with patch(
+        'openhands.server.routes.settings._get_sdk_settings_schema',
+        return_value=sdk_settings_schema,
+    ):
+        # Make the POST request to store settings
+        response = test_client.post('/api/settings', json=settings_data)
 
-    # We're not checking the exact response, just that it doesn't error
-    assert response.status_code == 200
+        # We're not checking the exact response, just that it doesn't error
+        assert response.status_code == 200
 
-    # Test the GET settings endpoint
-    response = test_client.get('/api/settings')
-    assert response.status_code == 200
-    response_data = response.json()
-    assert response_data['sdk_settings_schema']['model_name'] == 'SDKSettings'
-    assert response_data['sdk_settings_values']['llm_timeout'] == 123
-    assert response_data['sdk_settings_values']['enable_critic'] is True
-    assert response_data['sdk_settings_values']['critic_mode'] == 'all_actions'
-    assert response_data['sdk_settings_values']['enable_iterative_refinement'] is True
-    assert response_data['sdk_settings_values']['critic_threshold'] == 0.7
-    assert response_data['sdk_settings_values']['max_refinement_iterations'] == 4
-    assert response_data['sdk_settings_values']['llm_api_key'] is None
+        # Test the GET settings endpoint
+        response = test_client.get('/api/settings')
+        assert response.status_code == 200
+        response_data = response.json()
+        assert response_data['sdk_settings_schema']['model_name'] == 'SDKSettings'
+        assert response_data['sdk_settings_values']['llm_timeout'] == 123
+        assert response_data['sdk_settings_values']['enable_critic'] is True
+        assert response_data['sdk_settings_values']['critic_mode'] == 'all_actions'
+        assert (
+            response_data['sdk_settings_values']['enable_iterative_refinement'] is True
+        )
+        assert response_data['sdk_settings_values']['critic_threshold'] == 0.7
+        assert response_data['sdk_settings_values']['max_refinement_iterations'] == 4
+        assert response_data['sdk_settings_values']['llm_api_key'] is None
 
-    # Test updating with partial settings
-    partial_settings = {
-        'language': 'fr',
-        'llm_model': None,  # Should preserve existing value
-        'llm_api_key': None,  # Should preserve existing value
-    }
+        # Test updating with partial settings
+        partial_settings = {
+            'language': 'fr',
+            'llm_model': None,  # Should preserve existing value
+            'llm_api_key': None,  # Should preserve existing value
+        }
 
-    response = test_client.post('/api/settings', json=partial_settings)
-    assert response.status_code == 200
+        response = test_client.post('/api/settings', json=partial_settings)
+        assert response.status_code == 200
 
-    response = test_client.get('/api/settings')
-    assert response.status_code == 200
-    assert response.json()['sdk_settings_values']['llm_timeout'] == 123
+        response = test_client.get('/api/settings')
+        assert response.status_code == 200
+        assert response.json()['sdk_settings_values']['llm_timeout'] == 123
 
-    # Test the unset-provider-tokens endpoint
-    response = test_client.post('/api/unset-provider-tokens')
-    assert response.status_code == 200
+        # Test the unset-provider-tokens endpoint
+        response = test_client.post('/api/unset-provider-tokens')
+        assert response.status_code == 200
 
 
 @pytest.mark.asyncio
