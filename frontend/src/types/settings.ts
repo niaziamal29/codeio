@@ -44,17 +44,22 @@ export type SettingsChoice = {
   value: string;
 };
 
+export type SettingsValue = boolean | number | string | null;
+
 export type SettingsFieldSchema = {
   key: string;
   label: string;
   description?: string | null;
-  widget: string;
+  widget: "text" | "password" | "number" | "boolean" | "select";
   section: string;
   section_label: string;
   order: number;
+  default?: boolean | number | string | null;
+  placeholder?: string | null;
   choices: SettingsChoice[];
   depends_on: string[];
   advanced: boolean;
+  help_text?: string | null;
   secret: boolean;
   required: boolean;
   slash_command?: string | null;
@@ -63,7 +68,6 @@ export type SettingsFieldSchema = {
 export type SettingsSectionSchema = {
   key: string;
   label: string;
-  order: number;
   fields: SettingsFieldSchema[];
 };
 
@@ -101,4 +105,5 @@ export type Settings = {
   git_user_email?: string;
   v1_enabled?: boolean;
   sdk_settings_schema?: SettingsSchema | null;
+  sdk_settings_values?: Record<string, SettingsValue> | null;
 };

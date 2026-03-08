@@ -30,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
     stdio_servers: [],
     shttp_servers: [],
   },
+  sdk_settings_values: {},
   git_user_name: "openhands",
   git_user_email: "openhands@all-hands.dev",
   v1_enabled: false,

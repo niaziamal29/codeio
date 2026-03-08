@@ -1663,6 +1663,22 @@
     "de": "Erweitert",
     "uk": "Розширений"
   },
+  "SETTINGS$BASIC": {
+    "en": "Basic",
+    "ja": "Basic",
+    "zh-CN": "Basic",
+    "zh-TW": "Basic",
+    "ko-KR": "Basic",
+    "no": "Basic",
+    "it": "Basic",
+    "pt": "Basic",
+    "es": "Basic",
+    "ar": "Basic",
+    "fr": "Basic",
+    "tr": "Basic",
+    "de": "Basic",
+    "uk": "Basic"
+  },
   "SETTINGS$BASE_URL": {
     "en": "Base URL",
     "ja": "ベースURL",
@@ -1902,6 +1918,22 @@
     "tr": "Değişiklikleri Kaydet",
     "de": "Änderungen speichern",
     "uk": "Зберегти зміни"
+  },
+  "SETTINGS$SDK_SCHEMA_UNAVAILABLE": {
+    "en": "SDK settings schema unavailable.",
+    "ja": "SDK settings schema unavailable.",
+    "zh-CN": "SDK settings schema unavailable.",
+    "zh-TW": "SDK settings schema unavailable.",
+    "ko-KR": "SDK settings schema unavailable.",
+    "no": "SDK settings schema unavailable.",
+    "it": "SDK settings schema unavailable.",
+    "pt": "SDK settings schema unavailable.",
+    "es": "SDK settings schema unavailable.",
+    "ar": "SDK settings schema unavailable.",
+    "fr": "SDK settings schema unavailable.",
+    "tr": "SDK settings schema unavailable.",
+    "de": "SDK settings schema unavailable.",
+    "uk": "SDK settings schema unavailable."
   },
   "SETTINGS$NAV_INTEGRATIONS": {
     "en": "Integrations",
@@ -7247,7 +7279,7 @@
     "es": "Actualmente no hay un plan para este repositorio",
     "tr": "Şu anda bu depo için bir plan yok"
   },
-    "SIDEBAR$NAVIGATION_LABEL": {
+  "SIDEBAR$NAVIGATION_LABEL": {
     "en": "Sidebar navigation",
     "zh-CN": "侧边栏导航",
     "zh-TW": "側邊欄導航",
@@ -10385,7 +10417,7 @@
     "de": "klicken Sie hier für Anweisungen",
     "uk": "натисніть тут, щоб отримати інструкції"
   },
-    "BITBUCKET_DATA_CENTER$TOKEN_LABEL": {
+  "BITBUCKET_DATA_CENTER$TOKEN_LABEL": {
     "en": "Bitbucket Data Center Token",
     "ja": "Bitbucket Data Centerトークン",
     "zh-CN": "Bitbucket Data Center令牌",

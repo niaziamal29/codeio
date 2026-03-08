@@ -18,6 +18,8 @@ const getSettingsQueryFn = async (): Promise<Settings> => {
     git_user_email: settings.git_user_email || DEFAULT_SETTINGS.git_user_email,
     is_new_user: false,
     v1_enabled: settings.v1_enabled ?? DEFAULT_SETTINGS.v1_enabled,
+    sdk_settings_values:
+      settings.sdk_settings_values ?? DEFAULT_SETTINGS.sdk_settings_values,
   };
 };
 

@@ -49,6 +49,70 @@ def _get_sdk_settings_schema() -> dict[str, Any] | None:
     return settings_module.SDKSettings.export_schema().model_dump(mode='json')
 
 
+def _get_sdk_field_keys(schema: dict[str, Any] | None) -> set[str]:
+    if not schema:
+        return set()
+
+    return {
+        field['key']
+        for section in schema.get('sections', [])
+        for field in section.get('fields', [])
+    }
+
+
+def _get_sdk_secret_field_keys(schema: dict[str, Any] | None) -> set[str]:
+    if not schema:
+        return set()
+
+    return {
+        field['key']
+        for section in schema.get('sections', [])
+        for field in section.get('fields', [])
+        if field.get('secret')
+    }
+
+
+def _extract_sdk_settings_values(
+    settings: Settings, schema: dict[str, Any] | None
+) -> dict[str, bool | float | int | str | None]:
+    values = dict(settings.sdk_settings_values)
+    secret_field_keys = _get_sdk_secret_field_keys(schema)
+
+    for field_key in _get_sdk_field_keys(schema):
+        if field_key in secret_field_keys:
+            values[field_key] = None
+            continue
+        if field_key in values:
+            continue
+        if field_key not in Settings.model_fields:
+            continue
+
+        values[field_key] = getattr(settings, field_key)
+
+    return values
+
+
+def _apply_settings_payload(
+    payload: dict[str, Any],
+    existing_settings: Settings | None,
+    sdk_schema: dict[str, Any] | None,
+) -> Settings:
+    settings = existing_settings.model_copy() if existing_settings else Settings()
+
+    sdk_field_keys = _get_sdk_field_keys(sdk_schema)
+    secret_field_keys = _get_sdk_secret_field_keys(sdk_schema)
+    sdk_settings_values = dict(settings.sdk_settings_values)
+
+    for key, value in payload.items():
+        if key in Settings.model_fields:
+            setattr(settings, key, value)
+        if key in sdk_field_keys and key not in secret_field_keys:
+            sdk_settings_values[key] = value
+
+    settings.sdk_settings_values = sdk_settings_values
+    return settings
+
+
 app = APIRouter(prefix='/api', dependencies=get_dependencies())
 
 
@@ -89,14 +153,18 @@ async def load_settings(
                 if provider_token.token or provider_token.user_id:
                     provider_tokens_set[provider_type] = provider_token.host
 
+        sdk_settings_schema = _get_sdk_settings_schema()
         settings_with_token_data = GETSettingsModel(
-            **settings.model_dump(exclude={'secrets_store'}),
+            **settings.model_dump(exclude={'secrets_store', 'sdk_settings_values'}),
             llm_api_key_set=settings.llm_api_key is not None
             and bool(settings.llm_api_key),
             search_api_key_set=settings.search_api_key is not None
             and bool(settings.search_api_key),
             provider_tokens_set=provider_tokens_set,
-            sdk_settings_schema=_get_sdk_settings_schema(),
+            sdk_settings_schema=sdk_settings_schema,
+            sdk_settings_values=_extract_sdk_settings_values(
+                settings, sdk_settings_schema
+            ),
         )
 
         # If the base url matches the default for the provider, we don't send it
@@ -108,6 +176,10 @@ async def load_settings(
             settings.llm_model
         ):
             settings_with_token_data.llm_base_url = None
+
+        settings_with_token_data.sdk_settings_values['llm_base_url'] = (
+            settings_with_token_data.llm_base_url
+        )
 
         settings_with_token_data.llm_api_key = None
         settings_with_token_data.search_api_key = None
@@ -178,14 +250,17 @@ async def store_llm_settings(
     },
 )
 async def store_settings(
-    settings: Settings,
+    payload: dict[str, Any],
     settings_store: SettingsStore = Depends(get_user_settings_store),
 ) -> JSONResponse:
     # Check provider tokens are valid
     try:
         existing_settings = await settings_store.load()
+        sdk_settings_schema = _get_sdk_settings_schema()
+        settings = _apply_settings_payload(
+            payload, existing_settings, sdk_settings_schema
+        )
 
-        # Convert to Settings model and merge with existing settings
         if existing_settings:
             settings = await store_llm_settings(settings, existing_settings)
 
@@ -217,7 +292,6 @@ async def store_settings(
                 f'Updated global git configuration: name={config.git_user_name}, email={config.git_user_email}'
             )
 
-        settings = convert_to_settings(settings)
         await settings_store.store(settings)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -229,22 +303,3 @@ async def store_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={'error': 'Something went wrong storing settings'},
         )
-
-
-def convert_to_settings(settings_with_token_data: Settings) -> Settings:
-    settings_data = settings_with_token_data.model_dump()
-
-    # Filter out additional fields from `SettingsWithTokenData`
-    filtered_settings_data = {
-        key: value
-        for key, value in settings_data.items()
-        if key in Settings.model_fields  # Ensures only `Settings` fields are included
-    }
-
-    # Convert the API keys to `SecretStr` instances
-    filtered_settings_data['llm_api_key'] = settings_with_token_data.llm_api_key
-    filtered_settings_data['search_api_key'] = settings_with_token_data.search_api_key
-
-    # Create a new Settings instance
-    settings = Settings(**filtered_settings_data)
-    return settings

@@ -92,7 +92,13 @@ async def test_settings_api_endpoints(test_client):
         'llm_model': 'test-model',
         'llm_api_key': 'test-key',
         'llm_base_url': 'https://test.com',
+        'llm_timeout': 123,
         'remote_runtime_resource_factor': 2,
+        'enable_critic': True,
+        'critic_mode': 'all_actions',
+        'enable_iterative_refinement': True,
+        'critic_threshold': 0.7,
+        'max_refinement_iterations': 4,
     }
 
     # Make the POST request to store settings
@@ -104,7 +110,15 @@ async def test_settings_api_endpoints(test_client):
     # Test the GET settings endpoint
     response = test_client.get('/api/settings')
     assert response.status_code == 200
-    assert response.json()['sdk_settings_schema']['model_name'] == 'SDKSettings'
+    response_data = response.json()
+    assert response_data['sdk_settings_schema']['model_name'] == 'SDKSettings'
+    assert response_data['sdk_settings_values']['llm_timeout'] == 123
+    assert response_data['sdk_settings_values']['enable_critic'] is True
+    assert response_data['sdk_settings_values']['critic_mode'] == 'all_actions'
+    assert response_data['sdk_settings_values']['enable_iterative_refinement'] is True
+    assert response_data['sdk_settings_values']['critic_threshold'] == 0.7
+    assert response_data['sdk_settings_values']['max_refinement_iterations'] == 4
+    assert response_data['sdk_settings_values']['llm_api_key'] is None
 
     # Test updating with partial settings
     partial_settings = {
@@ -115,6 +129,10 @@ async def test_settings_api_endpoints(test_client):
 
     response = test_client.post('/api/settings', json=partial_settings)
     assert response.status_code == 200
+
+    response = test_client.get('/api/settings')
+    assert response.status_code == 200
+    assert response.json()['sdk_settings_values']['llm_timeout'] == 123
 
     # Test the unset-provider-tokens endpoint
     response = test_client.post('/api/unset-provider-tokens')

@@ -54,6 +54,9 @@ class Settings(BaseModel):
     git_user_name: str | None = None
     git_user_email: str | None = None
     v1_enabled: bool = True
+    sdk_settings_values: dict[str, bool | float | int | str | None] = Field(
+        default_factory=dict
+    )
 
     model_config = ConfigDict(
         validate_assignment=True,

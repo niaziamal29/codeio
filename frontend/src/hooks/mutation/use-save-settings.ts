@@ -5,8 +5,10 @@ import SettingsService from "#/api/settings-service/settings-service.api";
 import { Settings } from "#/types/settings";
 import { useSettings } from "../query/use-settings";
 
-const saveSettingsMutationFn = async (settings: Partial<Settings>) => {
-  const settingsToSave: Partial<Settings> = {
+type SettingsUpdate = Partial<Settings> & Record<string, unknown>;
+
+const saveSettingsMutationFn = async (settings: SettingsUpdate) => {
+  const settingsToSave: SettingsUpdate = {
     ...settings,
     agent: settings.agent || DEFAULT_SETTINGS.agent,
     language: settings.language || DEFAULT_SETTINGS.language,
@@ -32,8 +34,8 @@ export const useSaveSettings = () => {
   const { data: currentSettings } = useSettings();
 
   return useMutation({
-    mutationFn: async (settings: Partial<Settings>) => {
-      const newSettings = { ...currentSettings, ...settings };
+    mutationFn: async (settings: SettingsUpdate) => {
+      const newSettings: SettingsUpdate = { ...currentSettings, ...settings };
 
       // Track MCP configuration changes
       if (
