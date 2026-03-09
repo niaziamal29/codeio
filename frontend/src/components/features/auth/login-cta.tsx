@@ -3,7 +3,6 @@ import { CardTitle } from "#/ui/card-title";
 import { Typography } from "#/ui/typography";
 import { BrandButton } from "../settings/brand-button";
 import { I18nKey } from "#/i18n/declaration";
-import RobotIcon from "#/icons/robot.svg?react";
 
 interface LoginCTAProps {
   className?: string;
@@ -21,25 +20,24 @@ export function LoginCTA({ className }: LoginCTAProps) {
       data-testid="login-cta"
     >
       {/* CTA inner container */}
-      <div className="w-[236px] flex flex-col gap-[11px] mt-auto mb-auto ml-[25px]">
-        {/* Icon */}
-        <div className="w-[40px] h-[40px]">
-          <RobotIcon width={40} height={40} />
-        </div>
-
+      <div className="w-[270px] h-[332px] flex flex-col gap-[11px] mt-[25px] ml-[25px]">
         {/* Card title */}
-        <div className="w-[236px]">
-          <CardTitle>{t(I18nKey.CTA$ENTERPRISE_TITLE)}</CardTitle>
-        </div>
+        <CardTitle>{t(I18nKey.CTA$ENTERPRISE_TITLE)}</CardTitle>
 
-        {/* Typography */}
-        <div className="w-[236px]">
-          <Typography.Text className="text-[#8C8C8C] font-inter font-normal text-[14px] leading-[20px]">
-            {t(I18nKey.CTA$ENTERPRISE_DESCRIPTION)}
-          </Typography.Text>
-        </div>
+        {/* Description */}
+        <Typography.Text className="text-[#8C8C8C] font-inter font-normal text-[14px] leading-[20px]">
+          {t(I18nKey.CTA$ENTERPRISE_DESCRIPTION)}
+        </Typography.Text>
 
-        <div className="w-[236px] h-[40px] flex justify-start mt-4">
+        {/* Feature list */}
+        <ul className="text-[#8C8C8C] font-inter font-normal text-[14px] leading-[20px] list-disc list-inside flex flex-col gap-1">
+          <li>{t(I18nKey.CTA$FEATURE_ON_PREMISES)}</li>
+          <li>{t(I18nKey.CTA$FEATURE_DATA_CONTROL)}</li>
+          <li>{t(I18nKey.CTA$FEATURE_COMPLIANCE)}</li>
+          <li>{t(I18nKey.CTA$FEATURE_SUPPORT)}</li>
+        </ul>
+
+        <div className="h-[40px] flex justify-start mt-auto">
           <BrandButton
             variant="primary"
             type="button"
