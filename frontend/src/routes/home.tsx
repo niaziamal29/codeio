@@ -7,12 +7,17 @@ import { GitRepository } from "#/types/git";
 import { NewConversation } from "#/components/features/home/new-conversation/new-conversation";
 import { RecentConversations } from "#/components/features/home/recent-conversations/recent-conversations";
 import { HomepageCTA } from "#/components/features/home/homepage-cta";
+import { isCTADismissed } from "#/utils/session-storage";
 
 <PrefetchPageLinks page="/conversations/:conversationId" />;
 
 function HomeScreen() {
   const [selectedRepo, setSelectedRepo] = React.useState<GitRepository | null>(
     null,
+  );
+
+  const [shouldShowCTA, setShouldShowCTA] = React.useState(
+    () => !isCTADismissed("homepage"),
   );
 
   return (
@@ -42,9 +47,11 @@ function HomeScreen() {
         </div>
       </div>
 
-      <div className="mt-auto ml-auto p-6">
-        <HomepageCTA />
-      </div>
+      {shouldShowCTA && (
+        <div className="mt-auto ml-auto p-6">
+          <HomepageCTA setShouldShowCTA={setShouldShowCTA} />
+        </div>
+      )}
     </div>
   );
 }

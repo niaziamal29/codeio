@@ -1,17 +1,24 @@
 import { useTranslation } from "react-i18next";
+import { Dispatch, SetStateAction } from "react";
 import { Card } from "#/ui/card";
 import { CardTitle } from "#/ui/card-title";
 import { Typography } from "#/ui/typography";
 import { cn } from "#/utils/utils";
 import { I18nKey } from "#/i18n/declaration";
+import { setCTADismissed } from "#/utils/session-storage";
 import CloseIcon from "#/icons/close.svg?react";
 
 interface HomepageCTAProps {
-  onClose?: () => void;
+  setShouldShowCTA: Dispatch<SetStateAction<boolean>>;
 }
 
-export function HomepageCTA({ onClose }: HomepageCTAProps) {
+export function HomepageCTA({ setShouldShowCTA }: HomepageCTAProps) {
   const { t } = useTranslation();
+
+  const handleClose = () => {
+    setCTADismissed("homepage");
+    setShouldShowCTA(false);
+  };
 
   return (
     <Card
@@ -24,7 +31,7 @@ export function HomepageCTA({ onClose }: HomepageCTAProps) {
     >
       <button
         type="button"
-        onClick={onClose}
+        onClick={handleClose}
         className="absolute top-[13px] left-[279px] w-7 h-7 rounded-full border border-[#242424] bg-[#0A0A0A] flex items-center justify-center text-white/60 hover:text-white cursor-pointer shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]"
         aria-label="Close"
       >
