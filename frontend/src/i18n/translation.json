@@ -16722,5 +16722,53 @@
     "es": "Finalizar",
     "tr": "Bitir",
     "uk": "Завершити"
+  },
+  "CTA$ENTERPRISE_TITLE": {
+    "en": "Get OpenHands For Enterprise",
+    "ja": "OpenHands Enterpriseを取得",
+    "zh-CN": "获取 OpenHands 企业版",
+    "zh-TW": "取得 OpenHands 企業版",
+    "ko-KR": "OpenHands 엔터프라이즈 받기",
+    "no": "Få OpenHands for bedrifter",
+    "ar": "احصل على OpenHands للمؤسسات",
+    "de": "OpenHands für Unternehmen",
+    "fr": "Obtenez OpenHands pour entreprise",
+    "it": "Ottieni OpenHands per aziende",
+    "pt": "Obtenha OpenHands para empresas",
+    "es": "Obtén OpenHands para empresas",
+    "tr": "Kurumsal OpenHands'i edinin",
+    "uk": "Отримайте OpenHands для підприємств"
+  },
+  "CTA$ENTERPRISE_DESCRIPTION": {
+    "en": "Cloud allows you to access OpenHands anywhere and coordinate with your team like never before.",
+    "ja": "クラウドを使用すると、どこからでもOpenHandsにアクセスし、これまでにない方法でチームと連携できます。",
+    "zh-CN": "云端让您可以随时随地访问 OpenHands，并以前所未有的方式与团队协调。",
+    "zh-TW": "雲端讓您可以隨時隨地存取 OpenHands，並以前所未有的方式與團隊協調。",
+    "ko-KR": "클라우드를 통해 어디서나 OpenHands에 접근하고 팀과 협업할 수 있습니다.",
+    "no": "Sky gir deg tilgang til OpenHands hvor som helst og koordinerer med teamet ditt som aldri før.",
+    "ar": "يتيح لك السحاب الوصول إلى OpenHands من أي مكان والتنسيق مع فريقك بشكل لم يسبق له مثيل.",
+    "de": "Cloud ermöglicht Ihnen den Zugriff auf OpenHands von überall und die Koordination mit Ihrem Team wie nie zuvor.",
+    "fr": "Le cloud vous permet d'accéder à OpenHands de n'importe où et de coordonner avec votre équipe comme jamais auparavant.",
+    "it": "Il cloud ti permette di accedere a OpenHands ovunque e coordinare con il tuo team come mai prima.",
+    "pt": "A nuvem permite que você acesse o OpenHands de qualquer lugar e coordene com sua equipe como nunca antes.",
+    "es": "La nube te permite acceder a OpenHands desde cualquier lugar y coordinar con tu equipo como nunca antes.",
+    "tr": "Bulut, OpenHands'e her yerden erişmenize ve ekibinizle daha önce hiç olmadığı gibi koordine olmanıza olanak tanır.",
+    "uk": "Хмара дозволяє отримати доступ до OpenHands з будь-якого місця та координувати роботу з командою як ніколи раніше."
+  },
+  "CTA$LEARN_MORE": {
+    "en": "Learn more",
+    "ja": "詳細を見る",
+    "zh-CN": "了解更多",
+    "zh-TW": "了解更多",
+    "ko-KR": "더 알아보기",
+    "no": "Lær mer",
+    "ar": "اعرف المزيد",
+    "de": "Mehr erfahren",
+    "fr": "En savoir plus",
+    "it": "Scopri di più",
+    "pt": "Saiba mais",
+    "es": "Más información",
+    "tr": "Daha fazla bilgi",
+    "uk": "Дізнатися більше"
   }
 }
