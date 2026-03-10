@@ -16723,7 +16723,7 @@
     "tr": "Bitir",
     "uk": "Завершити"
   },
-  "CTA$ENTERPRISE_TITLE": {
+  "CTA$ENTERPRISE": {
     "en": "Enterprise",
     "ja": "エンタープライズ",
     "zh-CN": "企业版",
@@ -16739,7 +16739,7 @@
     "tr": "Kurumsal",
     "uk": "Підприємство"
   },
-  "CTA$ENTERPRISE_DESCRIPTION": {
+  "CTA$ENTERPRISE_DEPLOY": {
     "en": "Deploy OpenHands on your own infrastructure. Full control over data, compliance, and security.",
     "ja": "独自のインフラストラクチャにOpenHandsをデプロイ。データ、コンプライアンス、セキュリティを完全にコントロール。",
     "zh-CN": "在您自己的基础设施上部署 OpenHands。完全控制数据、合规性和安全性。",

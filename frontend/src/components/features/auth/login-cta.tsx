@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Card } from "#/ui/card";
 import { CardTitle } from "#/ui/card-title";
 import { Typography } from "#/ui/typography";
 import { BrandButton } from "../settings/brand-button";
@@ -14,26 +15,20 @@ export function LoginCTA() {
   };
 
   return (
-    <div
-      className={cn(
-        "flex w-80 h-auto rounded-2xl flex-col border border-[#24242499]",
-      )}
-      style={{
-        background:
-          "linear-gradient(0deg, rgba(10, 10, 10, 0.5), rgba(10, 10, 10, 0.5)), radial-gradient(80% 60% at 50% 0%, rgba(255, 255, 255, 0.25) 0%, rgba(0, 0, 0, 0) 100%)",
-        boxShadow: "0px 4px 6px -4px #0000001A, 0px 10px 15px -3px #0000001A",
-      }}
-      data-testid="login-cta"
+    <Card
+      testId="login-cta"
+      variant="dark"
+      className={cn("w-full max-w-80 h-auto flex-col", "cta-card-gradient")}
     >
-      <div className={cn("w-[270px] flex flex-col gap-[11px] mt-[25px] ml-6")}>
+      <div className={cn("flex flex-col gap-[11px] p-6")}>
         <div className={cn("size-10")}>
           <StackedIcon width={40} height={40} />
         </div>
 
-        <CardTitle>{t(I18nKey.CTA$ENTERPRISE_TITLE)}</CardTitle>
+        <CardTitle>{t(I18nKey.CTA$ENTERPRISE)}</CardTitle>
 
         <Typography.Text className="text-[#8C8C8C] font-inter font-normal text-sm leading-5">
-          {t(I18nKey.CTA$ENTERPRISE_DESCRIPTION)}
+          {t(I18nKey.CTA$ENTERPRISE_DEPLOY)}
         </Typography.Text>
 
         <ul
@@ -58,6 +53,6 @@ export function LoginCTA() {
           </BrandButton>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

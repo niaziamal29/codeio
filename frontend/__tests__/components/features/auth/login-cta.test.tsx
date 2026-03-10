@@ -19,8 +19,8 @@ describe("LoginCTA", () => {
     render(<LoginCTA />);
 
     expect(screen.getByTestId("login-cta")).toBeInTheDocument();
-    expect(screen.getByText("CTA$ENTERPRISE_TITLE")).toBeInTheDocument();
-    expect(screen.getByText("CTA$ENTERPRISE_DESCRIPTION")).toBeInTheDocument();
+    expect(screen.getByText("CTA$ENTERPRISE")).toBeInTheDocument();
+    expect(screen.getByText("CTA$ENTERPRISE_DEPLOY")).toBeInTheDocument();
   });
 
   it("should render all enterprise feature list items", () => {
