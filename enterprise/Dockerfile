@@ -12,7 +12,7 @@ RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
-    apt-get install -y jq gettext && \
+    apt-get install -y jq gettext git && \
     # Apply security updates for packages with available fixes
     apt-get upgrade -y \
         libc-bin \
