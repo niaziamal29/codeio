@@ -12,6 +12,7 @@ import { TermsAndPrivacyNotice } from "#/components/shared/terms-and-privacy-not
 import { useRecaptcha } from "#/hooks/use-recaptcha";
 import { useConfig } from "#/hooks/query/use-config";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
+import { cn } from "#/utils/utils";
 import { LoginCTA } from "./login-cta";
 
 export interface LoginContentProps {
@@ -160,9 +161,9 @@ export function LoginContent({
     showBitbucket;
 
   return (
-    <div className="flex flex-row items-stretch gap-[24px] h-full items-stretch">
+    <div className={cn("flex flex-col md:flex-row items-stretch gap-6 h-full")}>
       <div
-        className="flex flex-col items-center w-full gap-12.5"
+        className={cn("flex flex-col items-center w-full gap-12.5")}
         data-testid="login-content"
       >
         <div>
