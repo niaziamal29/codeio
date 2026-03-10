@@ -58,7 +58,7 @@ setup("authenticate", async ({ page, baseURL }) => {
     throw new Error(`Unknown AUTH_METHOD: ${authMethod}`);
   }
 
-  // Wait for successful redirect back to app
+  // Wait for successful redirect back to app (could be home page or accept-tos)
   await page.waitForURL((url) => {
     const urlString = url.toString();
     return (
@@ -67,6 +67,12 @@ setup("authenticate", async ({ page, baseURL }) => {
       !urlString.includes("keycloak")
     );
   }, { timeout: 60_000 });
+
+  // Handle TOS acceptance if redirected to accept-tos page
+  if (page.url().includes("/accept-tos")) {
+    console.log("Redirected to accept-tos page after authentication, handling TOS acceptance...");
+    await handleTOSAcceptance(page);
+  }
 
   // Verify authentication succeeded
   await expect(page.getByTestId("home-screen")).toBeVisible({ timeout: 30_000 });
@@ -118,9 +124,35 @@ async function authenticateWithGitHub(page: import("@playwright/test").Page): Pr
   await expect(githubButton).toBeVisible({ timeout: 10_000 });
   await githubButton.click();
 
-  // Wait for GitHub login page
-  await page.waitForURL(/github\.com/, { timeout: 30_000 });
+  // Wait for redirect - could be GitHub.com, home page, or accept-tos
+  // If user is already logged into Keycloak, they may be redirected back to the app
+  await page.waitForURL((url) => {
+    const urlString = url.toString();
+    return (
+      urlString.includes("github.com") ||
+      urlString.includes("/accept-tos") ||
+      // Check if redirected back to home (no login/keycloak in URL)
+      (!urlString.includes("keycloak") && !urlString.includes("/login"))
+    );
+  }, { timeout: 30_000 });
 
+  const currentUrl = page.url();
+
+  // If redirected to accept-tos, handle TOS acceptance
+  if (currentUrl.includes("/accept-tos")) {
+    console.log("Redirected to accept-tos page, handling TOS acceptance...");
+    await handleTOSAcceptance(page);
+    console.log("TOS acceptance completed");
+    return;
+  }
+
+  // If redirected to home page (already authenticated via Keycloak session)
+  if (!currentUrl.includes("github.com")) {
+    console.log("Already authenticated via Keycloak session");
+    return;
+  }
+
+  // Continue with GitHub login flow
   // Fill in GitHub credentials
   const usernameField = page.locator('input[name="login"]');
   const passwordField = page.locator('input[name="password"]');
@@ -143,6 +175,30 @@ async function authenticateWithGitHub(page: import("@playwright/test").Page): Pr
   await handleOAuthAuthorization(page);
 
   console.log("GitHub authentication flow completed");
+}
+
+/**
+ * Handle Terms of Service acceptance flow
+ */
+async function handleTOSAcceptance(page: import("@playwright/test").Page): Promise<void> {
+  // Wait for the TOS page to be fully loaded
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+
+  // Find and click the TOS checkbox
+  const tosCheckbox = page.locator('input[type="checkbox"]');
+  await tosCheckbox.waitFor({ state: "visible", timeout: 10_000 });
+  await tosCheckbox.click();
+
+  // Find and click the Continue button
+  const continueButton = page.getByRole('button', { name: 'Continue' });
+  await expect(continueButton).toBeEnabled({ timeout: 5_000 });
+  await continueButton.click();
+
+  // Wait for redirect to home page after TOS acceptance
+  await page.waitForURL((url) => {
+    const urlString = url.toString();
+    return !urlString.includes("/accept-tos");
+  }, { timeout: 30_000 });
 }
 
 /**
