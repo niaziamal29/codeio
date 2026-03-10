@@ -609,3 +609,102 @@ describe("Setup Payment modal", () => {
     expect(setupPaymentModal).toBeInTheDocument();
   });
 });
+
+describe("HomepageCTA visibility", () => {
+  const getConfigSpy = vi.spyOn(OptionService, "getConfig");
+  const getSettingsSpy = vi.spyOn(SettingsService, "getSettings");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.spyOn(AuthService, "authenticate").mockResolvedValue(true);
+
+    getSettingsSpy.mockResolvedValue(MOCK_DEFAULT_USER_SETTINGS);
+
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    vi.stubGlobal("sessionStorage", {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("should show HomepageCTA in SaaS mode when not dismissed", async () => {
+    useIsAuthedMock.mockReturnValue({
+      data: true,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    useConfigMock.mockReturnValue({
+      data: { app_mode: "saas", feature_flags: DEFAULT_FEATURE_FLAGS },
+      isLoading: false,
+    });
+
+    getConfigSpy.mockResolvedValue({
+      app_mode: "saas",
+      posthog_client_key: "test-posthog-key",
+      providers_configured: ["github"],
+      auth_url: "https://auth.example.com",
+      feature_flags: DEFAULT_FEATURE_FLAGS,
+      maintenance_start_time: null,
+      recaptcha_site_key: null,
+      faulty_models: [],
+      error_message: null,
+      updated_at: "2024-01-14T10:00:00Z",
+      github_app_slug: null,
+    });
+
+    renderHomeScreen();
+
+    await screen.findByTestId("home-screen");
+
+    const ctaLink = await screen.findByRole("link", { name: "CTA$LEARN_MORE" });
+    expect(ctaLink).toHaveAttribute("href", "https://openhands.dev/enterprise/");
+  });
+
+  it("should not show HomepageCTA in OSS mode", async () => {
+    useIsAuthedMock.mockReturnValue({
+      data: true,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    useConfigMock.mockReturnValue({
+      data: { app_mode: "oss", feature_flags: DEFAULT_FEATURE_FLAGS },
+      isLoading: false,
+    });
+
+    getConfigSpy.mockResolvedValue({
+      app_mode: "oss",
+      posthog_client_key: "test-posthog-key",
+      providers_configured: ["github"],
+      auth_url: "https://auth.example.com",
+      feature_flags: DEFAULT_FEATURE_FLAGS,
+      maintenance_start_time: null,
+      recaptcha_site_key: null,
+      faulty_models: [],
+      error_message: null,
+      updated_at: "2024-01-14T10:00:00Z",
+      github_app_slug: null,
+    });
+
+    renderHomeScreen();
+
+    await screen.findByTestId("home-screen");
+
+    expect(screen.queryByText("CTA$ENTERPRISE_TITLE")).not.toBeInTheDocument();
+  });
+});

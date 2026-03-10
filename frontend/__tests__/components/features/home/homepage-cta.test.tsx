@@ -44,7 +44,9 @@ describe("HomepageCTA", () => {
   describe("rendering", () => {
     it("renders the enterprise title", () => {
       renderHomepageCTA();
-      expect(screen.getByText("Get OpenHands for Enterprise")).toBeInTheDocument();
+      expect(
+        screen.getByText("Get OpenHands for Enterprise"),
+      ).toBeInTheDocument();
     });
 
     it("renders the enterprise description", () => {
@@ -54,9 +56,13 @@ describe("HomepageCTA", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders the Learn More button", () => {
+    it("renders the Learn More button inside a link", () => {
       renderHomepageCTA();
-      expect(screen.getByText("Learn More")).toBeInTheDocument();
+      const link = screen.getByRole("link", { name: "Learn More" });
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute("href", "https://openhands.dev/enterprise/");
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noopener noreferrer");
     });
 
     it("renders the close button with correct aria-label", () => {
@@ -89,7 +95,7 @@ describe("HomepageCTA", () => {
     it("calls both setCTADismissed and setShouldShowCTA in order", async () => {
       const user = userEvent.setup();
       const callOrder: string[] = [];
-      
+
       vi.mocked(setCTADismissed).mockImplementation(() => {
         callOrder.push("setCTADismissed");
       });
@@ -113,11 +119,12 @@ describe("HomepageCTA", () => {
       expect(closeButton).not.toHaveAttribute("tabindex", "-1");
     });
 
-    it("Learn More button is a button element", () => {
+    it("Learn More link contains a button for styling", () => {
       renderHomepageCTA();
-      const learnMoreButton = screen.getByRole("button", { name: "Learn More" });
-      expect(learnMoreButton).toBeInTheDocument();
-      expect(learnMoreButton.tagName).toBe("BUTTON");
+      const link = screen.getByRole("link", { name: "Learn More" });
+      const button = link.querySelector("button");
+      expect(button).toBeInTheDocument();
+      expect(button).toHaveTextContent("Learn More");
     });
   });
 });

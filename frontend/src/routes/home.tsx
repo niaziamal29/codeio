@@ -8,10 +8,12 @@ import { NewConversation } from "#/components/features/home/new-conversation/new
 import { RecentConversations } from "#/components/features/home/recent-conversations/recent-conversations";
 import { HomepageCTA } from "#/components/features/home/homepage-cta";
 import { isCTADismissed } from "#/utils/session-storage";
+import { useConfig } from "#/hooks/query/use-config";
 
 <PrefetchPageLinks page="/conversations/:conversationId" />;
 
 function HomeScreen() {
+  const { data: config } = useConfig();
   const [selectedRepo, setSelectedRepo] = React.useState<GitRepository | null>(
     null,
   );
@@ -19,6 +21,8 @@ function HomeScreen() {
   const [shouldShowCTA, setShouldShowCTA] = React.useState(
     () => !isCTADismissed("homepage"),
   );
+
+  const isSaasMode = config?.app_mode === "saas";
 
   return (
     <div
@@ -47,7 +51,7 @@ function HomeScreen() {
         </div>
       </div>
 
-      {shouldShowCTA && (
+      {isSaasMode && shouldShowCTA && (
         <div className="mt-auto ml-auto p-6">
           <HomepageCTA setShouldShowCTA={setShouldShowCTA} />
         </div>
