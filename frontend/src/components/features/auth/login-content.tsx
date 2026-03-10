@@ -271,7 +271,7 @@ export function LoginContent({
         <TermsAndPrivacyNotice className="max-w-[320px] text-[#A3A3A3]" />
       </div>
 
-      <LoginCTA />
+      {appMode === "saas" && <LoginCTA />}
     </div>
   );
 }

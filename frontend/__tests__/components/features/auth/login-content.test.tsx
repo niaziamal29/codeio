@@ -205,6 +205,48 @@ describe("LoginContent", () => {
     expect(screen.getByTestId("terms-and-privacy-notice")).toBeInTheDocument();
   });
 
+  it("should display the enterprise LoginCTA component when appMode is saas", () => {
+    render(
+      <MemoryRouter>
+        <LoginContent
+          githubAuthUrl="https://github.com/oauth/authorize"
+          appMode="saas"
+          providersConfigured={["github"]}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId("login-cta")).toBeInTheDocument();
+  });
+
+  it("should not display the enterprise LoginCTA component when appMode is oss", () => {
+    render(
+      <MemoryRouter>
+        <LoginContent
+          githubAuthUrl="https://github.com/oauth/authorize"
+          appMode="oss"
+          providersConfigured={["github"]}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByTestId("login-cta")).not.toBeInTheDocument();
+  });
+
+  it("should not display the enterprise LoginCTA component when appMode is null", () => {
+    render(
+      <MemoryRouter>
+        <LoginContent
+          githubAuthUrl="https://github.com/oauth/authorize"
+          appMode={null}
+          providersConfigured={["github"]}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByTestId("login-cta")).not.toBeInTheDocument();
+  });
+
   it("should display invitation pending message when hasInvitation is true", () => {
     render(
       <MemoryRouter>
