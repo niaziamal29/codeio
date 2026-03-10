@@ -23,18 +23,14 @@ export function HomepageCTA({ setShouldShowCTA }: HomepageCTAProps) {
 
   return (
     <Card
-      border="none"
-      className={cn(
-        "w-[320px] h-[222px] rounded-2xl border border-[#24242499] bg-black relative",
-        "bg-[radial-gradient(85.36%_123.38%_at_50%_0%,rgba(255,255,255,0.14)_0%,rgba(0,0,0,0)_100%)]",
-        "shadow-[0px_4px_6px_-4px_#0000001A,0px_10px_15px_-3px_#0000001A]",
-      )}
+      variant="dark"
+      className={cn("w-full max-w-[320px] cta-card-gradient")}
     >
       <button
         type="button"
         onClick={handleClose}
         className={cn(
-          "absolute top-[13px] right-[13px] size-7 rounded-full",
+          "absolute top-3 right-3 size-7 rounded-full",
           "border border-[#242424] bg-[#0A0A0A]",
           "flex items-center justify-center",
           "text-white/60 hover:text-white cursor-pointer",
@@ -45,13 +41,13 @@ export function HomepageCTA({ setShouldShowCTA }: HomepageCTAProps) {
         <CloseIcon width={16} height={16} />
       </button>
 
-      <div className="w-[270px] h-[180px] p-[21px_25px_0] flex flex-col gap-4">
-        <div className="w-[270px] flex flex-col gap-2">
-          <CardTitle className="font-inter font-semibold text-xl leading-7 tracking-normal max-w-[186px]">
+      <div className="p-5 pr-12 flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <CardTitle className="font-inter font-semibold text-xl leading-7 tracking-normal">
             {t(I18nKey.CTA$ENTERPRISE_TITLE)}
           </CardTitle>
 
-          <Typography.Text className="font-inter font-normal text-sm leading-5 tracking-normal text-white/60 max-w-[270px] max-h-[60px]">
+          <Typography.Text className="font-inter font-normal text-sm leading-5 tracking-normal text-white/60">
             {t(I18nKey.CTA$ENTERPRISE_DESCRIPTION)}
           </Typography.Text>
         </div>

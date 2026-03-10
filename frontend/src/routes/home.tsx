@@ -52,7 +52,7 @@ function HomeScreen() {
       </div>
 
       {isSaasMode && shouldShowCTA && (
-        <div className="mt-auto ml-auto p-6">
+        <div className="mt-auto p-4 flex justify-center md:justify-end md:p-6">
           <HomepageCTA setShouldShowCTA={setShouldShowCTA} />
         </div>
       )}
