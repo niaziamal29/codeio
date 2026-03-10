@@ -160,7 +160,7 @@ export function LoginContent({
     showBitbucket;
 
   return (
-    <div className="flex flex-row items-stretch gap-8">
+    <div className="flex flex-row items-stretch gap-[24px] h-full items-stretch">
       <div
         className="flex flex-col items-center w-full gap-12.5"
         data-testid="login-content"
