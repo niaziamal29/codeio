@@ -59,7 +59,7 @@ export function AccountSettingsContextMenu({
       testId="account-settings-context-menu"
       ref={ref}
       alignment="right"
-      className="mt-0 md:right-full md:left-full md:bottom-0 ml-0 w-fit z-[9999]"
+      className="mt-0 top-full md:top-auto md:right-full md:left-full md:bottom-0 ml-0 w-fit z-[9999]"
     >
       {showAddTeamMembers && (
         <ContextMenuListItem
