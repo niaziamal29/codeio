@@ -3,7 +3,7 @@ import json
 import uuid
 import warnings
 from datetime import datetime, timezone
-from typing import Annotated, Literal, Optional, cast
+from typing import Annotated, Optional, cast
 from urllib.parse import quote, urlencode
 from uuid import UUID as parse_uuid
 
@@ -26,7 +26,7 @@ from server.auth.user.user_authorizer import (
     depends_user_authorizer,
 )
 from server.config import sign_token
-from server.constants import IS_FEATURE_ENV
+from server.constants import IS_FEATURE_ENV, IS_LOCAL_ENV
 from server.routes.event_webhook import _get_session_api_key, _get_user_id
 from server.services.org_invitation_service import (
     EmailMismatchError,
@@ -36,13 +36,13 @@ from server.services.org_invitation_service import (
     UserAlreadyMemberError,
 )
 from server.utils.rate_limit_utils import check_rate_limit_by_user_id
+from server.utils.url_utils import get_cookie_domain, get_cookie_samesite, get_web_url
 from sqlalchemy import select
 from storage.database import a_session_maker
 from storage.user import User
 from storage.user_store import UserStore
 
 from openhands.analytics import get_analytics_service
-from openhands.app_server.config import get_global_config
 from openhands.core.logger import openhands_logger as logger
 from openhands.integrations.provider import ProviderHandler
 from openhands.integrations.service_types import ProviderType, TokenResponse
@@ -77,7 +77,7 @@ def set_response_cookie(
     signed_token = sign_token(cookie_data, config.jwt_secret.get_secret_value())  # type: ignore
 
     # Set secure cookie with signed token
-    domain = get_cookie_domain(request)
+    domain = get_cookie_domain()
     if domain:
         response.set_cookie(
             key='keycloak_auth',
@@ -85,7 +85,7 @@ def set_response_cookie(
             domain=domain,
             httponly=True,
             secure=secure,
-            samesite=get_cookie_samesite(request),
+            samesite=get_cookie_samesite(),
         )
     else:
         response.set_cookie(
@@ -93,28 +93,8 @@ def set_response_cookie(
             value=signed_token,
             httponly=True,
             secure=secure,
-            samesite=get_cookie_samesite(request),
+            samesite=get_cookie_samesite(),
         )
-
-
-def get_cookie_domain(request: Request) -> str | None:
-    # for now just use the full hostname except for staging stacks.
-    return (
-        None
-        if not request.url.hostname
-        or request.url.hostname.endswith('staging.all-hands.dev')
-        else request.url.hostname
-    )
-
-
-def get_cookie_samesite(request: Request) -> Literal['lax', 'strict']:
-    # for localhost and feature/staging stacks we set it to 'lax' as the cookie domain won't allow 'strict'
-    return (
-        'lax'
-        if request.url.hostname == 'localhost'
-        or (request.url.hostname or '').endswith('staging.all-hands.dev')
-        else 'strict'
-    )
 
 
 def _extract_oauth_state(state: str | None) -> tuple[str, str | None, str | None]:
@@ -138,19 +118,6 @@ def _extract_oauth_state(state: str | None) -> tuple[str, str | None, str | None
     except Exception:
         # Old format - state is just the redirect URL
         return state, None, None
-
-
-# Keep alias for backward compatibility
-def _extract_recaptcha_state(state: str | None) -> tuple[str, str | None]:
-    """Extract redirect URL and reCAPTCHA token from OAuth state.
-
-    Deprecated: Use _extract_oauth_state instead.
-
-    Returns:
-        Tuple of (redirect_url, recaptcha_token). Token may be None.
-    """
-    redirect_url, recaptcha_token, _ = _extract_oauth_state(state)
-    return redirect_url, recaptcha_token
 
 
 async def _get_user_orgs_with_data(user_id: str, org_member_ids: list) -> list:
@@ -180,6 +147,7 @@ async def _get_user_orgs_with_data(user_id: str, org_member_ids: list) -> list:
                 extra={'user_id': user_id, 'org_id': str(org_id)},
             )
     return orgs
+
 
 
 @oauth_router.get('/keycloak/callback')
@@ -212,10 +180,7 @@ async def keycloak_callback(
             detail='Missing code in request params',
         )
 
-    web_url = get_global_config().web_url
-    if not web_url:
-        scheme = 'http' if request.url.hostname == 'localhost' else 'https'
-        web_url = f'{scheme}://{request.url.netloc}'
+    web_url = get_web_url(request)
     redirect_uri = web_url + request.url.path
 
     (
@@ -374,7 +339,9 @@ async def keycloak_callback(
             else:
                 raise
 
-        verification_redirect_url = f'{request.base_url}login?email_verification_required=true&user_id={user_id}'
+        verification_redirect_url = (
+            f'{web_url}/login?email_verification_required=true&user_id={user_id}'
+        )
         if rate_limited:
             verification_redirect_url = f'{verification_redirect_url}&rate_limited=true'
 
@@ -567,9 +534,7 @@ async def keycloak_callback(
     # If the user hasn't accepted the TOS, redirect to the TOS page
     if not has_accepted_tos:
         encoded_redirect_url = quote(redirect_url, safe='')
-        tos_redirect_url = (
-            f'{request.base_url}accept-tos?redirect_url={encoded_redirect_url}'
-        )
+        tos_redirect_url = f'{web_url}/accept-tos?redirect_url={encoded_redirect_url}'
         if invitation_token:
             tos_redirect_url = f'{tos_redirect_url}&invitation_success=true'
         response = RedirectResponse(tos_redirect_url, status_code=302)
@@ -601,10 +566,9 @@ async def keycloak_offline_callback(code: str, state: str, request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             content={'error': 'Missing code in request params'},
         )
-    scheme = 'https'
-    if request.url.hostname == 'localhost':
-        scheme = 'http'
-    redirect_uri = f'{scheme}://{request.url.netloc}{request.url.path}'
+
+    web_url = get_web_url(request)
+    redirect_uri = web_url + request.url.path
     logger.debug(f'code: {code}, redirect_uri: {redirect_uri}')
 
     (
@@ -626,15 +590,14 @@ async def keycloak_offline_callback(code: str, state: str, request: Request):
     )
 
     redirect_url, _, _ = _extract_oauth_state(state)
-    return RedirectResponse(
-        redirect_url if redirect_url else request.base_url, status_code=302
-    )
+    return RedirectResponse(redirect_url if redirect_url else web_url, status_code=302)
 
 
 @oauth_router.get('/github/callback')
 async def github_dummy_callback(request: Request):
     """Callback for GitHub that just forwards the user to the app base URL."""
-    return RedirectResponse(request.base_url, status_code=302)
+    web_url = get_web_url(request)
+    return RedirectResponse(web_url, status_code=302)
 
 
 @api_router.post('/authenticate')
@@ -656,8 +619,8 @@ async def authenticate(request: Request):
         if keycloak_auth_cookie:
             response.delete_cookie(
                 key='keycloak_auth',
-                domain=get_cookie_domain(request),
-                samesite=get_cookie_samesite(request),
+                domain=get_cookie_domain(),
+                samesite=get_cookie_samesite(),
             )
 
         return response
@@ -681,7 +644,8 @@ async def accept_tos(request: Request):
 
     # Get redirect URL from request body
     body = await request.json()
-    redirect_url = body.get('redirect_url', str(request.base_url))
+    web_url = get_web_url(request)
+    redirect_url = body.get('redirect_url', str(web_url))
 
     # Update user settings with TOS acceptance
     accepted_tos: datetime = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -711,7 +675,7 @@ async def accept_tos(request: Request):
         response=response,
         keycloak_access_token=access_token.get_secret_value(),
         keycloak_refresh_token=refresh_token.get_secret_value(),
-        secure=False if request.url.hostname == 'localhost' else True,
+        secure=not IS_LOCAL_ENV,
         accepted_tos=True,
     )
     return response
@@ -728,8 +692,8 @@ async def logout(request: Request):
     # Always delete the cookie regardless of what happens
     response.delete_cookie(
         key='keycloak_auth',
-        domain=get_cookie_domain(request),
-        samesite=get_cookie_samesite(request),
+        domain=get_cookie_domain(),
+        samesite=get_cookie_samesite(),
     )
 
     # Try to properly logout from Keycloak, but don't fail if it doesn't work
