@@ -43,10 +43,10 @@ describe("session-storage CTA utilities", () => {
   describe("storage key format", () => {
     it("uses the correct key format: {location}-cta-dismissed", () => {
       setCTADismissed("homepage");
-      
+
       // Verify key exists with correct format
       expect(sessionStorage.getItem("homepage-cta-dismissed")).toBe("true");
-      
+
       // Verify other keys don't exist
       expect(sessionStorage.getItem("cta-dismissed")).toBeNull();
       expect(sessionStorage.getItem("homepage")).toBeNull();
@@ -56,7 +56,7 @@ describe("session-storage CTA utilities", () => {
   describe("persistence within session", () => {
     it("dismissed state persists across multiple reads", () => {
       setCTADismissed("homepage");
-      
+
       expect(isCTADismissed("homepage")).toBe(true);
       expect(isCTADismissed("homepage")).toBe(true);
       expect(isCTADismissed("homepage")).toBe(true);
@@ -65,7 +65,7 @@ describe("session-storage CTA utilities", () => {
     it("different locations are independent", () => {
       // Note: This test documents expected behavior when context-menu is added
       setCTADismissed("homepage");
-      
+
       expect(isCTADismissed("homepage")).toBe(true);
       // Other locations would be independent when added to CTALocation type
     });
