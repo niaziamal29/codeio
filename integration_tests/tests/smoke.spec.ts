@@ -100,6 +100,10 @@ test.describe("Smoke Tests @smoke", () => {
     await expect(conversationPage.chatBox).toBeVisible();
     await expect(conversationPage.chatInput).toBeVisible();
 
+    // Wait for agent to be ready by checking status text shows "Waiting for task"
+    const agentStatusText = page.getByTestId("agent-status-text");
+    await expect(agentStatusText).toHaveText("Waiting for task", { timeout: 90_000 });
+
     // Take screenshot before sending message
     await page.screenshot({ path: "test-results/screenshots/conversation-ready.png" });
   });
