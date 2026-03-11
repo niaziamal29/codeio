@@ -136,22 +136,11 @@ test.describe("Smoke Tests @smoke", () => {
   });
 
   test("should be able to use Tavily search and get accurate response", async ({ page }) => {
-    // Navigate to home page and start a new conversation
+    // Navigate to home page
     await homePage.goto();
 
-    if (TEST_REPO_URL) {
-      try {
-        await homePage.selectRepository(TEST_REPO_URL);
-      } catch {
-        // Repository selection might not be required
-      }
-      await homePage.startNewConversation('repo-launch-button');
-    } else {
-      await homePage.startNewConversation('launch-new-conversation-button');
-    }
-
-    // Wait for conversation page to load
-    await page.waitForTimeout(2000);
+    // Click on the first conversation in the recent conversations list
+    await homePage.clickFirstConversation();
 
     // Initialize conversation page
     conversationPage = new ConversationPage(page);
