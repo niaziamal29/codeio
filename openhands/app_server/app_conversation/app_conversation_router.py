@@ -35,6 +35,7 @@ from openhands.app_server.app_conversation.app_conversation_service import (
 )
 from openhands.app_server.app_conversation.app_conversation_service_base import (
     AppConversationServiceBase,
+    get_project_dir,
 )
 from openhands.app_server.app_conversation.app_conversation_start_task_service import (
     AppConversationStartTaskService,
@@ -594,11 +595,14 @@ async def get_conversation_skills(
         # Prefer the shared loader to avoid duplication; otherwise return empty list.
         all_skills: list = []
         if isinstance(app_conversation_service, AppConversationServiceBase):
+            project_dir = get_project_dir(
+                sandbox_spec.working_dir, conversation.selected_repository
+            )
             all_skills = await app_conversation_service.load_and_merge_all_skills(
-                ctx.sandbox,
-                ctx.conversation.selected_repository,
-                ctx.sandbox_spec.working_dir,
-                ctx.agent_server_url,
+                sandbox,
+                conversation.selected_repository,
+                project_dir,
+                agent_server_url,
             )
 
         logger.info(
