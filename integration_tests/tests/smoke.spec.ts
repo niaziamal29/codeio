@@ -69,7 +69,7 @@ test.describe("Smoke Tests @smoke", () => {
     await expect(homePage.accountSettingsMenu).toBeVisible();
   });
 
-  test("should be able to start a conversation and interact with agent @critical", async ({ page }) => {
+  test("should be able to start a conversation, send a prompt, and receive response @critical", async ({ page }) => {
     // Navigate to home
     await homePage.goto();
 
@@ -94,7 +94,7 @@ test.describe("Smoke Tests @smoke", () => {
     conversationPage = new ConversationPage(page);
 
     // Wait for the agent to be ready
-    await conversationPage.waitForConversationReady(90_000);
+    await conversationPage.waitForConversationReady();
 
     // Verify chat interface is available
     await expect(conversationPage.chatBox).toBeVisible();
@@ -102,29 +102,6 @@ test.describe("Smoke Tests @smoke", () => {
 
     // Take screenshot before sending message
     await page.screenshot({ path: "test-results/screenshots/conversation-ready.png" });
-  });
-
-  test("should be able to send a prompt and receive response without errors @critical", async ({ page }) => {
-    // This test continues from a fresh conversation
-    await homePage.goto();
-
-    // Start a new conversation
-    if (TEST_REPO_URL) {
-      try {
-        await homePage.selectRepository(TEST_REPO_URL);
-      } catch {
-        // Repository selection might not be required
-      }
-      await homePage.startNewConversation('repo-launch-button');
-    } else {
-      await homePage.startNewConversation();
-    }
-    await page.waitForTimeout(2000);
-
-    conversationPage = new ConversationPage(page);
-
-    // Wait for agent to be ready
-    await conversationPage.waitForConversationReady(90_000);
 
     // Execute the test prompt
     console.log(`Sending prompt: "${TEST_PROMPT}"`);
