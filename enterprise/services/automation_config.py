@@ -7,22 +7,9 @@ and validates it against a Pydantic schema.
 from __future__ import annotations
 
 import ast
-import re
 
+from croniter import croniter
 from pydantic import BaseModel, field_validator, model_validator
-
-# 5-field cron pattern:  min hour dom month dow
-# Each field: *, */N, N, N-N, N-N/N, or comma-separated combinations
-_CRON_FIELD = r'(\*(/[0-9]{1,2})?|[0-9]{1,2}(-[0-9]{1,2})?(/[0-9]{1,2})?(,[0-9]{1,2}(-[0-9]{1,2})?(/[0-9]{1,2})?)*)'
-_CRON_RE = re.compile(
-    r'^'
-    + _CRON_FIELD + r'\s+'
-    + _CRON_FIELD + r'\s+'
-    + _CRON_FIELD + r'\s+'
-    + _CRON_FIELD + r'\s+'
-    + _CRON_FIELD
-    + r'$'
-)
 
 
 def extract_config(source: str) -> dict:
@@ -80,8 +67,8 @@ class CronTriggerModel(BaseModel):
     @classmethod
     def validate_schedule(cls, v: str) -> str:
         v = v.strip()
-        if not _CRON_RE.match(v):
-            raise ValueError(f'Invalid 5-field cron expression: {v!r}')
+        if not croniter.is_valid(v):
+            raise ValueError(f'Invalid cron expression: {v!r}')
         return v
 
 

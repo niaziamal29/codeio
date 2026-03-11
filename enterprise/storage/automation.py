@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -11,6 +10,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -43,8 +43,8 @@ class Automation(Base):  # type: ignore
     )
     updated_at = Column(
         DateTime(timezone=True),
-        server_default=text('CURRENT_TIMESTAMP'),
-        onupdate=datetime.now,
+        server_default=func.now(),
+        onupdate=func.now(),
         nullable=False,
     )
 
@@ -69,7 +69,7 @@ class AutomationRun(Base):  # type: ignore
         nullable=False,
     )
     event_id = Column(
-        Integer,
+        BigInteger,
         ForeignKey('automation_events.id'),
         nullable=True,
     )

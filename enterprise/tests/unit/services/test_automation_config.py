@@ -140,7 +140,7 @@ class TestValidateConfig:
             'name': 'Bad Cron',
             'triggers': {'cron': {'schedule': 'not-a-cron'}},
         }
-        with pytest.raises(ValidationError, match='Invalid 5-field cron'):
+        with pytest.raises(ValidationError, match='Invalid cron expression'):
             validate_config(cfg)
 
     def test_invalid_cron_too_few_fields(self):
@@ -148,7 +148,7 @@ class TestValidateConfig:
             'name': 'Short Cron',
             'triggers': {'cron': {'schedule': '* *'}},
         }
-        with pytest.raises(ValidationError, match='Invalid 5-field cron'):
+        with pytest.raises(ValidationError, match='Invalid cron expression'):
             validate_config(cfg)
 
     def test_name_at_boundary_200(self):

@@ -22,7 +22,7 @@ def upgrade() -> None:
     # --- automation_events (must come first, referenced by automation_runs) ---
     op.create_table(
         'automation_events',
-        sa.Column('id', sa.Integer(), sa.Identity(), nullable=False, primary_key=True),
+        sa.Column('id', sa.BigInteger(), sa.Identity(), nullable=False, primary_key=True),
         sa.Column('source_type', sa.String(), nullable=False),
         sa.Column('payload', sa.dialects.postgresql.JSONB(), nullable=False),
         sa.Column('metadata', sa.dialects.postgresql.JSONB(), nullable=True),
@@ -42,7 +42,7 @@ def upgrade() -> None:
     op.create_index(
         'ix_automation_events_new',
         'automation_events',
-        ['status'],
+        ['created_at'],
         postgresql_where=sa.text("status = 'NEW'"),
     )
 
@@ -88,7 +88,7 @@ def upgrade() -> None:
         ),
         sa.Column(
             'event_id',
-            sa.Integer(),
+            sa.BigInteger(),
             sa.ForeignKey('automation_events.id'),
             nullable=True,
         ),

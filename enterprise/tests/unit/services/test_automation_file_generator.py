@@ -74,3 +74,18 @@ class TestGenerateAutomationFile:
         ast.parse(source)
         cfg = extract_config(source)
         assert cfg['name'] == 'Special Chars'
+
+    def test_triple_quotes_in_prompt(self):
+        """Prompts containing triple quotes must not break the generated file."""
+        source = generate_automation_file(
+            name='Triple Quote Test',
+            schedule='0 0 * * *',
+            timezone='UTC',
+            prompt='Use """triple quotes""" and \'\'\'single triples\'\'\' safely',
+        )
+        # Must parse without error
+        ast.parse(source)
+        cfg = extract_config(source)
+        assert cfg['name'] == 'Triple Quote Test'
+        # The prompt must survive round-trip
+        assert '"""triple quotes"""' in source or "triple quotes" in source

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import textwrap
+
 
 def generate_automation_file(
     name: str,
@@ -17,35 +19,39 @@ def generate_automation_file(
     through :func:`services.automation_config.extract_config` and
     :func:`services.automation_config.validate_config`.
     """
-    # Escape backslashes and triple-quotes in user strings
-    safe_name = name.replace('\\', '\\\\').replace('"', '\\"')
-    safe_prompt = prompt.replace('\\', '\\\\').replace('"', '\\"')
-    safe_schedule = schedule.replace('\\', '\\\\').replace('"', '\\"')
-    safe_timezone = timezone.replace('\\', '\\\\').replace('"', '\\"')
+    # Use repr() for safe string escaping — handles backslashes, quotes, etc.
+    r_name = repr(name)
+    r_schedule = repr(schedule)
+    r_timezone = repr(timezone)
+    r_prompt = repr(prompt)
 
-    return f'''"""{safe_name} — auto-generated automation."""
+    # Build a safe docstring — strip quotes from repr and re-escape for docstring
+    safe_docstring_name = name.replace('\\', '\\\\').replace('"', '\\"')
 
-__config__ = {{
-    "name": "{safe_name}",
-    "triggers": {{
-        "cron": {{
-            "schedule": "{safe_schedule}",
-            "timezone": "{safe_timezone}",
+    return textwrap.dedent(f'''\
+        """{safe_docstring_name} — auto-generated automation."""
+
+        __config__ = {{
+            "name": {r_name},
+            "triggers": {{
+                "cron": {{
+                    "schedule": {r_schedule},
+                    "timezone": {r_timezone},
+                }}
+            }},
         }}
-    }},
-}}
 
-import os
-from openhands.sdk import LLM, Conversation
-from openhands.tools.preset.default import get_default_agent
+        import os
+        from openhands.sdk import LLM, Conversation
+        from openhands.tools.preset.default import get_default_agent
 
-llm = LLM(
-    model=os.getenv("LLM_MODEL", "anthropic/claude-sonnet-4-5-20250929"),
-    api_key=os.getenv("LLM_API_KEY"),
-    base_url=os.getenv("LLM_BASE_URL"),
-)
-agent = get_default_agent(llm=llm, cli_mode=True)
-conversation = Conversation(agent=agent, workspace=os.getcwd())
-conversation.send_message("{safe_prompt}")
-conversation.run()
-'''
+        llm = LLM(
+            model=os.getenv("LLM_MODEL", "anthropic/claude-sonnet-4-5-20250929"),
+            api_key=os.getenv("LLM_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL"),
+        )
+        agent = get_default_agent(llm=llm, cli_mode=True)
+        conversation = Conversation(agent=agent, workspace=os.getcwd())
+        conversation.send_message({r_prompt})
+        conversation.run()
+    ''')

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, DateTime, Index, Integer, String, Text, UniqueConstraint, text
+from sqlalchemy import BigInteger, Column, DateTime, Index, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import JSON
 from storage.base import Base
@@ -13,7 +13,7 @@ class AutomationEvent(Base):  # type: ignore
 
     __tablename__ = 'automation_events'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     source_type = Column(String, nullable=False)
     payload = Column(_JsonType, nullable=False)
     metadata_ = Column('metadata', _JsonType, nullable=True)
@@ -31,7 +31,7 @@ class AutomationEvent(Base):  # type: ignore
         UniqueConstraint('dedup_key', name='uq_automation_events_dedup'),
         Index(
             'ix_automation_events_new',
-            'status',
+            'created_at',
             postgresql_where=text("status = 'NEW'"),
         ),
     )
