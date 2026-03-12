@@ -3,6 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { LoginCTA } from "#/components/features/auth/login-cta";
 
+// Mock useTracking hook
+const mockTrackSaasSelfhostedInquiry = vi.fn();
+vi.mock("#/hooks/use-tracking", () => ({
+  useTracking: () => ({
+    trackSaasSelfhostedInquiry: mockTrackSaasSelfhostedInquiry,
+  }),
+}));
+
 describe("LoginCTA", () => {
   const mockWindowOpen = vi.fn();
 
@@ -46,5 +54,19 @@ describe("LoginCTA", () => {
       "_blank",
       "noopener",
     );
+  });
+
+  it("should call trackSaasSelfhostedInquiry with location 'login_page' when Learn More is clicked", async () => {
+    const user = userEvent.setup();
+    render(<LoginCTA />);
+
+    const learnMoreButton = screen.getByRole("button", {
+      name: "CTA$LEARN_MORE",
+    });
+    await user.click(learnMoreButton);
+
+    expect(mockTrackSaasSelfhostedInquiry).toHaveBeenCalledWith({
+      location: "login_page",
+    });
   });
 });
