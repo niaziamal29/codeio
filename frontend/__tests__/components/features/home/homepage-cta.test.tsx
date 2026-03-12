@@ -28,6 +28,14 @@ vi.mock("#/utils/session-storage", () => ({
   setCTADismissed: vi.fn(),
 }));
 
+// Mock useTracking hook
+const mockTrackSaasSelfhostedInquiry = vi.fn();
+vi.mock("#/hooks/use-tracking", () => ({
+  useTracking: () => ({
+    trackSaasSelfhostedInquiry: mockTrackSaasSelfhostedInquiry,
+  }),
+}));
+
 import { setCTADismissed } from "#/utils/session-storage";
 
 describe("HomepageCTA", () => {
@@ -56,13 +64,10 @@ describe("HomepageCTA", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders the Learn More button inside a link", () => {
+    it("renders the Learn More button", () => {
       renderHomepageCTA();
-      const link = screen.getByRole("link", { name: "Learn More" });
-      expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute("href", "https://openhands.dev/enterprise/");
-      expect(link).toHaveAttribute("target", "_blank");
-      expect(link).toHaveAttribute("rel", "noopener noreferrer");
+      const button = screen.getByRole("button", { name: "Learn More" });
+      expect(button).toBeInTheDocument();
     });
 
     it("renders the close button with correct aria-label", () => {
@@ -112,6 +117,37 @@ describe("HomepageCTA", () => {
     });
   });
 
+  describe("Learn More button behavior", () => {
+    it("calls trackSaasSelfhostedInquiry with location 'home_page' when clicked", async () => {
+      const user = userEvent.setup();
+      renderHomepageCTA();
+
+      const learnMoreButton = screen.getByRole("button", { name: "Learn More" });
+      await user.click(learnMoreButton);
+
+      expect(mockTrackSaasSelfhostedInquiry).toHaveBeenCalledWith({
+        location: "home_page",
+      });
+    });
+
+    it("opens enterprise page in new tab when clicked", async () => {
+      const user = userEvent.setup();
+      const mockWindowOpen = vi.spyOn(window, "open").mockImplementation(() => null);
+      renderHomepageCTA();
+
+      const learnMoreButton = screen.getByRole("button", { name: "Learn More" });
+      await user.click(learnMoreButton);
+
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        "https://openhands.dev/enterprise/",
+        "_blank",
+        "noopener",
+      );
+
+      mockWindowOpen.mockRestore();
+    });
+  });
+
   describe("accessibility", () => {
     it("close button is focusable", () => {
       renderHomepageCTA();
@@ -119,12 +155,10 @@ describe("HomepageCTA", () => {
       expect(closeButton).not.toHaveAttribute("tabindex", "-1");
     });
 
-    it("Learn More link contains a button for styling", () => {
+    it("Learn More button is focusable", () => {
       renderHomepageCTA();
-      const link = screen.getByRole("link", { name: "Learn More" });
-      const button = link.querySelector("button");
-      expect(button).toBeInTheDocument();
-      expect(button).toHaveTextContent("Learn More");
+      const learnMoreButton = screen.getByRole("button", { name: "Learn More" });
+      expect(learnMoreButton).not.toHaveAttribute("tabindex", "-1");
     });
   });
 });

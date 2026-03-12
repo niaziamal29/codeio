@@ -7,6 +7,7 @@ import { BrandButton } from "#/components/features/settings/brand-button";
 import { cn } from "#/utils/utils";
 import { I18nKey } from "#/i18n/declaration";
 import { setCTADismissed } from "#/utils/session-storage";
+import { useTracking } from "#/hooks/use-tracking";
 import CloseIcon from "#/icons/close.svg?react";
 
 interface HomepageCTAProps {
@@ -15,17 +16,20 @@ interface HomepageCTAProps {
 
 export function HomepageCTA({ setShouldShowCTA }: HomepageCTAProps) {
   const { t } = useTranslation();
+  const { trackSaasSelfhostedInquiry } = useTracking();
 
   const handleClose = () => {
     setCTADismissed("homepage");
     setShouldShowCTA(false);
   };
 
+  const handleLearnMore = () => {
+    trackSaasSelfhostedInquiry({ location: "home_page" });
+    window.open("https://openhands.dev/enterprise/", "_blank", "noopener");
+  };
+
   return (
-    <Card
-      theme="dark"
-      className={cn("w-full max-w-[320px] cta-card-gradient")}
-    >
+    <Card theme="dark" className={cn("w-full max-w-[320px] cta-card-gradient")}>
       <button
         type="button"
         onClick={handleClose}
@@ -52,19 +56,14 @@ export function HomepageCTA({ setShouldShowCTA }: HomepageCTAProps) {
           </Typography.Text>
         </div>
 
-        <a
-          href="https://openhands.dev/enterprise/"
-          target="_blank"
-          rel="noopener noreferrer"
+        <BrandButton
+          type="button"
+          variant="primary"
+          onClick={handleLearnMore}
+          className="h-10 rounded border border-[#242424] bg-[#050505] px-4 py-2 text-white hover:bg-[#1a1a1a] hover:opacity-100"
         >
-          <BrandButton
-            type="button"
-            variant="primary"
-            className="h-10 rounded border border-[#242424] bg-[#050505] px-4 py-2 text-white hover:bg-[#1a1a1a] hover:opacity-100"
-          >
-            {t(I18nKey.CTA$LEARN_MORE)}
-          </BrandButton>
-        </a>
+          {t(I18nKey.CTA$LEARN_MORE)}
+        </BrandButton>
       </div>
     </Card>
   );
