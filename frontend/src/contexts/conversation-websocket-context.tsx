@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostHog } from "posthog-js/react";
-import { useTranslation } from "react-i18next";
 import { useWebSocket, WebSocketHookOptions } from "#/hooks/use-websocket";
 import { useEventStore } from "#/stores/use-event-store";
 import { useErrorMessageStore } from "#/stores/error-message-store";
@@ -100,8 +99,6 @@ export function ConversationWebSocketProvider({
   const { setExecutionStatus } = useV1ConversationStateStore();
   const { appendInput, appendOutput } = useCommandStore();
   const { trackCreditLimitReached } = useTracking();
-
-  const { t } = useTranslation();
 
   // History loading state - separate per connection
   const [isLoadingHistoryMain, setIsLoadingHistoryMain] = useState(true);
@@ -700,16 +697,10 @@ export function ConversationWebSocketProvider({
           }
         }
       },
-      onClose: (event: CloseEvent) => {
+      onClose: () => {
         setMainConnectionState("CLOSED");
-        // Show error message on unexpected disconnect
-        // Recovery is handled by useSandboxRecovery based on user intent (tab focus, page refresh)
-        // NOT on WebSocket disconnect (server pauses sandboxes after 20 min inactivity)
-        if (event.code !== 1000 && hasConnectedRefMain.current) {
-          setErrorMessage(
-            `${t(I18nKey.STATUS$CONNECTION_LOST)}: ${event.reason || t(I18nKey.STATUS$DISCONNECTED_REFRESH_PAGE)}`,
-          );
-        }
+        // Recovery is handled by useSandboxRecovery on tab focus/page refresh
+        // No error message needed - silent recovery provides better UX
       },
       onError: () => {
         setMainConnectionState("CLOSED");
@@ -773,16 +764,10 @@ export function ConversationWebSocketProvider({
           }
         }
       },
-      onClose: (event: CloseEvent) => {
+      onClose: () => {
         setPlanningConnectionState("CLOSED");
-        // Show error message on unexpected disconnect
-        // Recovery is handled by useSandboxRecovery based on user intent (tab focus, page refresh)
-        // NOT on WebSocket disconnect (server pauses sandboxes after 20 min inactivity)
-        if (event.code !== 1000 && hasConnectedRefPlanning.current) {
-          setErrorMessage(
-            `${t(I18nKey.STATUS$CONNECTION_LOST)}: ${event.reason || t(I18nKey.STATUS$DISCONNECTED_REFRESH_PAGE)}`,
-          );
-        }
+        // Recovery is handled by useSandboxRecovery on tab focus/page refresh
+        // No error message needed - silent recovery provides better UX
       },
       onError: () => {
         setPlanningConnectionState("CLOSED");
