@@ -17,7 +17,7 @@ export function LoginCTA() {
   return (
     <Card
       testId="login-cta"
-      variant="dark"
+      theme="dark"
       className={cn("w-full max-w-80 h-auto flex-col", "cta-card-gradient")}
     >
       <div className={cn("flex flex-col gap-[11px] p-6")}>
