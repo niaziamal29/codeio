@@ -12,7 +12,7 @@ RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
-    apt-get install -y jq gettext git && \
+    apt-get install -y jq gettext && \
     # Apply security updates for packages with available fixes
     apt-get upgrade -y \
         libc-bin \
@@ -30,8 +30,8 @@ RUN /app/.venv/bin/pip install poetry poetry-plugin-export
 # Copy lock files first for better Docker layer caching
 COPY --chown=openhands:openhands enterprise/pyproject.toml enterprise/poetry.lock /tmp/enterprise/
 RUN cd /tmp/enterprise && \
-    # Export only main dependencies (without hashes to support VCS git dependencies)
-    /app/.venv/bin/poetry export --only main --without-hashes -o requirements.txt && \
+    # Export only main dependencies with hashes for supply chain security
+    /app/.venv/bin/poetry export --only main -o requirements.txt && \
     # Remove the local path dependency (openhands-ai is already in base image)
     sed -i '/^-e /d; /openhands-ai/d' requirements.txt && \
     # Install pinned dependencies from lock file
