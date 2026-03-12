@@ -8,13 +8,14 @@ from server.constants import ORG_SETTINGS_VERSION
 from server.verified_models.verified_model_service import (
     StoredVerifiedModel,  # noqa: F401
 )
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
 from sqlalchemy.orm import sessionmaker
+from testcontainers.postgres import PostgresContainer
 
 # Anything not loaded here may not have a table created for it.
 from storage.api_key import ApiKey  # noqa: F401
@@ -57,20 +58,107 @@ def create_keycloak_user_info():
     return _create
 
 
+# ---------------------------------------------------------------------------
+# Session-scoped: one PostgreSQL container per xdist worker (= per process)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope='session')
+def _pg_container():
+    """Start a PostgreSQL container for the test session."""
+    with PostgresContainer('postgres:16-alpine') as pg:
+        yield pg
+
+
+@pytest.fixture(scope='session')
+def _pg_template_db(_pg_container):
+    """Create a template database with all tables via Base.metadata.create_all()."""
+    pg = _pg_container
+    host = pg.get_container_host_ip()
+    port = pg.get_exposed_port(5432)
+    user = pg.username
+    password = pg.password
+    dbname = pg.dbname
+
+    # Connect to the default database and create the template
+    default_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}'
+    default_engine = create_engine(default_url, isolation_level='AUTOCOMMIT')
+    with default_engine.connect() as conn:
+        conn.execute(text('CREATE DATABASE template_test'))
+    default_engine.dispose()
+
+    # Create all tables in the template database
+    template_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/template_test'
+    template_engine = create_engine(template_url)
+    Base.metadata.create_all(template_engine)
+    template_engine.dispose()
+
+    yield {
+        'host': host,
+        'port': port,
+        'user': user,
+        'password': password,
+        'default_dbname': dbname,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Function-scoped: one cloned database per test
+# ---------------------------------------------------------------------------
+
 @pytest.fixture(scope='function')
-def db_path(tmp_path):
-    """Create a unique temp file path for each test."""
-    return str(tmp_path / 'test.db')
+def _test_db(_pg_template_db):
+    """Clone the template database for a single test."""
+    info = _pg_template_db
+    db_name = f'test_{uuid.uuid4().hex[:12]}'
+    default_url = (
+        f"postgresql+psycopg2://{info['user']}:{info['password']}"
+        f"@{info['host']}:{info['port']}/{info['default_dbname']}"
+    )
+
+    default_engine = create_engine(default_url, isolation_level='AUTOCOMMIT')
+    with default_engine.connect() as conn:
+        conn.execute(text(f'CREATE DATABASE "{db_name}" TEMPLATE template_test'))
+    default_engine.dispose()
+
+    yield {**info, 'dbname': db_name}
+
+    # Teardown: terminate connections then drop the test database
+    default_engine = create_engine(default_url, isolation_level='AUTOCOMMIT')
+    with default_engine.connect() as conn:
+        conn.execute(
+            text(
+                f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                f"WHERE datname = '{db_name}' AND pid <> pg_backend_pid()"
+            )
+        )
+        conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
+    default_engine.dispose()
 
 
 @pytest.fixture
-def engine(db_path):
-    """Create a sync engine with tables using file-based DB."""
-    engine = create_engine(
-        f'sqlite:///{db_path}', connect_args={'check_same_thread': False}
+def engine(_test_db):
+    """Create a sync engine pointing at the per-test PostgreSQL database."""
+    info = _test_db
+    url = (
+        f"postgresql+psycopg2://{info['user']}:{info['password']}"
+        f"@{info['host']}:{info['port']}/{info['dbname']}"
     )
-    Base.metadata.create_all(engine)
-    return engine
+    eng = create_engine(url)
+    yield eng
+    eng.dispose()
+
+
+@pytest.fixture
+async def async_engine(_test_db):
+    """Create an async engine pointing at the per-test PostgreSQL database."""
+    info = _test_db
+    url = (
+        f"postgresql+asyncpg://{info['user']}:{info['password']}"
+        f"@{info['host']}:{info['port']}/{info['dbname']}"
+    )
+    eng = create_async_engine(url)
+    yield eng
+    await eng.dispose()
 
 
 @pytest.fixture
@@ -79,33 +167,13 @@ def session_maker(engine):
 
 
 @pytest.fixture
-def async_engine(db_path):
-    """Create an async engine using the SAME file-based database."""
-    async_engine = create_async_engine(
-        f'sqlite+aiosqlite:///{db_path}',
-        connect_args={'check_same_thread': False},
-    )
-
-    async def create_tables():
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-
-    # Run the async function synchronously
-    import asyncio
-
-    asyncio.run(create_tables())
-    return async_engine
-
-
-@pytest.fixture
 async def async_session_maker(async_engine):
     """Create an async session maker bound to the async engine."""
-    async_session_maker = async_sessionmaker(
+    return async_sessionmaker(
         bind=async_engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    return async_session_maker
 
 
 def add_minimal_fixtures(session_maker):

@@ -5,24 +5,9 @@ Test that the models are correctly defined.
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from storage.base import Base
 from storage.org import Org
 from storage.org_member import OrgMember
 from storage.user import User
-
-
-@pytest.fixture
-def engine():
-    engine = create_engine('sqlite:///:memory:')
-    Base.metadata.create_all(engine)
-    return engine
-
-
-@pytest.fixture
-def session_maker(engine):
-    return sessionmaker(bind=engine)
 
 
 def test_user_model(session_maker):
