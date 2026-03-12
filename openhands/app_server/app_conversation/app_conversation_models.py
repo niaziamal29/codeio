@@ -16,6 +16,10 @@ from openhands.sdk.conversation.state import ConversationExecutionStatus
 from openhands.sdk.llm import MetricsSnapshot
 from openhands.sdk.plugin import PluginSource
 from openhands.storage.data_models.conversation_metadata import ConversationTrigger
+from openhands.storage.data_models.settings import SandboxGroupingStrategy
+
+# Re-export SandboxGroupingStrategy for backward compatibility
+__all__ = ['SandboxGroupingStrategy']
 
 
 class AgentType(Enum):
@@ -98,20 +102,6 @@ class AppConversationSortOrder(Enum):
     UPDATED_AT_DESC = 'UPDATED_AT_DESC'
     TITLE = 'TITLE'
     TITLE_DESC = 'TITLE_DESC'
-
-
-class SandboxGroupingStrategy(Enum):
-    """Strategy for grouping conversations within sandboxes."""
-
-    NO_GROUPING = 'NO_GROUPING'  # Default - each conversation gets its own sandbox
-    GROUP_BY_NEWEST = 'GROUP_BY_NEWEST'  # Add to the most recently created sandbox
-    LEAST_RECENTLY_USED = (
-        'LEAST_RECENTLY_USED'  # Add to the least recently used sandbox
-    )
-    FEWEST_CONVERSATIONS = (
-        'FEWEST_CONVERSATIONS'  # Add to sandbox with fewest conversations
-    )
-    ADD_TO_ANY = 'ADD_TO_ANY'  # Add to any available sandbox (first found)
 
 
 class AppConversationInfoPage(BaseModel):

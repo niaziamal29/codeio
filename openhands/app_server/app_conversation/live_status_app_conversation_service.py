@@ -34,7 +34,6 @@ from openhands.app_server.app_conversation.app_conversation_models import (
     AppConversationStartTaskStatus,
     AppConversationUpdateRequest,
     PluginSpec,
-    SandboxGroupingStrategy,
 )
 from openhands.app_server.app_conversation.app_conversation_service import (
     AppConversationService,
@@ -89,6 +88,7 @@ from openhands.sdk.utils.paging import page_iterator
 from openhands.sdk.workspace.remote.async_remote_workspace import AsyncRemoteWorkspace
 from openhands.server.types import AppMode
 from openhands.storage.data_models.conversation_metadata import ConversationTrigger
+from openhands.storage.data_models.settings import SandboxGroupingStrategy
 from openhands.tools.preset.default import (
     get_default_tools,
 )
@@ -135,9 +135,11 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
     access_token_hard_timeout: timedelta | None
     app_mode: str | None = None
     tavily_api_key: str | None = None
-    sandbox_grouping_strategy: SandboxGroupingStrategy = (
-        SandboxGroupingStrategy.NO_GROUPING
-    )
+
+    async def _get_sandbox_grouping_strategy(self) -> SandboxGroupingStrategy:
+        """Get the sandbox grouping strategy from user settings."""
+        user_info = await self.user_context.get_user_info()
+        return user_info.sandbox_grouping_strategy
 
     async def search_app_conversations(
         self,
@@ -260,7 +262,8 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
 
             # Setup working dir based on grouping
             working_dir = sandbox_spec.working_dir
-            if self.sandbox_grouping_strategy != SandboxGroupingStrategy.NO_GROUPING:
+            sandbox_grouping_strategy = await self._get_sandbox_grouping_strategy()
+            if sandbox_grouping_strategy != SandboxGroupingStrategy.NO_GROUPING:
                 working_dir = f'{working_dir}/{conversation_id.hex}'
 
             # Run setup scripts
@@ -511,9 +514,10 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         """
         try:
             user_id = await self.user_context.get_user_id()
+            sandbox_grouping_strategy = await self._get_sandbox_grouping_strategy()
 
             # If no grouping, return None to force creation of a new sandbox
-            if self.sandbox_grouping_strategy == SandboxGroupingStrategy.NO_GROUPING:
+            if sandbox_grouping_strategy == SandboxGroupingStrategy.NO_GROUPING:
                 return None
 
             # Collect all running sandboxes for this user
@@ -539,7 +543,9 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
                 return None
 
             # Apply the grouping strategy
-            return await self._select_sandbox_by_strategy(running_sandboxes)
+            return await self._select_sandbox_by_strategy(
+                running_sandboxes, sandbox_grouping_strategy
+            )
 
         except Exception as e:
             _logger.warning(
@@ -548,35 +554,32 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             return None
 
     async def _select_sandbox_by_strategy(
-        self, running_sandboxes: list[SandboxInfo]
+        self,
+        running_sandboxes: list[SandboxInfo],
+        sandbox_grouping_strategy: SandboxGroupingStrategy,
     ) -> SandboxInfo:
         """Select a sandbox from the list based on the configured grouping strategy.
 
         Args:
             running_sandboxes: List of running sandboxes for the user
+            sandbox_grouping_strategy: The strategy to use for selection
 
         Returns:
             Selected sandbox based on the strategy
         """
-        if self.sandbox_grouping_strategy == SandboxGroupingStrategy.ADD_TO_ANY:
+        if sandbox_grouping_strategy == SandboxGroupingStrategy.ADD_TO_ANY:
             # Return the first available sandbox
             return running_sandboxes[0]
 
-        elif self.sandbox_grouping_strategy == SandboxGroupingStrategy.GROUP_BY_NEWEST:
+        elif sandbox_grouping_strategy == SandboxGroupingStrategy.GROUP_BY_NEWEST:
             # Return the most recently created sandbox
             return max(running_sandboxes, key=lambda s: s.created_at)
 
-        elif (
-            self.sandbox_grouping_strategy
-            == SandboxGroupingStrategy.LEAST_RECENTLY_USED
-        ):
+        elif sandbox_grouping_strategy == SandboxGroupingStrategy.LEAST_RECENTLY_USED:
             # Return the least recently created sandbox (oldest)
             return min(running_sandboxes, key=lambda s: s.created_at)
 
-        elif (
-            self.sandbox_grouping_strategy
-            == SandboxGroupingStrategy.FEWEST_CONVERSATIONS
-        ):
+        elif sandbox_grouping_strategy == SandboxGroupingStrategy.FEWEST_CONVERSATIONS:
             # Count conversations per sandbox and return the one with fewest
             sandbox_conversation_counts = (
                 await self._get_conversation_counts_by_sandbox(
@@ -1764,10 +1767,6 @@ class LiveStatusAppConversationServiceInjector(AppConversationServiceInjector):
         default=None,
         description='The Tavily Search API key to add to MCP integration',
     )
-    sandbox_grouping_strategy: SandboxGroupingStrategy = Field(
-        default=SandboxGroupingStrategy.ADD_TO_ANY,
-        description='Strategy for grouping conversations within sandboxes',
-    )
 
     async def inject(
         self, state: InjectorState, request: Request | None = None
@@ -1850,5 +1849,4 @@ class LiveStatusAppConversationServiceInjector(AppConversationServiceInjector):
                 access_token_hard_timeout=access_token_hard_timeout,
                 app_mode=app_mode,
                 tavily_api_key=tavily_api_key,
-                sandbox_grouping_strategy=self.sandbox_grouping_strategy,
             )

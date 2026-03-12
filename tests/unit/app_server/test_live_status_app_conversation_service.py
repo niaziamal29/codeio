@@ -20,7 +20,6 @@ from openhands.app_server.app_conversation.app_conversation_models import (
     AgentType,
     AppConversationInfo,
     AppConversationStartRequest,
-    SandboxGroupingStrategy,
 )
 from openhands.app_server.app_conversation.live_status_app_conversation_service import (
     PLANNING_AGENT_INSTRUCTION,
@@ -44,6 +43,7 @@ from openhands.sdk.workspace import LocalWorkspace
 from openhands.sdk.workspace.remote.async_remote_workspace import AsyncRemoteWorkspace
 from openhands.server.types import AppMode
 from openhands.storage.data_models.conversation_metadata import ConversationTrigger
+from openhands.storage.data_models.settings import SandboxGroupingStrategy
 
 # Env var used by openhands SDK LLM to skip context-window validation (e.g. for gpt-4 in tests)
 _ALLOW_SHORT_CONTEXT_WINDOWS = 'ALLOW_SHORT_CONTEXT_WINDOWS'
@@ -99,7 +99,6 @@ class TestLiveStatusAppConversationService:
             openhands_provider_base_url='https://provider.example.com',
             access_token_hard_timeout=None,
             app_mode='test',
-            sandbox_grouping_strategy=SandboxGroupingStrategy.ADD_TO_ANY,  # Use ADD_TO_ANY for tests to maintain old behavior
         )
 
         # Mock user info
@@ -108,6 +107,8 @@ class TestLiveStatusAppConversationService:
         self.mock_user.llm_model = 'gpt-4'
         self.mock_user.llm_base_url = 'https://api.openai.com/v1'
         self.mock_user.llm_api_key = 'test_api_key'
+        # Use ADD_TO_ANY for tests to maintain old behavior
+        self.mock_user.sandbox_grouping_strategy = SandboxGroupingStrategy.ADD_TO_ANY
         self.mock_user.confirmation_mode = False
         self.mock_user.search_api_key = None  # Default to None
         self.mock_user.condenser_max_size = None  # Default to None
