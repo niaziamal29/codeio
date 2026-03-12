@@ -1,4 +1,4 @@
-"""Add sandbox_grouping_strategy column to user and org tables.
+"""Add sandbox_grouping_strategy column to user, org, and user_settings tables.
 
 Revision ID: 100
 Revises: 099
@@ -21,8 +21,13 @@ def upgrade() -> None:
         'org',
         sa.Column('sandbox_grouping_strategy', sa.String, nullable=True),
     )
+    op.add_column(
+        'user_settings',
+        sa.Column('sandbox_grouping_strategy', sa.String, nullable=True),
+    )
 
 
 def downgrade() -> None:
+    op.drop_column('user_settings', 'sandbox_grouping_strategy')
     op.drop_column('org', 'sandbox_grouping_strategy')
     op.drop_column('user', 'sandbox_grouping_strategy')
