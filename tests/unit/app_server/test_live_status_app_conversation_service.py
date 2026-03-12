@@ -1094,11 +1094,12 @@ class TestLiveStatusAppConversationService:
 
         workspace = LocalWorkspace(working_dir='/test')
         secrets = {'test': StaticSecret(value='secret')}
+        test_conversation_id = uuid4()
 
         # Act
         result = await self.service._finalize_conversation_request(
             mock_agent,
-            None,
+            test_conversation_id,
             self.mock_user,
             workspace,
             None,
@@ -1111,7 +1112,7 @@ class TestLiveStatusAppConversationService:
 
         # Assert
         assert isinstance(result, StartConversationRequest)
-        assert isinstance(result.conversation_id, UUID)
+        assert result.conversation_id == test_conversation_id
 
     @pytest.mark.asyncio
     async def test_finalize_conversation_request_skills_loading_fails(self):
@@ -2147,6 +2148,7 @@ class TestLiveStatusAppConversationService:
 
         await self.service._build_start_conversation_request_for_user(
             sandbox=self.mock_sandbox,
+            conversation_id=uuid4(),
             initial_message=None,
             system_message_suffix=None,
             git_provider=None,
@@ -2183,6 +2185,7 @@ class TestLiveStatusAppConversationService:
 
         await self.service._build_start_conversation_request_for_user(
             sandbox=self.mock_sandbox,
+            conversation_id=uuid4(),
             initial_message=None,
             system_message_suffix=None,
             git_provider=None,
@@ -2707,11 +2710,12 @@ class TestPluginHandling:
 
         # Act
         await self.service._build_start_conversation_request_for_user(
-            self.mock_sandbox,
-            None,
-            None,
-            None,
-            '/workspace',
+            sandbox=self.mock_sandbox,
+            conversation_id=uuid4(),
+            initial_message=None,
+            system_message_suffix=None,
+            git_provider=None,
+            working_dir='/workspace',
             plugins=plugins,
         )
 
@@ -2735,11 +2739,12 @@ class TestPluginHandling:
 
         # Act
         await self.service._build_start_conversation_request_for_user(
-            self.mock_sandbox,
-            None,
-            None,
-            None,
-            '/workspace',
+            sandbox=self.mock_sandbox,
+            conversation_id=uuid4(),
+            initial_message=None,
+            system_message_suffix=None,
+            git_provider=None,
+            working_dir='/workspace',
         )
 
         # Assert
