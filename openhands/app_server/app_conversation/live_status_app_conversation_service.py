@@ -294,7 +294,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             )
             # Log hook_config to verify it's being passed
             hook_config_in_request = body_json.get('hook_config')
-            _logger.info(
+            _logger.debug(
                 f'Sending StartConversationRequest with hook_config: '
                 f'{hook_config_in_request}'
             )
@@ -1230,7 +1230,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             # (includes repo name when a repo is selected), so we pass
             # it directly without appending the repo name again.
             try:
-                _logger.info(
+                _logger.debug(
                     f'Attempting to load hooks from workspace: '
                     f'project_dir={working_dir}'
                 )
@@ -1238,11 +1238,11 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
                     remote_workspace, working_dir
                 )
                 if hook_config:
-                    _logger.info(
+                    _logger.debug(
                         f'Successfully loaded hooks: {hook_config.model_dump()}'
                     )
                 else:
-                    _logger.info('No hooks found in workspace')
+                    _logger.debug('No hooks found in workspace')
             except Exception as e:
                 _logger.warning(f'Failed to load hooks: {e}', exc_info=True)
                 # Continue without hooks - don't fail conversation startup

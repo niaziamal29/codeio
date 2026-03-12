@@ -698,7 +698,7 @@ async def get_conversation_hooks(
         )
 
         # Load hooks from agent-server
-        logger.info(
+        logger.debug(
             f'Loading hooks for conversation {conversation_id}, '
             f'agent_server_url={ctx.agent_server_url}, '
             f'project_dir={project_dir}'
@@ -753,7 +753,7 @@ async def get_conversation_hooks(
                         )
                     )
 
-        logger.info(
+        logger.debug(
             f'Loaded {len(hooks_response)} hook event types for conversation {conversation_id}'
         )
 

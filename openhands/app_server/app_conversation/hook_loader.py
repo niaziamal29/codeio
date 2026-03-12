@@ -60,7 +60,7 @@ async def load_hooks_from_agent_server(
     Returns:
         HookConfig if hooks.json exists and is valid, None otherwise.
     """
-    _logger.info(
+    _logger.debug(
         f'load_hooks_from_agent_server called: '
         f'agent_server_url={agent_server_url}, project_dir={project_dir}'
     )
@@ -99,7 +99,7 @@ async def load_hooks_from_agent_server(
             _logger.debug('Hooks config is empty')
             return None
 
-        _logger.info(f'Loaded hooks from agent-server for {project_dir}')
+        _logger.debug(f'Loaded hooks from agent-server for {project_dir}')
         return hook_config
 
     except httpx.HTTPStatusError as e:
