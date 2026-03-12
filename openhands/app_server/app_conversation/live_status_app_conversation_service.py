@@ -47,7 +47,6 @@ from openhands.app_server.app_conversation.app_conversation_start_task_service i
     AppConversationStartTaskService,
 )
 from openhands.app_server.app_conversation.hook_loader import (
-    get_project_dir_for_hooks,
     load_hooks_from_agent_server,
 )
 from openhands.app_server.app_conversation.sql_app_conversation_info_service import (
@@ -1140,8 +1139,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
     async def _load_hooks_from_workspace(
         self,
         remote_workspace: AsyncRemoteWorkspace,
-        working_dir: str,
-        selected_repository: str | None = None,
+        project_dir: str,
     ) -> HookConfig | None:
         """Load hooks from .openhands/hooks.json in the remote workspace.
 
@@ -1153,9 +1151,9 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
 
         Args:
             remote_workspace: AsyncRemoteWorkspace for accessing the agent server
-            working_dir: Working directory path in the sandbox
-            selected_repository: Repository name (e.g., 'OpenHands/software-agent-sdk')
-                If provided, hooks will be loaded from {working_dir}/{repo_name}/.openhands/hooks.json
+            project_dir: Project root directory path in the sandbox. This should
+                already be the resolved project directory (e.g.,
+                {working_dir}/{repo_name} when a repo is selected).
 
         Returns:
             HookConfig if hooks.json exists and is valid, None otherwise.
@@ -1171,8 +1169,6 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             ensures that conversation startup is not blocked by hook loading failures.
             Errors are logged as warnings for debugging purposes.
         """
-        project_dir = get_project_dir_for_hooks(working_dir, selected_repository)
-
         return await load_hooks_from_agent_server(
             agent_server_url=remote_workspace.host,
             session_api_key=remote_workspace._headers.get('X-Session-API-Key'),
@@ -1230,13 +1226,16 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
                 # Continue without skills - don't fail conversation startup
 
             # Load hooks from workspace (.openhands/hooks.json)
+            # Note: working_dir is already the resolved project_dir
+            # (includes repo name when a repo is selected), so we pass
+            # it directly without appending the repo name again.
             try:
                 _logger.info(
                     f'Attempting to load hooks from workspace: '
-                    f'working_dir={working_dir}, selected_repository={selected_repository}'
+                    f'project_dir={working_dir}'
                 )
                 hook_config = await self._load_hooks_from_workspace(
-                    remote_workspace, working_dir, selected_repository
+                    remote_workspace, working_dir
                 )
                 if hook_config:
                     _logger.info(

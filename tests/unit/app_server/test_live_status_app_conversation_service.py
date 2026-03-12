@@ -3111,12 +3111,12 @@ class TestLoadHooksFromWorkspace:
         assert result == '/workspace/project'
 
     @pytest.mark.asyncio
-    async def test_load_hooks_from_workspace_with_selected_repository(self):
-        """Test loading hooks when a repository is selected.
+    async def test_load_hooks_from_workspace_with_project_dir(self):
+        """Test loading hooks with a pre-resolved project_dir.
 
-        When a repository is selected, hooks should be loaded from
-        {working_dir}/{repo_name}/.openhands/hooks.json instead of
-        {working_dir}/.openhands/hooks.json.
+        The caller is responsible for computing the project_dir (which
+        already includes the repo name when a repo is selected).
+        _load_hooks_from_workspace should use the project_dir as-is.
         """
         # Arrange
         mock_remote_workspace = Mock(spec=AsyncRemoteWorkspace)
@@ -3140,17 +3140,16 @@ class TestLoadHooksFromWorkspace:
 
         self.mock_httpx_client.post = AsyncMock(return_value=mock_response)
 
-        # Act
+        # Act - project_dir already includes repo name
         result = await self.service._load_hooks_from_workspace(
             mock_remote_workspace,
-            '/workspace/project',
-            selected_repository='OpenHands/software-agent-sdk',
+            '/workspace/project/software-agent-sdk',
         )
 
         # Assert
         assert result is not None
         assert not result.is_empty()
-        # The project_dir should include the repository name
+        # The project_dir should be passed as-is without doubling
         self.mock_httpx_client.post.assert_called_once_with(
             'http://agent-server:8000/api/hooks',
             json={'project_dir': '/workspace/project/software-agent-sdk'},
@@ -3162,8 +3161,8 @@ class TestLoadHooksFromWorkspace:
         )
 
     @pytest.mark.asyncio
-    async def test_load_hooks_from_workspace_without_selected_repository(self):
-        """Test loading hooks without a selected repository uses working_dir directly."""
+    async def test_load_hooks_from_workspace_base_dir(self):
+        """Test loading hooks with a base workspace directory (no repo selected)."""
         # Arrange
         mock_remote_workspace = Mock(spec=AsyncRemoteWorkspace)
         mock_remote_workspace.host = 'http://agent-server:8000'
@@ -3186,16 +3185,14 @@ class TestLoadHooksFromWorkspace:
 
         self.mock_httpx_client.post = AsyncMock(return_value=mock_response)
 
-        # Act - without selected_repository
+        # Act - no repo selected, project_dir is base working_dir
         result = await self.service._load_hooks_from_workspace(
             mock_remote_workspace,
             '/workspace/project',
-            selected_repository=None,
         )
 
         # Assert
         assert result is not None
-        # The project_dir should be just the working_dir
         self.mock_httpx_client.post.assert_called_once_with(
             'http://agent-server:8000/api/hooks',
             json={'project_dir': '/workspace/project'},
