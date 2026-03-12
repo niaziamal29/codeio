@@ -6,11 +6,14 @@ import { BrandButton } from "../settings/brand-button";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import StackedIcon from "#/icons/stacked.svg?react";
+import { useTracking } from "#/hooks/use-tracking";
 
 export function LoginCTA() {
   const { t } = useTranslation();
+  const { trackSaasSelfhostedInquiry } = useTracking();
 
   const handleLearnMore = () => {
+    trackSaasSelfhostedInquiry({ location: "login_page" });
     window.open("https://openhands.dev/enterprise/", "_blank", "noopener");
   };
 
