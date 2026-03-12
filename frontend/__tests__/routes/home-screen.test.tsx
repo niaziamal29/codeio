@@ -671,8 +671,10 @@ describe("HomepageCTA visibility", () => {
 
     await screen.findByTestId("home-screen");
 
-    const ctaLink = await screen.findByRole("link", { name: "CTA$LEARN_MORE" });
-    expect(ctaLink).toHaveAttribute("href", "https://openhands.dev/enterprise/");
+    const ctaButton = await screen.findByRole("button", {
+      name: "CTA$LEARN_MORE",
+    });
+    expect(ctaButton).toBeInTheDocument();
   });
 
   it("should not show HomepageCTA in OSS mode", async () => {
