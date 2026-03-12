@@ -23,7 +23,7 @@ export function HomepageCTA({ setShouldShowCTA }: HomepageCTAProps) {
 
   return (
     <Card
-      variant="dark"
+      theme="dark"
       className={cn("w-full max-w-[320px] cta-card-gradient")}
     >
       <button
