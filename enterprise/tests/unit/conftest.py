@@ -1,3 +1,5 @@
+import json
+import pathlib
 import uuid
 from datetime import datetime
 from uuid import UUID
@@ -16,8 +18,9 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
+from xdist import is_xdist_controller
 
-# Anything not loaded here may not have a table created for it.
+# Models used by add_minimal_fixtures or directly by conftest.
 from storage.api_key import ApiKey  # noqa: F401
 from storage.base import Base
 from storage.billing_session import BillingSession
@@ -37,6 +40,108 @@ from storage.stored_offline_token import StoredOfflineToken
 from storage.stripe_customer import StripeCustomer
 from storage.user import User
 
+
+# ---------------------------------------------------------------------------
+# PostgreSQL container lifecycle — managed by the xdist controller
+# ---------------------------------------------------------------------------
+
+_PG_INFO_FILE = '.pytest_pg_info.json'
+
+
+def _pg_info_path(session):
+    """Return the path to the shared PG connection info file."""
+    return pathlib.Path(session.config.rootpath) / _PG_INFO_FILE
+
+
+def _extract_pg_info(pg):
+    """Extract connection info dict from a running PostgresContainer."""
+    return {
+        'host': pg.get_container_host_ip(),
+        'port': pg.get_exposed_port(5432),
+        'user': pg.username,
+        'password': pg.password,
+        'default_dbname': pg.dbname,
+    }
+
+
+def _import_all_models():
+    """Import every Base subclass so Base.metadata knows about all tables.
+
+    These imports are deliberately kept out of module scope because some
+    transitively load C-extension modules that spawn threads, which makes
+    the process unsafe to fork() (used by pytest --forked).  Importing
+    them here — inside the controller only — avoids that problem.
+    """
+    import importlib
+    import pkgutil
+
+    import storage as _storage_pkg
+
+    for _importer, modname, _ispkg in pkgutil.walk_packages(
+        _storage_pkg.__path__, prefix='storage.'
+    ):
+        try:
+            importlib.import_module(modname)
+        except Exception:
+            pass  # skip modules with unsatisfied dependencies
+
+
+def _create_template_db(info):
+    """Create a template database with all tables via Base.metadata.create_all()."""
+    _import_all_models()
+
+    default_url = (
+        f"postgresql+psycopg2://{info['user']}:{info['password']}"
+        f"@{info['host']}:{info['port']}/{info['default_dbname']}"
+    )
+    default_engine = create_engine(default_url, isolation_level='AUTOCOMMIT')
+    with default_engine.connect() as conn:
+        conn.execute(text('CREATE DATABASE template_test'))
+    default_engine.dispose()
+
+    template_url = (
+        f"postgresql+psycopg2://{info['user']}:{info['password']}"
+        f"@{info['host']}:{info['port']}/template_test"
+    )
+    template_engine = create_engine(template_url)
+    Base.metadata.create_all(template_engine)
+    template_engine.dispose()
+
+
+def pytest_sessionstart(session):
+    """Start the PostgreSQL container on the controller and create the template DB.
+
+    The controller (or non-xdist process) starts the container, creates the
+    template database, and writes connection info to a file.  Workers read the
+    file to discover the shared container.
+    """
+    if is_xdist_controller(session) or not hasattr(session.config, 'workerinput'):
+        # Controller or non-xdist: start container and create template DB
+        pg = PostgresContainer('postgres:16-alpine')
+        pg.start()
+        session.config._pg_container = pg
+        info = _extract_pg_info(pg)
+        _create_template_db(info)
+        _pg_info_path(session).write_text(json.dumps(info))
+        session.config._pg_info = info
+    else:
+        # xdist worker: read connection info written by the controller
+        session.config._pg_info = json.loads(_pg_info_path(session).read_text())
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Stop the PostgreSQL container and clean up the info file."""
+    pg = getattr(session.config, '_pg_container', None)
+    if pg is not None:
+        pg.stop()
+        info_path = _pg_info_path(session)
+        if info_path.exists():
+            info_path.unlink()
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
 
 @pytest.fixture
 def create_keycloak_user_info():
@@ -58,47 +163,10 @@ def create_keycloak_user_info():
     return _create
 
 
-# ---------------------------------------------------------------------------
-# Session-scoped: one PostgreSQL container per xdist worker (= per process)
-# ---------------------------------------------------------------------------
-
 @pytest.fixture(scope='session')
-def _pg_container():
-    """Start a PostgreSQL container for the test session."""
-    with PostgresContainer('postgres:16-alpine') as pg:
-        yield pg
-
-
-@pytest.fixture(scope='session')
-def _pg_template_db(_pg_container):
-    """Create a template database with all tables via Base.metadata.create_all()."""
-    pg = _pg_container
-    host = pg.get_container_host_ip()
-    port = pg.get_exposed_port(5432)
-    user = pg.username
-    password = pg.password
-    dbname = pg.dbname
-
-    # Connect to the default database and create the template
-    default_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}'
-    default_engine = create_engine(default_url, isolation_level='AUTOCOMMIT')
-    with default_engine.connect() as conn:
-        conn.execute(text('CREATE DATABASE template_test'))
-    default_engine.dispose()
-
-    # Create all tables in the template database
-    template_url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/template_test'
-    template_engine = create_engine(template_url)
-    Base.metadata.create_all(template_engine)
-    template_engine.dispose()
-
-    yield {
-        'host': host,
-        'port': port,
-        'user': user,
-        'password': password,
-        'default_dbname': dbname,
-    }
+def _pg_template_db(request):
+    """Return the shared PostgreSQL connection info from config."""
+    return request.config._pg_info
 
 
 # ---------------------------------------------------------------------------
