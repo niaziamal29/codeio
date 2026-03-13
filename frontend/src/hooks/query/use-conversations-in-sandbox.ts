@@ -9,6 +9,7 @@ export const useConversationsInSandbox = (sandboxId: string | null) =>
         ? V1ConversationService.searchConversationsBySandboxId(sandboxId)
         : Promise.resolve([]),
     enabled: !!sandboxId,
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 0, // Always consider data stale for confirmation dialogs
     gcTime: 1000 * 60, // 1 minute
+    refetchOnMount: true, // Always fetch fresh data when modal opens
   });
