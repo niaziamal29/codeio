@@ -2,12 +2,11 @@
 
 Tests the sandbox-scoped endpoints authenticated via X-Session-API-Key:
 - GET /api/v1/sandboxes/{sandbox_id}/settings/llm
-- GET /api/v1/sandboxes/{sandbox_id}/settings/llm-key
 - GET /api/v1/sandboxes/{sandbox_id}/settings/secrets
 - GET /api/v1/sandboxes/{sandbox_id}/settings/secrets/{secret_name}
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -19,7 +18,6 @@ from openhands.app_server.user.sdk_settings_models import (
     SecretNamesResponse,
 )
 from openhands.app_server.user.sdk_settings_router import (
-    get_llm_key,
     get_llm_settings,
     get_secret_value,
     list_secret_names,
@@ -44,22 +42,12 @@ def _make_sandbox_info(
     )
 
 
-def _make_mock_request(
-    sandbox_id: str = SANDBOX_ID,
-    session_api_key: str = 'session-key',
-) -> MagicMock:
-    request = MagicMock()
-    request.base_url = 'http://testserver/'
-    request.headers = {'X-Session-API-Key': session_api_key}
-    return request
-
-
 @pytest.mark.asyncio
 class TestGetLLMSettings:
     """Test suite for GET /sandboxes/{sandbox_id}/settings/llm."""
 
-    async def test_returns_llm_settings_with_lookup_secret(self):
-        """api_key is a LookupSecret dict pointing to /llm-key."""
+    async def test_returns_llm_settings_with_api_key(self):
+        """Returns model, raw api_key, and base_url."""
         user_info = UserInfo(
             id=USER_ID,
             llm_model='anthropic/claude-sonnet-4-20250514',
@@ -67,7 +55,6 @@ class TestGetLLMSettings:
             llm_base_url='https://litellm.example.com',
         )
         sandbox_info = _make_sandbox_info()
-        request = _make_mock_request()
 
         with patch(
             'openhands.app_server.user.sdk_settings_router._get_user_context'
@@ -76,23 +63,12 @@ class TestGetLLMSettings:
             ctx.get_user_info = AsyncMock(return_value=user_info)
             mock_ctx.return_value = ctx
 
-            result = await get_llm_settings(
-                request=request,
-                sandbox_id=SANDBOX_ID,
-                sandbox_info=sandbox_info,
-            )
+            result = await get_llm_settings(sandbox_info=sandbox_info)
 
         assert isinstance(result, LLMSettingsResponse)
         assert result.model == 'anthropic/claude-sonnet-4-20250514'
+        assert result.api_key == 'sk-test-key-123'
         assert result.base_url == 'https://litellm.example.com'
-
-        # api_key should be a LookupSecret dict, NOT the raw key
-        assert result.api_key is not None
-        assert result.api_key['kind'] == 'LookupSecret'
-        assert f'/sandboxes/{SANDBOX_ID}/settings/llm-key' in result.api_key['url']
-        # Session key referenced by env var name, not embedded
-        assert result.api_key['env_headers'] == {'X-Session-API-Key': 'SESSION_API_KEY'}
-        assert 'headers' not in result.api_key
 
     async def test_returns_none_api_key_when_not_configured(self):
         """api_key is None when user has no LLM key configured."""
@@ -102,7 +78,6 @@ class TestGetLLMSettings:
             llm_api_key=None,
         )
         sandbox_info = _make_sandbox_info()
-        request = _make_mock_request()
 
         with patch(
             'openhands.app_server.user.sdk_settings_router._get_user_context'
@@ -111,56 +86,10 @@ class TestGetLLMSettings:
             ctx.get_user_info = AsyncMock(return_value=user_info)
             mock_ctx.return_value = ctx
 
-            result = await get_llm_settings(
-                request=request,
-                sandbox_id=SANDBOX_ID,
-                sandbox_info=sandbox_info,
-            )
+            result = await get_llm_settings(sandbox_info=sandbox_info)
 
         assert result.model == 'gpt-4o'
         assert result.api_key is None
-
-
-@pytest.mark.asyncio
-class TestGetLLMKey:
-    """Test suite for GET /sandboxes/{sandbox_id}/settings/llm-key."""
-
-    async def test_returns_raw_api_key(self):
-        """Raw API key returned as plain text."""
-        user_info = UserInfo(
-            id=USER_ID,
-            llm_api_key=SecretStr('sk-actual-secret-key'),
-        )
-        sandbox_info = _make_sandbox_info()
-
-        with patch(
-            'openhands.app_server.user.sdk_settings_router._get_user_context'
-        ) as mock_ctx:
-            ctx = AsyncMock()
-            ctx.get_user_info = AsyncMock(return_value=user_info)
-            mock_ctx.return_value = ctx
-
-            response = await get_llm_key(sandbox_info=sandbox_info)
-
-        assert response.body == b'sk-actual-secret-key'
-        assert response.media_type == 'text/plain'
-
-    async def test_returns_404_when_no_key(self):
-        """404 when no LLM API key is configured."""
-        user_info = UserInfo(id=USER_ID, llm_api_key=None)
-        sandbox_info = _make_sandbox_info()
-
-        with patch(
-            'openhands.app_server.user.sdk_settings_router._get_user_context'
-        ) as mock_ctx:
-            ctx = AsyncMock()
-            ctx.get_user_info = AsyncMock(return_value=user_info)
-            mock_ctx.return_value = ctx
-
-            with pytest.raises(HTTPException) as exc_info:
-                await get_llm_key(sandbox_info=sandbox_info)
-
-        assert exc_info.value.status_code == 404
 
 
 @pytest.mark.asyncio

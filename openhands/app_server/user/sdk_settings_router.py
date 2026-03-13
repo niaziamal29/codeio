@@ -1,26 +1,16 @@
 """Router for sandbox settings API endpoints.
 
-Provides endpoints for agent-servers inside sandboxes to retrieve the
-owning user's SaaS credentials on demand, authenticated via
-``X-Session-API-Key`` (sandbox-scoped).
+Provides endpoints for SDK clients to retrieve the owning user's SaaS
+credentials, authenticated via ``X-Session-API-Key`` (sandbox-scoped).
 
 Endpoints
 ---------
 GET /sandboxes/{sandbox_id}/settings/llm
-    Full LLM config with ``api_key`` replaced by a ``LookupSecret`` dict.
-GET /sandboxes/{sandbox_id}/settings/llm-key
-    Raw LLM API key (plain text).  Called by ``LookupSecret`` inside sandbox.
+    Full LLM config (model, api_key, base_url) with the raw api_key.
 GET /sandboxes/{sandbox_id}/settings/secrets
     List of available secret names (no values).
 GET /sandboxes/{sandbox_id}/settings/secrets/{secret_name}
     Raw secret value (plain text).  Called by ``LookupSecret`` inside sandbox.
-
-Security model
---------------
-The ``X-Session-API-Key`` is sandbox-scoped and only known to the sandbox
-and the SaaS.  Raw secret values are only returned to the sandbox via the
-``/llm-key`` and ``/secrets/{name}`` endpoints — the SDK client on the
-user's machine never sees them.
 """
 
 import logging
@@ -120,64 +110,23 @@ async def _get_user_context(sandbox_info: SandboxInfo) -> AuthUserContext:
 # ---------------------------------------------------------------------------
 @router.get('/llm')
 async def get_llm_settings(
-    request: Request,
-    sandbox_id: str,
     sandbox_info: SandboxInfo = Depends(_valid_sandbox_from_session_key),
 ) -> LLMSettingsResponse:
-    """Return LLM config with ``api_key`` as a ``LookupSecret`` reference.
+    """Return LLM config including the raw API key.
 
-    The ``LookupSecret`` URL points back to ``/settings/llm-key`` on this
-    server so the agent-server can resolve the actual key on demand.
+    The SDK client uses this to construct a fully usable ``LLM`` object.
     """
     user_context = await _get_user_context(sandbox_info)
     user_info = await user_context.get_user_info()
 
-    # Build the LookupSecret dict that the SDK will deserialise.
-    # The URL points to our /llm-key sibling endpoint; the agent-server
-    # will call it when it needs the key.  We use env_headers so the
-    # session key is resolved from the sandbox environment at call time
-    # rather than being embedded in the serialised object.
-    api_key_lookup: dict | None = None
+    api_key: str | None = None
     if user_info.llm_api_key:
-        base_url = str(request.base_url).rstrip('/')
-        api_key_lookup = {
-            'kind': 'LookupSecret',
-            'url': f'{base_url}/api/v1/sandboxes/{sandbox_id}/settings/llm-key',
-            'env_headers': {
-                'X-Session-API-Key': 'SESSION_API_KEY',
-            },
-        }
+        api_key = user_info.llm_api_key.get_secret_value()
 
     return LLMSettingsResponse(
         model=user_info.llm_model,
-        api_key=api_key_lookup,
+        api_key=api_key,
         base_url=user_info.llm_base_url,
-    )
-
-
-# ---------------------------------------------------------------------------
-# GET /sandboxes/{sandbox_id}/settings/llm-key
-# ---------------------------------------------------------------------------
-@router.get('/llm-key')
-async def get_llm_key(
-    sandbox_info: SandboxInfo = Depends(_valid_sandbox_from_session_key),
-) -> Response:
-    """Return the raw LLM API key as plain text.
-
-    This endpoint is called by the ``LookupSecret`` embedded in the LLM
-    config — it runs **inside the sandbox**, not on the SDK client.
-    """
-    user_context = await _get_user_context(sandbox_info)
-    user_info = await user_context.get_user_info()
-
-    if not user_info.llm_api_key:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail='No LLM API key configured'
-        )
-
-    return Response(
-        content=user_info.llm_api_key.get_secret_value(),
-        media_type='text/plain',
     )
 
 
