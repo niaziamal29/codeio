@@ -47,6 +47,7 @@ import { useReadConversationFile } from "#/hooks/mutation/use-read-conversation-
 import useMetricsStore from "#/stores/metrics-store";
 import { I18nKey } from "#/i18n/declaration";
 import { useConversationHistory } from "#/hooks/query/use-conversation-history";
+import { setConversationState } from "#/utils/conversation-local-storage";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type V1_WebSocketConnectionState =
@@ -128,6 +129,13 @@ export function ConversationWebSocketProvider({
     path: string;
     conversationId: string;
   } | null>(null);
+
+  // Pending messages queue for when WebSocket is not connected
+  // This mirrors V0's pendingEventsRef pattern
+  // Each entry stores the message and the target mode (code/plan) at queue time
+  const pendingMessagesRef = useRef<
+    { message: V1SendMessageRequest; targetMode: "code" | "plan" }[]
+  >([]);
 
   // Helper function to update metrics from stats event
   const updateMetricsFromStats = useCallback(
@@ -397,6 +405,10 @@ export function ConversationWebSocketProvider({
           // Clear optimistic user message when a user message is confirmed
           if (isUserMessageEvent(event)) {
             removeOptimisticUserMessage();
+            // Clear draft from localStorage - message was successfully delivered
+            if (conversationId) {
+              setConversationState(conversationId, { draftMessage: null });
+            }
           }
 
           // Handle cache invalidation for ActionEvent
@@ -556,6 +568,11 @@ export function ConversationWebSocketProvider({
           // Clear optimistic user message when a user message is confirmed
           if (isUserMessageEvent(event)) {
             removeOptimisticUserMessage();
+            // Clear draft from localStorage - message was successfully delivered
+            // Use main conversationId since user types in main conversation input
+            if (conversationId) {
+              setConversationState(conversationId, { draftMessage: null });
+            }
           }
 
           // Handle cache invalidation for ActionEvent
@@ -809,30 +826,65 @@ export function ConversationWebSocketProvider({
     planningWebsocketOptions,
   );
 
+  // Flush pending messages for a specific mode when its socket is ready
+  const flushPendingMessages = useCallback(
+    (targetMode: "code" | "plan", socket: WebSocket) => {
+      if (socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      // Filter and send messages for this mode, keep others in queue
+      const remaining: typeof pendingMessagesRef.current = [];
+      for (const entry of pendingMessagesRef.current) {
+        if (entry.targetMode === targetMode) {
+          try {
+            socket.send(JSON.stringify(entry.message));
+          } catch {
+            // Re-queue on failure
+            remaining.push(entry);
+          }
+        } else {
+          // Keep messages for other mode
+          remaining.push(entry);
+        }
+      }
+      pendingMessagesRef.current = remaining;
+    },
+    [],
+  );
+
   // V1 send message function via WebSocket
   const sendMessage = useCallback(
     async (message: V1SendMessageRequest) => {
       const currentMode = useConversationStore.getState().conversationMode;
+      const targetMode = currentMode === "plan" ? "plan" : "code";
       const currentSocket =
         currentMode === "plan" ? planningAgentSocket : mainSocket;
 
       if (!currentSocket || currentSocket.readyState !== WebSocket.OPEN) {
-        const error = "WebSocket is not connected";
-        setErrorMessage(error);
-        throw new Error(error);
+        // Queue message instead of throwing error
+        // eslint-disable-next-line no-console
+        console.log("WebSocket not connected, queuing message...");
+        pendingMessagesRef.current.push({ message, targetMode });
+        return;
       }
+
+      // Flush any pending messages for this mode first
+      flushPendingMessages(targetMode, currentSocket);
 
       try {
         // Send message through WebSocket as JSON
         currentSocket.send(JSON.stringify(message));
       } catch (error) {
+        // Queue on send failure
+        pendingMessagesRef.current.push({ message, targetMode });
         const errorMessage =
           error instanceof Error ? error.message : "Failed to send message";
         setErrorMessage(errorMessage);
         throw error;
       }
     },
-    [mainSocket, planningAgentSocket, setErrorMessage],
+    [mainSocket, planningAgentSocket, setErrorMessage, flushPendingMessages],
   );
 
   // Track main socket state changes
@@ -892,6 +944,20 @@ export function ConversationWebSocketProvider({
       updateState();
     }
   }, [planningAgentSocket, planningAgentWsUrl]);
+
+  // Flush pending messages when main socket becomes OPEN
+  useEffect(() => {
+    if (mainConnectionState === "OPEN" && mainSocket) {
+      flushPendingMessages("code", mainSocket);
+    }
+  }, [mainConnectionState, mainSocket, flushPendingMessages]);
+
+  // Flush pending messages when planning socket becomes OPEN
+  useEffect(() => {
+    if (planningConnectionState === "OPEN" && planningAgentSocket) {
+      flushPendingMessages("plan", planningAgentSocket);
+    }
+  }, [planningConnectionState, planningAgentSocket, flushPendingMessages]);
 
   const contextValue = useMemo(
     () => ({ connectionState, sendMessage, isLoadingHistory }),
