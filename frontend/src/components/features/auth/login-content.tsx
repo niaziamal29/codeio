@@ -13,6 +13,7 @@ import { useRecaptcha } from "#/hooks/use-recaptcha";
 import { useConfig } from "#/hooks/query/use-config";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { cn } from "#/utils/utils";
+import { ENABLE_PROJ_USER_JOURNEY } from "#/utils/feature-flags";
 import { LoginCTA } from "./login-cta";
 
 export interface LoginContentProps {
@@ -275,7 +276,7 @@ export function LoginContent({
         <TermsAndPrivacyNotice className="max-w-[320px] text-[#A3A3A3]" />
       </div>
 
-      {appMode === "saas" && <LoginCTA />}
+      {appMode === "saas" && ENABLE_PROJ_USER_JOURNEY() && <LoginCTA />}
     </div>
   );
 }
