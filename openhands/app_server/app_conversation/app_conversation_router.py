@@ -688,8 +688,8 @@ async def get_conversation_hooks(
             return ctx
 
         from openhands.app_server.app_conversation.hook_loader import (
+            fetch_hooks_from_agent_server,
             get_project_dir_for_hooks,
-            load_hooks_from_agent_server,
         )
 
         project_dir = get_project_dir_for_hooks(
@@ -697,19 +697,43 @@ async def get_conversation_hooks(
             ctx.conversation.selected_repository,
         )
 
-        # Load hooks from agent-server
+        # Load hooks from agent-server (using the error-raising variant so
+        # HTTP/connection failures are surfaced to the user, not hidden).
         logger.debug(
             f'Loading hooks for conversation {conversation_id}, '
             f'agent_server_url={ctx.agent_server_url}, '
             f'project_dir={project_dir}'
         )
 
-        hook_config = await load_hooks_from_agent_server(
-            agent_server_url=ctx.agent_server_url,
-            session_api_key=ctx.session_api_key,
-            project_dir=project_dir,
-            httpx_client=httpx_client,
-        )
+        try:
+            hook_config = await fetch_hooks_from_agent_server(
+                agent_server_url=ctx.agent_server_url,
+                session_api_key=ctx.session_api_key,
+                project_dir=project_dir,
+                httpx_client=httpx_client,
+            )
+        except httpx.HTTPStatusError as e:
+            logger.warning(
+                f'Agent-server returned {e.response.status_code} when loading hooks '
+                f'for conversation {conversation_id}: {e.response.text}'
+            )
+            return JSONResponse(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                content={
+                    'error': f'Agent-server returned status {e.response.status_code} when loading hooks'
+                },
+            )
+        except httpx.RequestError as e:
+            logger.warning(
+                f'Failed to reach agent-server when loading hooks '
+                f'for conversation {conversation_id}: {e}'
+            )
+            return JSONResponse(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                content={
+                    'error': 'Failed to reach agent-server when loading hooks'
+                },
+            )
 
         # Transform hook_config to response format
         hooks_response: list[HookEventResponse] = []

@@ -40,16 +40,80 @@ def get_project_dir_for_hooks(
     return working_dir
 
 
+async def fetch_hooks_from_agent_server(
+    agent_server_url: str,
+    session_api_key: str | None,
+    project_dir: str,
+    httpx_client: httpx.AsyncClient,
+) -> HookConfig | None:
+    """Fetch hooks from the agent-server, raising on HTTP/connection errors.
+
+    This is the low-level function that makes a single API call to the
+    agent-server's /api/hooks endpoint. It raises on HTTP and connection
+    errors so callers can decide how to handle failures.
+
+    Args:
+        agent_server_url: URL of the agent server (e.g., 'http://localhost:8000')
+        session_api_key: Session API key for authentication (optional)
+        project_dir: Workspace directory path for project hooks
+        httpx_client: Shared HTTP client for making the request
+
+    Returns:
+        HookConfig if hooks.json exists and is valid, None if no hooks found.
+
+    Raises:
+        httpx.HTTPStatusError: If the agent-server returns a non-2xx status.
+        httpx.RequestError: If the agent-server is unreachable.
+    """
+    _logger.debug(
+        f'fetch_hooks_from_agent_server called: '
+        f'agent_server_url={agent_server_url}, project_dir={project_dir}'
+    )
+    payload = {'project_dir': project_dir}
+
+    headers = {'Content-Type': 'application/json'}
+    if session_api_key:
+        headers['X-Session-API-Key'] = session_api_key
+
+    response = await httpx_client.post(
+        f'{agent_server_url}/api/hooks',
+        json=payload,
+        headers=headers,
+        timeout=30.0,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+
+    hook_config_data = data.get('hook_config')
+    if hook_config_data is None:
+        _logger.debug('No hooks found in workspace')
+        return None
+
+    hook_config = HookConfig.from_dict(hook_config_data)
+
+    if hook_config.is_empty():
+        _logger.debug('Hooks config is empty')
+        return None
+
+    _logger.debug(f'Loaded hooks from agent-server for {project_dir}')
+    return hook_config
+
+
 async def load_hooks_from_agent_server(
     agent_server_url: str,
     session_api_key: str | None,
     project_dir: str,
     httpx_client: httpx.AsyncClient,
 ) -> HookConfig | None:
-    """Load hooks from the agent-server.
+    """Load hooks from the agent-server, swallowing errors gracefully.
 
-    This function makes a single API call to the agent-server's /api/hooks
-    endpoint to load hooks from the workspace's .openhands/hooks.json file.
+    Wrapper around fetch_hooks_from_agent_server that catches all errors
+    and returns None. Use this for the conversation-start path where hooks
+    are optional and failures should not block startup.
+
+    For the hooks viewer endpoint, use fetch_hooks_from_agent_server directly
+    so errors can be surfaced to the user.
 
     Args:
         agent_server_url: URL of the agent server (e.g., 'http://localhost:8000')
@@ -60,48 +124,10 @@ async def load_hooks_from_agent_server(
     Returns:
         HookConfig if hooks.json exists and is valid, None otherwise.
     """
-    _logger.debug(
-        f'load_hooks_from_agent_server called: '
-        f'agent_server_url={agent_server_url}, project_dir={project_dir}'
-    )
     try:
-        # Build request payload
-        payload = {
-            'project_dir': project_dir,
-        }
-
-        # Build headers
-        headers = {'Content-Type': 'application/json'}
-        if session_api_key:
-            headers['X-Session-API-Key'] = session_api_key
-
-        # Make API request
-        response = await httpx_client.post(
-            f'{agent_server_url}/api/hooks',
-            json=payload,
-            headers=headers,
-            timeout=30.0,
+        return await fetch_hooks_from_agent_server(
+            agent_server_url, session_api_key, project_dir, httpx_client
         )
-        response.raise_for_status()
-
-        data = response.json()
-
-        # Extract hook_config from response
-        hook_config_data = data.get('hook_config')
-        if hook_config_data is None:
-            _logger.debug('No hooks found in workspace')
-            return None
-
-        # Convert response to HookConfig
-        hook_config = HookConfig.from_dict(hook_config_data)
-
-        if hook_config.is_empty():
-            _logger.debug('Hooks config is empty')
-            return None
-
-        _logger.debug(f'Loaded hooks from agent-server for {project_dir}')
-        return hook_config
-
     except httpx.HTTPStatusError as e:
         _logger.warning(
             f'Agent-server at {agent_server_url} returned error status {e.response.status_code} '
