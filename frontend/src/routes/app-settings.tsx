@@ -24,6 +24,7 @@ import {
   SandboxGroupingStrategy,
   SandboxGroupingStrategyOptions,
 } from "#/types/settings";
+import { ENABLE_SANDBOX_GROUPING } from "#/utils/feature-flags";
 import { createPermissionGuard } from "#/utils/org/permission-guard";
 
 export const clientLoader = createPermissionGuard(
@@ -273,23 +274,25 @@ function AppSettingsScreen() {
             </SettingsSwitch>
           )}
 
-          <SettingsDropdownInput
-            testId="sandbox-grouping-strategy-input"
-            name="sandbox-grouping-strategy-input"
-            label={t(I18nKey.SETTINGS$SANDBOX_GROUPING_STRATEGY)}
-            items={Object.keys(SandboxGroupingStrategyOptions).map((key) => ({
-              key,
-              label: t(`SETTINGS$SANDBOX_GROUPING_${key}` as I18nKey),
-            }))}
-            selectedKey={
-              selectedSandboxGroupingStrategy ||
-              settings.sandbox_grouping_strategy ||
-              DEFAULT_SETTINGS.sandbox_grouping_strategy
-            }
-            isClearable={false}
-            onSelectionChange={handleSandboxGroupingStrategyChange}
-            wrapperClassName="w-full max-w-[680px]"
-          />
+          {ENABLE_SANDBOX_GROUPING() && (
+            <SettingsDropdownInput
+              testId="sandbox-grouping-strategy-input"
+              name="sandbox-grouping-strategy-input"
+              label={t(I18nKey.SETTINGS$SANDBOX_GROUPING_STRATEGY)}
+              items={Object.keys(SandboxGroupingStrategyOptions).map((key) => ({
+                key,
+                label: t(`SETTINGS$SANDBOX_GROUPING_${key}` as I18nKey),
+              }))}
+              selectedKey={
+                selectedSandboxGroupingStrategy ||
+                settings.sandbox_grouping_strategy ||
+                DEFAULT_SETTINGS.sandbox_grouping_strategy
+              }
+              isClearable={false}
+              onSelectionChange={handleSandboxGroupingStrategyChange}
+              wrapperClassName="w-full max-w-[680px]"
+            />
+          )}
 
           {!settings?.v1_enabled && (
             <SettingsInput
