@@ -4,6 +4,7 @@ Tests:
 - GET /api/v1/users/me?expose_secrets=true
 - GET /api/v1/sandboxes/{sandbox_id}/settings/secrets
 - GET /api/v1/sandboxes/{sandbox_id}/settings/secrets/{secret_name}
+- Shared session_auth.validate_session_key()
 """
 
 from unittest.mock import AsyncMock, patch
@@ -21,8 +22,12 @@ from openhands.app_server.sandbox.sandbox_router import (
     get_secret_value,
     list_secret_names,
 )
+from openhands.app_server.sandbox.session_auth import validate_session_key
 from openhands.app_server.user.user_models import UserInfo
-from openhands.app_server.user.user_router import get_current_user
+from openhands.app_server.user.user_router import (
+    _validate_session_key_ownership,
+    get_current_user,
+)
 from openhands.sdk.secret import StaticSecret
 
 SANDBOX_ID = 'sb-test-123'
@@ -40,6 +45,91 @@ def _make_sandbox_info(
         status=SandboxStatus.RUNNING,
         session_api_key='session-key',
     )
+
+
+def _patch_sandbox_service(return_sandbox: SandboxInfo | None):
+    """Patch ``get_sandbox_service`` in ``session_auth`` to return a mock service."""
+    mock_sandbox_service = AsyncMock()
+    mock_sandbox_service.get_sandbox_by_session_api_key = AsyncMock(
+        return_value=return_sandbox
+    )
+    ctx = patch(
+        'openhands.app_server.sandbox.session_auth.get_sandbox_service',
+    )
+    return ctx, mock_sandbox_service
+
+
+# ---------------------------------------------------------------------------
+# validate_session_key (shared utility)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+class TestValidateSessionKey:
+    """Tests for the shared session_auth.validate_session_key utility."""
+
+    async def test_rejects_missing_key(self):
+        """Missing session key raises 401."""
+        with pytest.raises(HTTPException) as exc_info:
+            await validate_session_key(None)
+        assert exc_info.value.status_code == 401
+        assert 'X-Session-API-Key' in exc_info.value.detail
+
+    async def test_rejects_empty_string_key(self):
+        """Empty string session key raises 401."""
+        with pytest.raises(HTTPException) as exc_info:
+            await validate_session_key('')
+        assert exc_info.value.status_code == 401
+
+    async def test_rejects_invalid_key(self):
+        """Session key that maps to no sandbox raises 401."""
+        ctx, mock_svc = _patch_sandbox_service(None)
+        with ctx as mock_get:
+            mock_get.return_value.__aenter__ = AsyncMock(return_value=mock_svc)
+            mock_get.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await validate_session_key('bogus-key')
+        assert exc_info.value.status_code == 401
+        assert 'Invalid session API key' in exc_info.value.detail
+
+    async def test_accepts_valid_key(self):
+        """Valid session key returns sandbox info."""
+        sandbox = _make_sandbox_info()
+        ctx, mock_svc = _patch_sandbox_service(sandbox)
+        with ctx as mock_get:
+            mock_get.return_value.__aenter__ = AsyncMock(return_value=mock_svc)
+            mock_get.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            result = await validate_session_key('valid-key')
+        assert result.id == SANDBOX_ID
+
+    async def test_rejects_sandbox_without_user_in_saas_mode(self):
+        """In SAAS mode, sandbox without created_by_user_id raises 401."""
+        sandbox = _make_sandbox_info(user_id=None)
+        ctx, mock_svc = _patch_sandbox_service(sandbox)
+        with (
+            ctx as mock_get,
+            patch(
+                'openhands.app_server.sandbox.session_auth.get_global_config'
+            ) as mock_cfg,
+        ):
+            mock_get.return_value.__aenter__ = AsyncMock(return_value=mock_svc)
+            mock_get.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            from openhands.server.types import AppMode
+
+            mock_cfg.return_value.app_mode = AppMode.SAAS
+
+            with pytest.raises(HTTPException) as exc_info:
+                await validate_session_key('valid-key')
+        assert exc_info.value.status_code == 401
+        assert 'no user' in exc_info.value.detail
+
+
+# ---------------------------------------------------------------------------
+# GET /users/me?expose_secrets=true
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -78,13 +168,7 @@ class TestGetCurrentUserExposeSecrets:
 
     async def test_expose_secrets_rejects_missing_session_key(self):
         """expose_secrets=true without X-Session-API-Key is rejected."""
-        user_info = UserInfo(id=USER_ID, llm_api_key=SecretStr('sk-key'))
         mock_context = AsyncMock()
-        mock_context.get_user_info = AsyncMock(return_value=user_info)
-
-        from openhands.app_server.user.user_router import (
-            _validate_session_key_ownership,
-        )
 
         with pytest.raises(HTTPException) as exc_info:
             await _validate_session_key_ownership(mock_context, session_api_key=None)
@@ -98,30 +182,35 @@ class TestGetCurrentUserExposeSecrets:
 
         other_user_sandbox = _make_sandbox_info(user_id='user-B')
 
-        with (
-            patch(
-                'openhands.app_server.user.user_router.get_sandbox_service'
-            ) as mock_svc,
-            pytest.raises(HTTPException) as exc_info,
-        ):
-            mock_sandbox_service = AsyncMock()
-            mock_sandbox_service.get_sandbox_by_session_api_key = AsyncMock(
-                return_value=other_user_sandbox
-            )
-            mock_svc.return_value.__aenter__ = AsyncMock(
-                return_value=mock_sandbox_service
-            )
-            mock_svc.return_value.__aexit__ = AsyncMock(return_value=False)
-
-            from openhands.app_server.user.user_router import (
-                _validate_session_key_ownership,
-            )
+        ctx, mock_svc = _patch_sandbox_service(other_user_sandbox)
+        with ctx as mock_get, pytest.raises(HTTPException) as exc_info:
+            mock_get.return_value.__aenter__ = AsyncMock(return_value=mock_svc)
+            mock_get.return_value.__aexit__ = AsyncMock(return_value=False)
 
             await _validate_session_key_ownership(
                 mock_context, session_api_key='stolen-key'
             )
 
         assert exc_info.value.status_code == 403
+
+    async def test_expose_secrets_rejects_unknown_caller(self):
+        """If caller_id cannot be determined, reject with 401."""
+        mock_context = AsyncMock()
+        mock_context.get_user_id = AsyncMock(return_value=None)
+
+        sandbox = _make_sandbox_info(user_id='user-B')
+
+        ctx, mock_svc = _patch_sandbox_service(sandbox)
+        with ctx as mock_get, pytest.raises(HTTPException) as exc_info:
+            mock_get.return_value.__aenter__ = AsyncMock(return_value=mock_svc)
+            mock_get.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            await _validate_session_key_ownership(
+                mock_context, session_api_key='some-key'
+            )
+
+        assert exc_info.value.status_code == 401
+        assert 'Cannot determine authenticated user' in exc_info.value.detail
 
     async def test_default_masks_api_key(self):
         """Without expose_secrets, llm_api_key is masked (no session key needed)."""
@@ -142,6 +231,11 @@ class TestGetCurrentUserExposeSecrets:
         # The raw value is still in the object, but serialization masks it
         dumped = result.model_dump(mode='json')
         assert dumped['llm_api_key'] == '**********'
+
+
+# ---------------------------------------------------------------------------
+# GET /sandboxes/{sandbox_id}/settings/secrets
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -195,6 +289,11 @@ class TestListSecretNames:
             result = await list_secret_names(sandbox_info=sandbox_info)
 
         assert len(result.secrets) == 0
+
+
+# ---------------------------------------------------------------------------
+# GET /sandboxes/{sandbox_id}/settings/secrets/{name}
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
