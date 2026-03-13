@@ -12,11 +12,12 @@ import pytest
 from fastapi import HTTPException
 from pydantic import SecretStr
 
-from openhands.app_server.sandbox.sandbox_models import SandboxInfo, SandboxStatus
-from openhands.app_server.user.sandbox_secrets_models import (
+from openhands.app_server.sandbox.sandbox_models import (
+    SandboxInfo,
+    SandboxStatus,
     SecretNamesResponse,
 )
-from openhands.app_server.user.sandbox_secrets_router import (
+from openhands.app_server.sandbox.sandbox_router import (
     get_secret_value,
     list_secret_names,
 )
@@ -162,7 +163,7 @@ class TestListSecretNames:
         sandbox_info = _make_sandbox_info()
 
         with patch(
-            'openhands.app_server.user.sandbox_secrets_router._get_user_context'
+            'openhands.app_server.sandbox.sandbox_router._get_user_context'
         ) as mock_ctx:
             ctx = AsyncMock()
             ctx.get_secrets = AsyncMock(return_value=secrets)
@@ -185,7 +186,7 @@ class TestListSecretNames:
         sandbox_info = _make_sandbox_info()
 
         with patch(
-            'openhands.app_server.user.sandbox_secrets_router._get_user_context'
+            'openhands.app_server.sandbox.sandbox_router._get_user_context'
         ) as mock_ctx:
             ctx = AsyncMock()
             ctx.get_secrets = AsyncMock(return_value={})
@@ -211,7 +212,7 @@ class TestGetSecretValue:
         sandbox_info = _make_sandbox_info()
 
         with patch(
-            'openhands.app_server.user.sandbox_secrets_router._get_user_context'
+            'openhands.app_server.sandbox.sandbox_router._get_user_context'
         ) as mock_ctx:
             ctx = AsyncMock()
             ctx.get_secrets = AsyncMock(return_value=secrets)
@@ -231,7 +232,7 @@ class TestGetSecretValue:
         sandbox_info = _make_sandbox_info()
 
         with patch(
-            'openhands.app_server.user.sandbox_secrets_router._get_user_context'
+            'openhands.app_server.sandbox.sandbox_router._get_user_context'
         ) as mock_ctx:
             ctx = AsyncMock()
             ctx.get_secrets = AsyncMock(return_value=secrets)
@@ -253,7 +254,7 @@ class TestGetSecretValue:
         sandbox_info = _make_sandbox_info()
 
         with patch(
-            'openhands.app_server.user.sandbox_secrets_router._get_user_context'
+            'openhands.app_server.sandbox.sandbox_router._get_user_context'
         ) as mock_ctx:
             ctx = AsyncMock()
             ctx.get_secrets = AsyncMock(return_value=secrets)

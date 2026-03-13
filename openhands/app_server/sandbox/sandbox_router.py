@@ -1,16 +1,35 @@
 """Runtime Containers router for OpenHands App Server."""
 
+import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.security import APIKeyHeader
 
 from openhands.agent_server.models import Success
-from openhands.app_server.config import depends_sandbox_service
-from openhands.app_server.sandbox.sandbox_models import SandboxInfo, SandboxPage
+from openhands.app_server.config import depends_sandbox_service, get_sandbox_service
+from openhands.app_server.sandbox.sandbox_models import (
+    SandboxInfo,
+    SandboxPage,
+    SecretNameItem,
+    SecretNamesResponse,
+)
 from openhands.app_server.sandbox.sandbox_service import (
     SandboxService,
 )
+from openhands.app_server.services.injector import InjectorState
+from openhands.app_server.user.auth_user_context import AuthUserContext
+from openhands.app_server.user.specifiy_user_context import (
+    ADMIN,
+    USER_CONTEXT_ATTR,
+)
 from openhands.server.dependencies import get_dependencies
+from openhands.server.types import AppMode
+from openhands.server.user_auth.user_auth import (
+    get_for_user as get_user_auth_for_user,
+)
+
+_logger = logging.getLogger(__name__)
 
 # We use the get_dependencies method here to signal to the OpenAPI docs that this endpoint
 # is protected. The actual protection is provided by SetAuthCookieMiddleware
@@ -94,3 +113,102 @@ async def delete_sandbox(
     if not exists:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     return Success()
+
+
+# ---------------------------------------------------------------------------
+# Sandbox-scoped secrets (authenticated via X-Session-API-Key)
+# ---------------------------------------------------------------------------
+
+
+async def _valid_sandbox_from_session_key(
+    request: Request,
+    sandbox_id: str,
+    session_api_key: str = Depends(
+        APIKeyHeader(name='X-Session-API-Key', auto_error=False)
+    ),
+) -> SandboxInfo:
+    """Authenticate via ``X-Session-API-Key`` and verify sandbox ownership."""
+    if not session_api_key:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail='X-Session-API-Key header is required',
+        )
+
+    state = InjectorState()
+    setattr(state, USER_CONTEXT_ATTR, ADMIN)
+
+    async with get_sandbox_service(state) as sandbox_service:
+        sandbox_info = await sandbox_service.get_sandbox_by_session_api_key(
+            session_api_key
+        )
+
+    if sandbox_info is None:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail='Invalid session API key'
+        )
+
+    if sandbox_info.id != sandbox_id:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail='Session API key does not match sandbox',
+        )
+
+    if not sandbox_info.created_by_user_id:
+        from openhands.app_server.config import get_global_config
+
+        if get_global_config().app_mode == AppMode.SAAS:
+            _logger.error(
+                'Sandbox had no user specified',
+                extra={'sandbox_id': sandbox_info.id},
+            )
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                detail='Sandbox had no user specified',
+            )
+
+    return sandbox_info
+
+
+async def _get_user_context(sandbox_info: SandboxInfo) -> AuthUserContext:
+    """Build an ``AuthUserContext`` for the sandbox owner."""
+    assert sandbox_info.created_by_user_id
+    user_auth = await get_user_auth_for_user(sandbox_info.created_by_user_id)
+    return AuthUserContext(user_auth=user_auth)
+
+
+@router.get('/{sandbox_id}/settings/secrets')
+async def list_secret_names(
+    sandbox_info: SandboxInfo = Depends(_valid_sandbox_from_session_key),
+) -> SecretNamesResponse:
+    """List available secret names (no raw values)."""
+    user_context = await _get_user_context(sandbox_info)
+    secret_sources = await user_context.get_secrets()
+
+    items = [
+        SecretNameItem(name=name, description=source.description)
+        for name, source in secret_sources.items()
+    ]
+    return SecretNamesResponse(secrets=items)
+
+
+@router.get('/{sandbox_id}/settings/secrets/{secret_name}')
+async def get_secret_value(
+    secret_name: str,
+    sandbox_info: SandboxInfo = Depends(_valid_sandbox_from_session_key),
+) -> Response:
+    """Return a single secret value as plain text.
+
+    Called by ``LookupSecret`` inside the sandbox.
+    """
+    user_context = await _get_user_context(sandbox_info)
+    secret_sources = await user_context.get_secrets()
+
+    source = secret_sources.get(secret_name)
+    if source is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Secret not found')
+
+    value = source.get_value()
+    if value is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Secret has no value')
+
+    return Response(content=value, media_type='text/plain')
