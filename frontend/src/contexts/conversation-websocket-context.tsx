@@ -133,6 +133,8 @@ export function ConversationWebSocketProvider({
   // Pending messages queue for when WebSocket is not connected
   // This mirrors V0's pendingEventsRef pattern
   // Each entry stores the message and the target mode (code/plan) at queue time
+  // IMPORTANT: This queue is cleared when switching conversations to prevent
+  // messages from being sent to the wrong conversation
   const pendingMessagesRef = useRef<
     { message: V1SendMessageRequest; targetMode: "code" | "plan" }[]
   >([]);
@@ -314,6 +316,8 @@ export function ConversationWebSocketProvider({
     receivedEventCountRefMain.current = 0;
     // Reset the tracked event ref when conversation changes
     latestPlanningFileEventRef.current = null;
+    // Clear pending messages to prevent sending messages to wrong conversation
+    pendingMessagesRef.current = [];
   }, [conversationId]);
 
   const { data: preloadedEvents } = useConversationHistory(conversationId);

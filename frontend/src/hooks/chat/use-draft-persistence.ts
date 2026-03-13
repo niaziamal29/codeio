@@ -33,15 +33,19 @@ export const useDraftPersistence = (
   // Track if this is the first mount to handle initial cleanup
   const isFirstMountRef = useRef(true);
 
-  // IMPORTANT: This effect must run FIRST when conversation changes
-  // It handles cleanup and special cases like task-to-real ID transitions
+  // IMPORTANT: This effect must run FIRST when conversation changes.
+  // It handles three concerns:
+  // 1. Cleanup: Cancel pending saves from previous conversation
+  // 2. Task-to-real transition: Preserve draft typed during initialization
+  // 3. DOM reset: Clear stale content before restoration effect runs
   useEffect(() => {
     const previousConversationId = currentConversationIdRef.current;
     const isInitialMount = isFirstMountRef.current;
     currentConversationIdRef.current = conversationId;
     isFirstMountRef.current = false;
 
-    // Cancel any pending debounced save from previous conversation
+    // --- 1. Cancel pending saves from previous conversation ---
+    // Prevents draft from being saved to wrong conversation if user switched quickly
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
@@ -49,38 +53,38 @@ export const useDraftPersistence = (
 
     const element = chatInputRef.current;
 
-    // Handle conversation change (not initial mount)
+    // --- 2. Handle task-to-real ID transition (preserve draft during initialization) ---
+    // When a new V1 conversation initializes, it starts with a temporary "task-xxx" ID
+    // that transitions to a real conversation ID once ready. Task IDs don't persist
+    // to localStorage, so any draft typed during this phase would be lost.
+    // We detect this transition and transfer the draft to the new real ID.
     if (!isInitialMount && previousConversationId !== conversationId) {
-      // Special case: transitioning from task ID to real conversation ID
-      // This happens when a new conversation finishes initializing.
-      // The user may have typed a draft during initialization that wasn't saved
-      // (because task IDs don't persist to localStorage). Transfer it now.
       const wasTaskId = isTaskId(previousConversationId);
       const isNowRealId = !isTaskId(conversationId);
 
       if (wasTaskId && isNowRealId && element) {
         const currentText = getTextContent(element).trim();
         if (currentText) {
-          // Save the draft to the NEW (real) conversation ID
+          // Transfer draft to the new (real) conversation ID
           setConversationState(conversationId, { draftMessage: currentText });
-          // Don't clear the DOM - keep the draft visible
-          // Mark as restored to prevent the restoration effect from overwriting
+          // Keep draft visible in DOM and mark as restored to prevent overwrite
           hasRestoredRef.current = true;
           setIsRestored(true);
-          return; // Skip normal cleanup
+          return; // Skip normal cleanup - draft is already in correct state
         }
       }
     }
 
-    // ALWAYS clear DOM on mount or conversation change
-    // This prevents stale drafts from appearing in new conversations
-    // (e.g., from browser form restoration or React DOM recycling)
-    // The restoration effect will then restore the correct draft if one exists
+    // --- 3. Clear stale DOM content (will be restored by next effect if draft exists) ---
+    // This prevents stale drafts from appearing in new conversations due to:
+    // - Browser form restoration on back/forward navigation
+    // - React DOM recycling between conversation switches
+    // The restoration effect will then populate with the correct saved draft
     if (element) {
       element.textContent = "";
     }
 
-    // Reset restoration flag so draft will be restored for new conversation
+    // Reset restoration flag so the restoration effect will run for new conversation
     hasRestoredRef.current = false;
     setIsRestored(false);
   }, [conversationId, chatInputRef]);
