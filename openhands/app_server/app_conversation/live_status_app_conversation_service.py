@@ -129,6 +129,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
     jwt_service: JwtService
     sandbox_startup_timeout: int
     sandbox_startup_poll_frequency: int
+    max_num_conversations_per_sandbox: int
     httpx_client: httpx.AsyncClient
     web_url: str | None
     openhands_provider_base_url: str | None
@@ -557,7 +558,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         self,
         running_sandboxes: list[SandboxInfo],
         sandbox_grouping_strategy: SandboxGroupingStrategy,
-    ) -> SandboxInfo:
+    ) -> SandboxInfo | None:
         """Select a sandbox from the list based on the configured grouping strategy.
 
         Args:
@@ -565,35 +566,48 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             sandbox_grouping_strategy: The strategy to use for selection
 
         Returns:
-            Selected sandbox based on the strategy
+            Selected sandbox based on the strategy, or None if no sandbox is available
+            (e.g., all sandboxes have reached max_num_conversations_per_sandbox)
         """
+        # Get conversation counts for filtering by max_num_conversations_per_sandbox
+        sandbox_conversation_counts = await self._get_conversation_counts_by_sandbox(
+            [s.id for s in running_sandboxes]
+        )
+
+        # Filter out sandboxes that have reached the max number of conversations
+        available_sandboxes = [
+            s
+            for s in running_sandboxes
+            if sandbox_conversation_counts.get(s.id, 0)
+            < self.max_num_conversations_per_sandbox
+        ]
+
+        if not available_sandboxes:
+            # All sandboxes have reached the max - need to create a new one
+            return None
+
         if sandbox_grouping_strategy == SandboxGroupingStrategy.ADD_TO_ANY:
             # Return the first available sandbox
-            return running_sandboxes[0]
+            return available_sandboxes[0]
 
         elif sandbox_grouping_strategy == SandboxGroupingStrategy.GROUP_BY_NEWEST:
             # Return the most recently created sandbox
-            return max(running_sandboxes, key=lambda s: s.created_at)
+            return max(available_sandboxes, key=lambda s: s.created_at)
 
         elif sandbox_grouping_strategy == SandboxGroupingStrategy.LEAST_RECENTLY_USED:
             # Return the least recently created sandbox (oldest)
-            return min(running_sandboxes, key=lambda s: s.created_at)
+            return min(available_sandboxes, key=lambda s: s.created_at)
 
         elif sandbox_grouping_strategy == SandboxGroupingStrategy.FEWEST_CONVERSATIONS:
-            # Count conversations per sandbox and return the one with fewest
-            sandbox_conversation_counts = (
-                await self._get_conversation_counts_by_sandbox(
-                    [s.id for s in running_sandboxes]
-                )
-            )
+            # Return the one with fewest conversations
             return min(
-                running_sandboxes,
+                available_sandboxes,
                 key=lambda s: sandbox_conversation_counts.get(s.id, 0),
             )
 
         else:
             # Default fallback - return first sandbox
-            return running_sandboxes[0]
+            return available_sandboxes[0]
 
     async def _get_conversation_counts_by_sandbox(
         self, sandbox_ids: list[str]
@@ -1753,6 +1767,10 @@ class LiveStatusAppConversationServiceInjector(AppConversationServiceInjector):
     sandbox_startup_poll_frequency: int = Field(
         default=2, description='The frequency to poll for sandbox readiness'
     )
+    max_num_conversations_per_sandbox: int = Field(
+        default=20,
+        description='The maximum number of conversations allowed per sandbox',
+    )
     init_git_in_empty_workspace: bool = Field(
         default=True,
         description='Whether to initialize a git repo when the workspace is empty',
@@ -1844,6 +1862,7 @@ class LiveStatusAppConversationServiceInjector(AppConversationServiceInjector):
                 jwt_service=jwt_service,
                 sandbox_startup_timeout=self.sandbox_startup_timeout,
                 sandbox_startup_poll_frequency=self.sandbox_startup_poll_frequency,
+                max_num_conversations_per_sandbox=self.max_num_conversations_per_sandbox,
                 httpx_client=httpx_client,
                 web_url=web_url,
                 openhands_provider_base_url=config.openhands_provider_base_url,
