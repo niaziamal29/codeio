@@ -621,20 +621,15 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             Dictionary mapping sandbox_id to conversation count
         """
         try:
-            # Get all conversations for the current user
-            page = (
-                await self.app_conversation_info_service.search_app_conversation_info(
-                    limit=10000  # Large limit to get all conversations
+            # Query count for each sandbox individually
+            # This is efficient since there are at most ~8 running sandboxes per user
+            counts: dict[str, int] = {}
+            for sandbox_id in sandbox_ids:
+                count = await self.app_conversation_info_service.count_app_conversation_info(
+                    sandbox_id__eq=sandbox_id
                 )
-            )
-
-            # Count conversations per sandbox
-            counts: dict[str, int] = defaultdict(int)
-            for conversation in page.items:
-                if conversation and conversation.sandbox_id in sandbox_ids:
-                    counts[conversation.sandbox_id] += 1
-
-            return dict(counts)
+                counts[sandbox_id] = count
+            return counts
         except Exception as e:
             _logger.warning(
                 f'Error counting conversations by sandbox: {e}', exc_info=True
