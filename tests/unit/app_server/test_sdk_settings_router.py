@@ -90,7 +90,9 @@ class TestGetLLMSettings:
         assert result.api_key is not None
         assert result.api_key['kind'] == 'LookupSecret'
         assert f'/sandboxes/{SANDBOX_ID}/settings/llm-key' in result.api_key['url']
-        assert result.api_key['headers']['X-Session-API-Key'] == 'session-key'
+        # Session key referenced by env var name, not embedded
+        assert result.api_key['env_headers'] == {'X-Session-API-Key': 'SESSION_API_KEY'}
+        assert 'headers' not in result.api_key
 
     async def test_returns_none_api_key_when_not_configured(self):
         """api_key is None when user has no LLM key configured."""

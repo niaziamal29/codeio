@@ -134,15 +134,17 @@ async def get_llm_settings(
 
     # Build the LookupSecret dict that the SDK will deserialise.
     # The URL points to our /llm-key sibling endpoint; the agent-server
-    # will call it (with the same session API key) when it needs the key.
+    # will call it when it needs the key.  We use env_headers so the
+    # session key is resolved from the sandbox environment at call time
+    # rather than being embedded in the serialised object.
     api_key_lookup: dict | None = None
     if user_info.llm_api_key:
         base_url = str(request.base_url).rstrip('/')
         api_key_lookup = {
             'kind': 'LookupSecret',
             'url': f'{base_url}/api/v1/sandboxes/{sandbox_id}/settings/llm-key',
-            'headers': {
-                'X-Session-API-Key': request.headers.get('X-Session-API-Key', ''),
+            'env_headers': {
+                'X-Session-API-Key': 'SESSION_API_KEY',
             },
         }
 
