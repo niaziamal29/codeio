@@ -7,17 +7,22 @@ import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalBody } from "#/components/shared/modals/modal-body";
 import { BrandButton } from "../settings/brand-button";
 import { I18nKey } from "#/i18n/declaration";
+import { useConversationsInSandbox } from "#/hooks/query/use-conversations-in-sandbox";
 
 interface ConfirmStopModalProps {
   onConfirm: () => void;
   onCancel: () => void;
+  sandboxId: string | null;
 }
 
 export function ConfirmStopModal({
   onConfirm,
   onCancel,
+  sandboxId,
 }: ConfirmStopModalProps) {
   const { t } = useTranslation();
+  const { data: conversations, isLoading } =
+    useConversationsInSandbox(sandboxId);
 
   return (
     <ModalBackdrop onClose={onCancel}>
@@ -29,6 +34,26 @@ export function ConfirmStopModal({
           <BaseModalDescription
             description={t(I18nKey.CONVERSATION$CLOSE_CONVERSATION_WARNING)}
           />
+          {isLoading ? (
+            <div
+              className="text-sm text-content-secondary"
+              data-testid="conversations-loading"
+            >
+              Loading...
+            </div>
+          ) : (
+            conversations &&
+            conversations.length > 0 && (
+              <ul
+                className="list-disc list-inside text-sm text-content-secondary"
+                data-testid="conversations-list"
+              >
+                {conversations.map((conv) => (
+                  <li key={conv.id}>{conv.title || conv.id}</li>
+                ))}
+              </ul>
+            )
+          )}
         </div>
         <div
           className="flex flex-col gap-2 w-full"
