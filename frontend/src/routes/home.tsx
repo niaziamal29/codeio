@@ -9,6 +9,7 @@ import { RecentConversations } from "#/components/features/home/recent-conversat
 import { HomepageCTA } from "#/components/features/home/homepage-cta";
 import { isCTADismissed } from "#/utils/session-storage";
 import { useConfig } from "#/hooks/query/use-config";
+import { ENABLE_PROJ_USER_JOURNEY } from "#/utils/feature-flags";
 
 <PrefetchPageLinks page="/conversations/:conversationId" />;
 
@@ -51,7 +52,7 @@ function HomeScreen() {
         </div>
       </div>
 
-      {isSaasMode && shouldShowCTA && (
+      {isSaasMode && shouldShowCTA && ENABLE_PROJ_USER_JOURNEY() && (
         <div className="mt-auto p-4 flex justify-center md:justify-end md:p-6">
           <HomepageCTA setShouldShowCTA={setShouldShowCTA} />
         </div>
