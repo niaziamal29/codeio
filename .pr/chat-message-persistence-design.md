@@ -51,16 +51,18 @@ We propose a multi-layered defense-in-depth solution (combining recommended Opti
 
 **Layer 1: Draft Persistence** - Continuously sync the chat input content to localStorage (debounced on every keystroke) so that drafts survive component remounts, page refreshes, and transient timeout/reconnect cycles. When a user returns to a conversation, their draft is automatically restored. Drafts are keyed by conversation ID to support switching between conversations.
 
-**Layer 2: Pending Message Queue** - When WebSocket is not connected or in a transitional state (including runtime startup), queue outgoing messages in sessionStorage. Users can submit messages even while the runtime is booting up - the messages will be processed once the runtime has started or resumed. This allows users to send a message and move on to other tasks/pages.
+**Layer 2: Pending Message Queue** - When WebSocket is not connected or in a transitional state (including runtime startup), queue outgoing messages in localStorage (keyed by conversation ID). Users can submit messages even while the runtime is booting up - the messages will be processed once the runtime has started or resumed. This allows users to send a message and move on to other tasks/pages.
 
 **Layer 3: UX Changes for Queue Support** - Enable message submission while runtime is starting:
 - Allow Enter key to submit messages to the queue while runtime is booting (currently creates a new line)
 - Enable the submit button (⬆️) during runtime startup (currently disabled)
 - Show clear visual feedback for queued/pending message status
 
+**Scope:** This design targets V1 conversations only. V0 already has a working `pendingEventsRef` queue mechanism in `ws-client-provider.tsx`.
+
 **Limitations and Trade-offs:**
-- Draft persistence uses localStorage which is per-origin and has ~5MB limit - suitable for text but we don't persist large file attachments in drafts
-- Session-based queue in sessionStorage means queued messages are lost if the browser tab is closed before delivery
+- localStorage is per-origin and has ~5MB limit - suitable for text but we don't persist large file attachments in drafts
+- Queued messages older than 24 hours are discarded to prevent stale message delivery
 - We prioritize simplicity over complex offline-first capabilities - this is not a full offline messaging solution
 - Need to handle edge cases: queue size limits, stale messages, message ordering guarantees
 
@@ -190,19 +192,20 @@ The codebase already has several relevant mechanisms:
 
 6. **`optimisticUserMessage` pattern** - Already exists for showing messages before server confirmation. The `removeOptimisticUserMessage()` is called when the server echoes back `UserMessageEvent`. This confirmation signal exists but is not currently used to control when input should be cleared.
 
-### 3.2 V0 vs V1 Differences
+### 3.2 V0 vs V1 Differences (Scope: V1 Only)
 
 **V0 (`ws-client-provider.tsx`):**
 - Has `pendingEventsRef` queue for offline messages
 - Messages queued when disconnected are sent on reconnect
 - Uses Socket.IO
+- **Out of scope** - existing queue mechanism works
 
 **V1 (`conversation-websocket-context.tsx`):**
 - No pending queue - throws error when disconnected
 - Uses native WebSocket
-- Needs queue implementation added
+- **In scope** - needs queue implementation added
 
-Both V0 and V1 need the draft persistence layer, but only V1 needs the pending queue added.
+Both V0 and V1 benefit from draft persistence, but this design focuses on V1 where the queue is missing.
 
 ### 3.3 Debouncing Strategy
 
@@ -331,7 +334,7 @@ export function useDraftPersistence(
 
 #### 4.2.1 Queue State Management
 
-Create a new Zustand store for managing queued messages:
+Create a new Zustand store for managing queued messages, using localStorage for persistence:
 
 ```typescript
 // frontend/src/stores/message-queue-store.ts
@@ -339,6 +342,8 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
 export type MessageStatus = "pending" | "sending" | "failed" | "delivered";
+
+const MESSAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export interface QueuedMessage {
   id: string;
@@ -364,6 +369,7 @@ interface MessageQueueActions {
   getPendingMessages: (conversationId: string) => QueuedMessage[];
   incrementRetryCount: (id: string) => void;
   clearConversationQueue: (conversationId: string) => void;
+  cleanupStaleMessages: () => void;
 }
 
 type MessageQueueStore = MessageQueueState & MessageQueueActions;
@@ -443,21 +449,22 @@ export const useMessageQueueStore = create<MessageQueueStore>()(
             false,
             "clearConversationQueue",
           ),
+
+        // Remove messages older than 24 hours
+        cleanupStaleMessages: () =>
+          set(
+            (state) => ({
+              messages: state.messages.filter(
+                (m) => Date.now() - new Date(m.timestamp).getTime() < MESSAGE_MAX_AGE_MS,
+              ),
+            }),
+            false,
+            "cleanupStaleMessages",
+          ),
       }),
       {
         name: "message-queue-storage",
-        storage: {
-          getItem: (name) => {
-            const str = sessionStorage.getItem(name);
-            return str ? JSON.parse(str) : null;
-          },
-          setItem: (name, value) => {
-            sessionStorage.setItem(name, JSON.stringify(value));
-          },
-          removeItem: (name) => {
-            sessionStorage.removeItem(name);
-          },
-        },
+        // Uses localStorage by default (persists across browser sessions)
       },
     ),
     { name: "message-queue-store" },
@@ -859,13 +866,13 @@ Implement draft persistence with localStorage integration.
 
 ### 5.2 Message Queue Store (M2)
 
-Implement the message queue store with sessionStorage persistence.
+Implement the message queue store with localStorage persistence.
 
-**Demo:** Messages are stored in sessionStorage and can be inspected via DevTools.
+**Demo:** Messages are stored in localStorage and can be inspected via DevTools.
 
 #### 5.2.1 Queue Store
-- [ ] `frontend/src/stores/message-queue-store.ts` - Zustand store with sessionStorage persistence
-- [ ] `frontend/__tests__/stores/message-queue-store.test.ts` - Unit tests for enqueue, status updates, retry count
+- [ ] `frontend/src/stores/message-queue-store.ts` - Zustand store with localStorage persistence
+- [ ] `frontend/__tests__/stores/message-queue-store.test.ts` - Unit tests for enqueue, status updates, retry count, stale cleanup
 
 ### 5.3 Queue Processing and V1 WebSocket Integration (M3)
 
@@ -881,9 +888,9 @@ Implement queue processing with retry logic and integrate with V1 WebSocket cont
 - [ ] `frontend/src/contexts/conversation-websocket-context.tsx` - Modify sendMessage to queue instead of throw when disconnected
 - [ ] `frontend/__tests__/contexts/conversation-websocket-context.test.tsx` - Add tests for queuing behavior
 
-#### 5.3.3 V0 WebSocket Integration (Optional)
-- [ ] `frontend/src/context/ws-client-provider.tsx` - Verify existing pendingEventsRef works with new queue store or integrate
-- [ ] `frontend/__tests__/conversation-websocket-handler.test.tsx` - Update tests
+#### 5.3.3 Stale Message Cleanup
+- [ ] Call `cleanupStaleMessages()` on app startup and periodically
+- [ ] Add cleanup on conversation load
 
 ### 5.4 Enable Submit During Runtime Startup (M4)
 
