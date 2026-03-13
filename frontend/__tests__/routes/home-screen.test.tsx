@@ -621,8 +621,14 @@ describe("HomepageCTA visibility", () => {
 
     getSettingsSpy.mockResolvedValue(MOCK_DEFAULT_USER_SETTINGS);
 
+    // Mock localStorage to enable the PROJ_USER_JOURNEY feature flag
     vi.stubGlobal("localStorage", {
-      getItem: vi.fn(() => null),
+      getItem: vi.fn((key: string) => {
+        if (key === "FEATURE_PROJ_USER_JOURNEY") {
+          return "true";
+        }
+        return null;
+      }),
       setItem: vi.fn(),
       removeItem: vi.fn(),
       clear: vi.fn(),
@@ -641,7 +647,7 @@ describe("HomepageCTA visibility", () => {
     vi.unstubAllGlobals();
   });
 
-  it("should show HomepageCTA in SaaS mode when not dismissed", async () => {
+  it("should show HomepageCTA in SaaS mode when not dismissed and feature flag enabled", async () => {
     useIsAuthedMock.mockReturnValue({
       data: true,
       isLoading: false,
@@ -677,7 +683,7 @@ describe("HomepageCTA visibility", () => {
     expect(ctaButton).toBeInTheDocument();
   });
 
-  it("should not show HomepageCTA in OSS mode", async () => {
+  it("should not show HomepageCTA in OSS mode even with feature flag enabled", async () => {
     useIsAuthedMock.mockReturnValue({
       data: true,
       isLoading: false,
@@ -691,6 +697,93 @@ describe("HomepageCTA visibility", () => {
 
     getConfigSpy.mockResolvedValue({
       app_mode: "oss",
+      posthog_client_key: "test-posthog-key",
+      providers_configured: ["github"],
+      auth_url: "https://auth.example.com",
+      feature_flags: DEFAULT_FEATURE_FLAGS,
+      maintenance_start_time: null,
+      recaptcha_site_key: null,
+      faulty_models: [],
+      error_message: null,
+      updated_at: "2024-01-14T10:00:00Z",
+      github_app_slug: null,
+    });
+
+    renderHomeScreen();
+
+    await screen.findByTestId("home-screen");
+
+    expect(screen.queryByText("CTA$ENTERPRISE_TITLE")).not.toBeInTheDocument();
+  });
+
+  it("should not show HomepageCTA when feature flag is disabled", async () => {
+    // Override localStorage to disable the feature flag
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(() => null), // No feature flags set
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    useIsAuthedMock.mockReturnValue({
+      data: true,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    useConfigMock.mockReturnValue({
+      data: { app_mode: "saas", feature_flags: DEFAULT_FEATURE_FLAGS },
+      isLoading: false,
+    });
+
+    getConfigSpy.mockResolvedValue({
+      app_mode: "saas",
+      posthog_client_key: "test-posthog-key",
+      providers_configured: ["github"],
+      auth_url: "https://auth.example.com",
+      feature_flags: DEFAULT_FEATURE_FLAGS,
+      maintenance_start_time: null,
+      recaptcha_site_key: null,
+      faulty_models: [],
+      error_message: null,
+      updated_at: "2024-01-14T10:00:00Z",
+      github_app_slug: null,
+    });
+
+    renderHomeScreen();
+
+    await screen.findByTestId("home-screen");
+
+    expect(screen.queryByText("CTA$ENTERPRISE_TITLE")).not.toBeInTheDocument();
+  });
+
+  it("should not show HomepageCTA when dismissed in session storage", async () => {
+    // Override sessionStorage to mark CTA as dismissed
+    vi.stubGlobal("sessionStorage", {
+      getItem: vi.fn((key: string) => {
+        if (key === "homepage-cta-dismissed") {
+          return "true";
+        }
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    useIsAuthedMock.mockReturnValue({
+      data: true,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+    });
+    useConfigMock.mockReturnValue({
+      data: { app_mode: "saas", feature_flags: DEFAULT_FEATURE_FLAGS },
+      isLoading: false,
+    });
+
+    getConfigSpy.mockResolvedValue({
+      app_mode: "saas",
       posthog_client_key: "test-posthog-key",
       providers_configured: ["github"],
       auth_url: "https://auth.example.com",
