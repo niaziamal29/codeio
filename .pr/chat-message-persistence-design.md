@@ -92,7 +92,7 @@ We propose a multi-layered defense-in-depth solution (combining recommended Opti
 5. User switches back to Conversation A
 6. The input is populated with "Implement the login feature..."
 
-**Key Behavior:** Drafts are keyed by conversation ID. Switching conversations saves the current draft and restores the target conversation's draft (if any).
+**Key Behavior:** Drafts are keyed by conversation ID. Each conversation maintains its own independent draft. Users can have unfinished drafts across multiple conversations simultaneously - switching conversations saves the current draft and restores the target conversation's draft (if any).
 
 ### 2.3 Queue Message During Runtime Startup Scenario
 
@@ -123,7 +123,24 @@ We propose a multi-layered defense-in-depth solution (combining recommended Opti
 6. The status indicator updates to "Delivered"
 7. If delivery fails after multiple retries, the message shows an error state with a "Retry" button
 
-### 2.5 Visual Indicators
+### 2.5 Multiple Conversations with Queued Messages Scenario
+
+**Scenario:** User queues messages in multiple conversations while offline, then comes back online.
+
+**Experience:**
+1. User is in Conversation A (runtime starting), types "Fix the login bug" and presses Enter
+2. Message is queued for Conversation A, input clears
+3. User switches to Conversation B (also starting), types "Add unit tests" and presses Enter
+4. Message is queued for Conversation B, input clears
+5. User switches to Conversation C and starts typing a draft (doesn't submit)
+6. User goes offline or waits for runtimes to start
+7. When Conversation A's runtime is ready, its queued message is sent automatically
+8. When Conversation B's runtime is ready, its queued message is sent automatically
+9. Conversation C's draft is preserved in the input (not queued since not submitted)
+
+**Key Behavior:** The message queue is keyed by conversation ID. Each conversation maintains its own independent queue. Messages are processed per-conversation when that conversation's WebSocket becomes available. Users can have queued messages pending across multiple conversations simultaneously.
+
+### 2.6 Visual Indicators
 
 ```plaintext
 ┌─────────────────────────────────────────────────────┐
@@ -152,7 +169,7 @@ We propose a multi-layered defense-in-depth solution (combining recommended Opti
 └─────────────────────────────────────────────────────┘
 ```
 
-### 2.6 Input State Changes
+### 2.7 Input State Changes
 
 **Current Behavior (to be changed):**
 - While runtime is booting: Enter key creates new line, submit button (⬆️) is disabled
