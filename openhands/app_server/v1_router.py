@@ -6,7 +6,7 @@ from openhands.app_server.event_callback import (
     webhook_router,
 )
 from openhands.app_server.sandbox import sandbox_router, sandbox_spec_router
-from openhands.app_server.user import sdk_settings_router, user_router
+from openhands.app_server.user import sandbox_secrets_router, user_router
 from openhands.app_server.web_client import web_client_router
 
 # Include routers
@@ -16,6 +16,6 @@ router.include_router(app_conversation_router.router)
 router.include_router(sandbox_router.router)
 router.include_router(sandbox_spec_router.router)
 router.include_router(user_router.router)
-router.include_router(sdk_settings_router.router)
+router.include_router(sandbox_secrets_router.router)
 router.include_router(webhook_router.router)
 router.include_router(web_client_router.router)

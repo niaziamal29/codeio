@@ -21,7 +21,7 @@ from openhands.app_server.config import get_sandbox_service
 from openhands.app_server.sandbox.sandbox_models import SandboxInfo
 from openhands.app_server.services.injector import InjectorState
 from openhands.app_server.user.auth_user_context import AuthUserContext
-from openhands.app_server.user.sdk_settings_models import (
+from openhands.app_server.user.sandbox_secrets_models import (
     SecretNameItem,
     SecretNamesResponse,
 )
