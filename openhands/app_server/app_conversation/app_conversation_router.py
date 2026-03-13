@@ -730,9 +730,7 @@ async def get_conversation_hooks(
             )
             return JSONResponse(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                content={
-                    'error': 'Failed to reach agent-server when loading hooks'
-                },
+                content={'error': 'Failed to reach agent-server when loading hooks'},
             )
 
         # Transform hook_config to response format
