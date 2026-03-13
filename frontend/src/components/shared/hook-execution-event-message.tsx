@@ -64,6 +64,15 @@ export function HookExecutionEventMessage({
   const statusText = getStatusText(event.blocked, event.success);
   const statusClassName = getStatusClassName(event.blocked, event.success);
 
+  // Determine the overall success indicator for GenericEventMessage.
+  // When blocked, suppress the success indicator entirely — the amber "blocked"
+  // badge in the title is the authoritative status signal.
+  const getSuccessStatus = (): "success" | "error" | undefined => {
+    if (event.blocked) return undefined;
+    return event.success ? "success" : "error";
+  };
+  const successStatus = getSuccessStatus();
+
   const title = (
     <span>
       {icon} {t("HOOK$HOOK_LABEL")}: {event.hook_event_type}
@@ -137,7 +146,7 @@ export function HookExecutionEventMessage({
     <GenericEventMessage
       title={title}
       details={details}
-      success={event.success ? "success" : "error"}
+      success={successStatus}
     />
   );
 }
