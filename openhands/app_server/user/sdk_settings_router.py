@@ -1,12 +1,11 @@
 """Router for sandbox settings API endpoints.
 
-Provides endpoints for SDK clients to retrieve the owning user's SaaS
-credentials, authenticated via ``X-Session-API-Key`` (sandbox-scoped).
+Provides endpoints for agent-servers inside sandboxes to retrieve the
+owning user's SaaS secrets on demand, authenticated via
+``X-Session-API-Key`` (sandbox-scoped).
 
 Endpoints
 ---------
-GET /sandboxes/{sandbox_id}/settings/llm
-    Full LLM config (model, api_key, base_url) with the raw api_key.
 GET /sandboxes/{sandbox_id}/settings/secrets
     List of available secret names (no values).
 GET /sandboxes/{sandbox_id}/settings/secrets/{secret_name}
@@ -23,7 +22,6 @@ from openhands.app_server.sandbox.sandbox_models import SandboxInfo
 from openhands.app_server.services.injector import InjectorState
 from openhands.app_server.user.auth_user_context import AuthUserContext
 from openhands.app_server.user.sdk_settings_models import (
-    LLMSettingsResponse,
     SecretNameItem,
     SecretNamesResponse,
 )
@@ -103,31 +101,6 @@ async def _get_user_context(sandbox_info: SandboxInfo) -> AuthUserContext:
     assert sandbox_info.created_by_user_id
     user_auth = await get_user_auth_for_user(sandbox_info.created_by_user_id)
     return AuthUserContext(user_auth=user_auth)
-
-
-# ---------------------------------------------------------------------------
-# GET /sandboxes/{sandbox_id}/settings/llm
-# ---------------------------------------------------------------------------
-@router.get('/llm')
-async def get_llm_settings(
-    sandbox_info: SandboxInfo = Depends(_valid_sandbox_from_session_key),
-) -> LLMSettingsResponse:
-    """Return LLM config including the raw API key.
-
-    The SDK client uses this to construct a fully usable ``LLM`` object.
-    """
-    user_context = await _get_user_context(sandbox_info)
-    user_info = await user_context.get_user_info()
-
-    api_key: str | None = None
-    if user_info.llm_api_key:
-        api_key = user_info.llm_api_key.get_secret_value()
-
-    return LLMSettingsResponse(
-        model=user_info.llm_model,
-        api_key=api_key,
-        base_url=user_info.llm_base_url,
-    )
 
 
 # ---------------------------------------------------------------------------

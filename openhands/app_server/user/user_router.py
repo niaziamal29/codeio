@@ -1,6 +1,7 @@
 """User router for OpenHands App Server. For the moment, this simply implements the /me endpoint."""
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 
 from openhands.app_server.config import depends_user_context
 from openhands.app_server.user.user_context import UserContext
@@ -18,9 +19,17 @@ user_dependency = depends_user_context()
 @router.get('/me')
 async def get_current_user(
     user_context: UserContext = user_dependency,
+    expose_secrets: bool = Query(
+        default=False,
+        description='If true, return unmasked secret values (e.g. llm_api_key).',
+    ),
 ) -> UserInfo:
     """Get the current authenticated user."""
     user = await user_context.get_user_info()
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail='Not authenticated')
+    if expose_secrets:
+        return JSONResponse(  # type: ignore[return-value]
+            content=user.model_dump(mode='json', context={'expose_secrets': True})
+        )
     return user

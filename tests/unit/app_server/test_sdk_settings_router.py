@@ -1,7 +1,7 @@
-"""Unit tests for the sandbox settings endpoints.
+"""Unit tests for the sandbox settings endpoints and /users/me expose_secrets.
 
-Tests the sandbox-scoped endpoints authenticated via X-Session-API-Key:
-- GET /api/v1/sandboxes/{sandbox_id}/settings/llm
+Tests:
+- GET /api/v1/users/me?expose_secrets=true
 - GET /api/v1/sandboxes/{sandbox_id}/settings/secrets
 - GET /api/v1/sandboxes/{sandbox_id}/settings/secrets/{secret_name}
 """
@@ -14,15 +14,14 @@ from pydantic import SecretStr
 
 from openhands.app_server.sandbox.sandbox_models import SandboxInfo, SandboxStatus
 from openhands.app_server.user.sdk_settings_models import (
-    LLMSettingsResponse,
     SecretNamesResponse,
 )
 from openhands.app_server.user.sdk_settings_router import (
-    get_llm_settings,
     get_secret_value,
     list_secret_names,
 )
 from openhands.app_server.user.user_models import UserInfo
+from openhands.app_server.user.user_router import get_current_user
 from openhands.sdk.secret import StaticSecret
 
 SANDBOX_ID = 'sb-test-123'
@@ -43,53 +42,47 @@ def _make_sandbox_info(
 
 
 @pytest.mark.asyncio
-class TestGetLLMSettings:
-    """Test suite for GET /sandboxes/{sandbox_id}/settings/llm."""
+class TestGetCurrentUserExposeSecrets:
+    """Test suite for GET /users/me?expose_secrets=true."""
 
-    async def test_returns_llm_settings_with_api_key(self):
-        """Returns model, raw api_key, and base_url."""
+    async def test_expose_secrets_returns_raw_api_key(self):
+        """With expose_secrets=true, llm_api_key is unmasked."""
         user_info = UserInfo(
             id=USER_ID,
             llm_model='anthropic/claude-sonnet-4-20250514',
             llm_api_key=SecretStr('sk-test-key-123'),
             llm_base_url='https://litellm.example.com',
         )
-        sandbox_info = _make_sandbox_info()
+        mock_context = AsyncMock()
+        mock_context.get_user_info = AsyncMock(return_value=user_info)
 
-        with patch(
-            'openhands.app_server.user.sdk_settings_router._get_user_context'
-        ) as mock_ctx:
-            ctx = AsyncMock()
-            ctx.get_user_info = AsyncMock(return_value=user_info)
-            mock_ctx.return_value = ctx
+        result = await get_current_user(user_context=mock_context, expose_secrets=True)
 
-            result = await get_llm_settings(sandbox_info=sandbox_info)
+        # JSONResponse — parse the body
+        import json
 
-        assert isinstance(result, LLMSettingsResponse)
-        assert result.model == 'anthropic/claude-sonnet-4-20250514'
-        assert result.api_key == 'sk-test-key-123'
-        assert result.base_url == 'https://litellm.example.com'
+        body = json.loads(result.body)
+        assert body['llm_model'] == 'anthropic/claude-sonnet-4-20250514'
+        assert body['llm_api_key'] == 'sk-test-key-123'
+        assert body['llm_base_url'] == 'https://litellm.example.com'
 
-    async def test_returns_none_api_key_when_not_configured(self):
-        """api_key is None when user has no LLM key configured."""
+    async def test_default_masks_api_key(self):
+        """Without expose_secrets, llm_api_key is masked."""
         user_info = UserInfo(
             id=USER_ID,
-            llm_model='gpt-4o',
-            llm_api_key=None,
+            llm_api_key=SecretStr('sk-test-key-123'),
         )
-        sandbox_info = _make_sandbox_info()
+        mock_context = AsyncMock()
+        mock_context.get_user_info = AsyncMock(return_value=user_info)
 
-        with patch(
-            'openhands.app_server.user.sdk_settings_router._get_user_context'
-        ) as mock_ctx:
-            ctx = AsyncMock()
-            ctx.get_user_info = AsyncMock(return_value=user_info)
-            mock_ctx.return_value = ctx
+        result = await get_current_user(user_context=mock_context, expose_secrets=False)
 
-            result = await get_llm_settings(sandbox_info=sandbox_info)
-
-        assert result.model == 'gpt-4o'
-        assert result.api_key is None
+        # Returns UserInfo directly (FastAPI will serialize with masking)
+        assert isinstance(result, UserInfo)
+        assert result.llm_api_key is not None
+        # The raw value is still in the object, but serialization masks it
+        dumped = result.model_dump(mode='json')
+        assert dumped['llm_api_key'] == '**********'
 
 
 @pytest.mark.asyncio
