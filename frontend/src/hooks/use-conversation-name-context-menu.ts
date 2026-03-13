@@ -280,7 +280,8 @@ export function useConversationNameContextMenu({
     shouldShowHooks: Boolean(
       showOptions &&
       conversationId &&
-      conversation?.conversation_version === "V1",
+      conversation?.conversation_version === "V1" &&
+      conversationStatus === "RUNNING",
     ),
   };
 }
