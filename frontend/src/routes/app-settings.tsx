@@ -53,6 +53,8 @@ function AppSettingsScreen() {
     sandboxGroupingStrategyHasChanged,
     setSandboxGroupingStrategyHasChanged,
   ] = React.useState(false);
+  const [selectedSandboxGroupingStrategy, setSelectedSandboxGroupingStrategy] =
+    React.useState<SandboxGroupingStrategy | null>(null);
   const [maxBudgetPerTaskHasChanged, setMaxBudgetPerTaskHasChanged] =
     React.useState(false);
   const [gitUserNameHasChanged, setGitUserNameHasChanged] =
@@ -79,11 +81,9 @@ function AppSettingsScreen() {
     const enableSolvabilityAnalysis =
       formData.get("enable-solvability-analysis-switch")?.toString() === "on";
 
-    const sandboxGroupingStrategyValue = formData
-      .get("sandbox-grouping-strategy-input")
-      ?.toString() as SandboxGroupingStrategy | undefined;
     const sandboxGroupingStrategy =
-      sandboxGroupingStrategyValue ||
+      selectedSandboxGroupingStrategy ||
+      settings?.sandbox_grouping_strategy ||
       DEFAULT_SETTINGS.sandbox_grouping_strategy;
 
     const maxBudgetPerTaskValue = formData
@@ -125,6 +125,7 @@ function AppSettingsScreen() {
           setSoundNotificationsSwitchHasChanged(false);
           setProactiveConversationsSwitchHasChanged(false);
           setSandboxGroupingStrategyHasChanged(false);
+          setSelectedSandboxGroupingStrategy(null);
           setMaxBudgetPerTaskHasChanged(false);
           setGitUserNameHasChanged(false);
           setGitUserEmailHasChanged(false);
@@ -172,11 +173,13 @@ function AppSettingsScreen() {
     );
   };
 
-  const checkIfSandboxGroupingStrategyHasChanged = (key: React.Key | null) => {
+  const handleSandboxGroupingStrategyChange = (key: React.Key | null) => {
+    const newStrategy = key?.toString() as SandboxGroupingStrategy | undefined;
+    setSelectedSandboxGroupingStrategy(newStrategy || null);
     const currentStrategy =
       settings?.sandbox_grouping_strategy ||
       DEFAULT_SETTINGS.sandbox_grouping_strategy;
-    setSandboxGroupingStrategyHasChanged(key !== currentStrategy);
+    setSandboxGroupingStrategyHasChanged(newStrategy !== currentStrategy);
   };
 
   const checkIfMaxBudgetPerTaskHasChanged = (value: string) => {
@@ -273,11 +276,13 @@ function AppSettingsScreen() {
               key,
               label: t(`SETTINGS$SANDBOX_GROUPING_${key}` as I18nKey),
             }))}
-            defaultSelectedKey={
+            selectedKey={
+              selectedSandboxGroupingStrategy ||
               settings.sandbox_grouping_strategy ||
               DEFAULT_SETTINGS.sandbox_grouping_strategy
             }
-            onSelectionChange={checkIfSandboxGroupingStrategyHasChanged}
+            isClearable={false}
+            onSelectionChange={handleSandboxGroupingStrategyChange}
             wrapperClassName="w-full max-w-[680px]"
           />
 
