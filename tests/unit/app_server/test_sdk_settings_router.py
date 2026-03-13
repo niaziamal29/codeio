@@ -46,7 +46,7 @@ class TestGetCurrentUserExposeSecrets:
     """Test suite for GET /users/me?expose_secrets=true."""
 
     async def test_expose_secrets_returns_raw_api_key(self):
-        """With expose_secrets=true, llm_api_key is unmasked."""
+        """With valid session key, expose_secrets=true returns unmasked llm_api_key."""
         user_info = UserInfo(
             id=USER_ID,
             llm_model='anthropic/claude-sonnet-4-20250514',
@@ -55,8 +55,17 @@ class TestGetCurrentUserExposeSecrets:
         )
         mock_context = AsyncMock()
         mock_context.get_user_info = AsyncMock(return_value=user_info)
+        mock_context.get_user_id = AsyncMock(return_value=USER_ID)
 
-        result = await get_current_user(user_context=mock_context, expose_secrets=True)
+        with patch(
+            'openhands.app_server.user.user_router._validate_session_key_ownership'
+        ) as mock_validate:
+            mock_validate.return_value = None
+            result = await get_current_user(
+                user_context=mock_context,
+                expose_secrets=True,
+                x_session_api_key='valid-key',
+            )
 
         # JSONResponse — parse the body
         import json
@@ -66,8 +75,55 @@ class TestGetCurrentUserExposeSecrets:
         assert body['llm_api_key'] == 'sk-test-key-123'
         assert body['llm_base_url'] == 'https://litellm.example.com'
 
+    async def test_expose_secrets_rejects_missing_session_key(self):
+        """expose_secrets=true without X-Session-API-Key is rejected."""
+        user_info = UserInfo(id=USER_ID, llm_api_key=SecretStr('sk-key'))
+        mock_context = AsyncMock()
+        mock_context.get_user_info = AsyncMock(return_value=user_info)
+
+        from openhands.app_server.user.user_router import (
+            _validate_session_key_ownership,
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await _validate_session_key_ownership(mock_context, session_api_key=None)
+        assert exc_info.value.status_code == 401
+        assert 'X-Session-API-Key' in exc_info.value.detail
+
+    async def test_expose_secrets_rejects_wrong_user(self):
+        """expose_secrets=true with session key from different user is rejected."""
+        mock_context = AsyncMock()
+        mock_context.get_user_id = AsyncMock(return_value='user-A')
+
+        other_user_sandbox = _make_sandbox_info(user_id='user-B')
+
+        with (
+            patch(
+                'openhands.app_server.user.user_router.get_sandbox_service'
+            ) as mock_svc,
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            mock_sandbox_service = AsyncMock()
+            mock_sandbox_service.get_sandbox_by_session_api_key = AsyncMock(
+                return_value=other_user_sandbox
+            )
+            mock_svc.return_value.__aenter__ = AsyncMock(
+                return_value=mock_sandbox_service
+            )
+            mock_svc.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            from openhands.app_server.user.user_router import (
+                _validate_session_key_ownership,
+            )
+
+            await _validate_session_key_ownership(
+                mock_context, session_api_key='stolen-key'
+            )
+
+        assert exc_info.value.status_code == 403
+
     async def test_default_masks_api_key(self):
-        """Without expose_secrets, llm_api_key is masked."""
+        """Without expose_secrets, llm_api_key is masked (no session key needed)."""
         user_info = UserInfo(
             id=USER_ID,
             llm_api_key=SecretStr('sk-test-key-123'),
@@ -75,7 +131,9 @@ class TestGetCurrentUserExposeSecrets:
         mock_context = AsyncMock()
         mock_context.get_user_info = AsyncMock(return_value=user_info)
 
-        result = await get_current_user(user_context=mock_context, expose_secrets=False)
+        result = await get_current_user(
+            user_context=mock_context, expose_secrets=False, x_session_api_key=None
+        )
 
         # Returns UserInfo directly (FastAPI will serialize with masking)
         assert isinstance(result, UserInfo)
