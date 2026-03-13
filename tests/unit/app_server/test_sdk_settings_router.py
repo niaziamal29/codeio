@@ -1,119 +1,172 @@
-"""Unit tests for the SDK settings endpoints.
+"""Unit tests for the sandbox settings endpoints.
 
-Tests the GET /api/v1/users/settings/llm and GET /api/v1/users/settings/secrets
-endpoints that allow SDK users to retrieve their SaaS credentials.
+Tests the sandbox-scoped endpoints authenticated via X-Session-API-Key:
+- GET /api/v1/sandboxes/{sandbox_id}/settings/llm
+- GET /api/v1/sandboxes/{sandbox_id}/settings/llm-key
+- GET /api/v1/sandboxes/{sandbox_id}/settings/secrets
+- GET /api/v1/sandboxes/{sandbox_id}/settings/secrets/{secret_name}
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 from pydantic import SecretStr
 
+from openhands.app_server.sandbox.sandbox_models import SandboxInfo, SandboxStatus
 from openhands.app_server.user.sdk_settings_models import (
     LLMSettingsResponse,
-    SecretsResponse,
+    SecretNamesResponse,
 )
 from openhands.app_server.user.sdk_settings_router import (
+    get_llm_key,
     get_llm_settings,
-    get_secrets,
+    get_secret_value,
+    list_secret_names,
 )
-from openhands.app_server.user.user_context import UserContext
 from openhands.app_server.user.user_models import UserInfo
 from openhands.sdk.secret import StaticSecret
 
+SANDBOX_ID = 'sb-test-123'
+USER_ID = 'test-user-id'
 
-def _make_user_context(
-    *,
-    user_id: str | None = 'test-user-id',
-    user_info: UserInfo | None = None,
-    secrets: dict | None = None,
-    raise_on_get_info: bool = False,
-    raise_on_get_secrets: bool = False,
-) -> UserContext:
-    """Create a mock UserContext."""
-    mock = MagicMock(spec=UserContext)
-    mock.get_user_id = AsyncMock(return_value=user_id)
 
-    if raise_on_get_info:
-        mock.get_user_info = AsyncMock(side_effect=Exception('DB error'))
-    else:
-        mock.get_user_info = AsyncMock(return_value=user_info)
+def _make_sandbox_info(
+    sandbox_id: str = SANDBOX_ID,
+    user_id: str | None = USER_ID,
+) -> SandboxInfo:
+    return SandboxInfo(
+        id=sandbox_id,
+        created_by_user_id=user_id,
+        sandbox_spec_id='test-spec',
+        status=SandboxStatus.RUNNING,
+        session_api_key='session-key',
+    )
 
-    if raise_on_get_secrets:
-        mock.get_secrets = AsyncMock(side_effect=Exception('DB error'))
-    else:
-        mock.get_secrets = AsyncMock(return_value=secrets or {})
 
-    return mock
+def _make_mock_request(
+    sandbox_id: str = SANDBOX_ID,
+    session_api_key: str = 'session-key',
+) -> MagicMock:
+    request = MagicMock()
+    request.base_url = 'http://testserver/'
+    request.headers = {'X-Session-API-Key': session_api_key}
+    return request
 
 
 @pytest.mark.asyncio
 class TestGetLLMSettings:
-    """Test suite for GET /api/v1/users/settings/llm."""
+    """Test suite for GET /sandboxes/{sandbox_id}/settings/llm."""
 
-    async def test_returns_llm_settings_with_all_fields(self):
-        """Test successful retrieval of LLM settings with model, key, and base URL."""
+    async def test_returns_llm_settings_with_lookup_secret(self):
+        """api_key is a LookupSecret dict pointing to /llm-key."""
         user_info = UserInfo(
-            id='test-user-id',
+            id=USER_ID,
             llm_model='anthropic/claude-sonnet-4-20250514',
             llm_api_key=SecretStr('sk-test-key-123'),
             llm_base_url='https://litellm.example.com',
         )
-        user_context = _make_user_context(user_info=user_info)
+        sandbox_info = _make_sandbox_info()
+        request = _make_mock_request()
 
-        result = await get_llm_settings(user_context=user_context)
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_user_info = AsyncMock(return_value=user_info)
+            mock_ctx.return_value = ctx
+
+            result = await get_llm_settings(
+                request=request,
+                sandbox_id=SANDBOX_ID,
+                sandbox_info=sandbox_info,
+            )
 
         assert isinstance(result, LLMSettingsResponse)
         assert result.model == 'anthropic/claude-sonnet-4-20250514'
-        assert result.api_key == 'sk-test-key-123'
         assert result.base_url == 'https://litellm.example.com'
 
-    async def test_returns_llm_settings_with_no_api_key(self):
-        """Test LLM settings when no API key is configured."""
+        # api_key should be a LookupSecret dict, NOT the raw key
+        assert result.api_key is not None
+        assert result.api_key['kind'] == 'LookupSecret'
+        assert f'/sandboxes/{SANDBOX_ID}/settings/llm-key' in result.api_key['url']
+        assert result.api_key['headers']['X-Session-API-Key'] == 'session-key'
+
+    async def test_returns_none_api_key_when_not_configured(self):
+        """api_key is None when user has no LLM key configured."""
         user_info = UserInfo(
-            id='test-user-id',
+            id=USER_ID,
             llm_model='gpt-4o',
             llm_api_key=None,
-            llm_base_url=None,
         )
-        user_context = _make_user_context(user_info=user_info)
+        sandbox_info = _make_sandbox_info()
+        request = _make_mock_request()
 
-        result = await get_llm_settings(user_context=user_context)
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_user_info = AsyncMock(return_value=user_info)
+            mock_ctx.return_value = ctx
+
+            result = await get_llm_settings(
+                request=request,
+                sandbox_id=SANDBOX_ID,
+                sandbox_info=sandbox_info,
+            )
 
         assert result.model == 'gpt-4o'
         assert result.api_key is None
-        assert result.base_url is None
-
-    async def test_returns_401_when_not_authenticated(self):
-        """Test endpoint returns 401 when user is not authenticated."""
-        user_context = _make_user_context(user_id=None)
-
-        with pytest.raises(HTTPException) as exc_info:
-            await get_llm_settings(user_context=user_context)
-
-        assert exc_info.value.status_code == 401
-        assert 'not authenticated' in exc_info.value.detail.lower()
-
-    async def test_returns_500_on_internal_error(self):
-        """Test endpoint returns 500 when an internal error occurs."""
-        user_context = _make_user_context(
-            user_id='test-user-id',
-            raise_on_get_info=True,
-        )
-
-        with pytest.raises(HTTPException) as exc_info:
-            await get_llm_settings(user_context=user_context)
-
-        assert exc_info.value.status_code == 500
 
 
 @pytest.mark.asyncio
-class TestGetSecrets:
-    """Test suite for GET /api/v1/users/settings/secrets."""
+class TestGetLLMKey:
+    """Test suite for GET /sandboxes/{sandbox_id}/settings/llm-key."""
 
-    async def test_returns_all_secrets(self):
-        """Test successful retrieval of all secrets."""
+    async def test_returns_raw_api_key(self):
+        """Raw API key returned as plain text."""
+        user_info = UserInfo(
+            id=USER_ID,
+            llm_api_key=SecretStr('sk-actual-secret-key'),
+        )
+        sandbox_info = _make_sandbox_info()
+
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_user_info = AsyncMock(return_value=user_info)
+            mock_ctx.return_value = ctx
+
+            response = await get_llm_key(sandbox_info=sandbox_info)
+
+        assert response.body == b'sk-actual-secret-key'
+        assert response.media_type == 'text/plain'
+
+    async def test_returns_404_when_no_key(self):
+        """404 when no LLM API key is configured."""
+        user_info = UserInfo(id=USER_ID, llm_api_key=None)
+        sandbox_info = _make_sandbox_info()
+
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_user_info = AsyncMock(return_value=user_info)
+            mock_ctx.return_value = ctx
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_llm_key(sandbox_info=sandbox_info)
+
+        assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+class TestListSecretNames:
+    """Test suite for GET /sandboxes/{sandbox_id}/settings/secrets."""
+
+    async def test_returns_secret_names_without_values(self):
+        """Response contains names and descriptions, NOT raw values."""
         secrets = {
             'GITHUB_TOKEN': StaticSecret(
                 value=SecretStr('ghp_test123'),
@@ -124,124 +177,110 @@ class TestGetSecrets:
                 description='Custom API key',
             ),
         }
-        user_context = _make_user_context(secrets=secrets)
+        sandbox_info = _make_sandbox_info()
 
-        result = await get_secrets(names=None, user_context=user_context)
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_secrets = AsyncMock(return_value=secrets)
+            mock_ctx.return_value = ctx
 
-        assert isinstance(result, SecretsResponse)
+            result = await list_secret_names(sandbox_info=sandbox_info)
+
+        assert isinstance(result, SecretNamesResponse)
         assert len(result.secrets) == 2
-        secret_names = {s.name for s in result.secrets}
-        assert 'GITHUB_TOKEN' in secret_names
-        assert 'MY_API_KEY' in secret_names
+        names = {s.name for s in result.secrets}
+        assert 'GITHUB_TOKEN' in names
+        assert 'MY_API_KEY' in names
 
-        gh_secret = next(s for s in result.secrets if s.name == 'GITHUB_TOKEN')
-        assert gh_secret.value == 'ghp_test123'
-        assert gh_secret.description == 'GitHub personal access token'
-
-    async def test_returns_filtered_secrets(self):
-        """Test filtering secrets by name."""
-        secrets = {
-            'GITHUB_TOKEN': StaticSecret(
-                value=SecretStr('ghp_test123'),
-                description='GitHub token',
-            ),
-            'MY_API_KEY': StaticSecret(
-                value=SecretStr('my-api-key-value'),
-                description='Custom API key',
-            ),
-            'ANOTHER_SECRET': StaticSecret(
-                value=SecretStr('another-value'),
-                description='Another secret',
-            ),
-        }
-        user_context = _make_user_context(secrets=secrets)
-
-        result = await get_secrets(
-            names=['GITHUB_TOKEN', 'ANOTHER_SECRET'],
-            user_context=user_context,
-        )
-
-        assert len(result.secrets) == 2
-        secret_names = {s.name for s in result.secrets}
-        assert 'GITHUB_TOKEN' in secret_names
-        assert 'ANOTHER_SECRET' in secret_names
-        assert 'MY_API_KEY' not in secret_names
+        gh = next(s for s in result.secrets if s.name == 'GITHUB_TOKEN')
+        assert gh.description == 'GitHub personal access token'
+        # Verify no 'value' field is exposed
+        assert not hasattr(gh, 'value')
 
     async def test_returns_empty_when_no_secrets(self):
-        """Test empty response when user has no secrets."""
-        user_context = _make_user_context(secrets={})
+        sandbox_info = _make_sandbox_info()
 
-        result = await get_secrets(names=None, user_context=user_context)
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_secrets = AsyncMock(return_value={})
+            mock_ctx.return_value = ctx
 
-        assert isinstance(result, SecretsResponse)
+            result = await list_secret_names(sandbox_info=sandbox_info)
+
         assert len(result.secrets) == 0
 
-    async def test_returns_empty_when_filtered_names_not_found(self):
-        """Test empty response when filtered names don't match any secrets."""
+
+@pytest.mark.asyncio
+class TestGetSecretValue:
+    """Test suite for GET /sandboxes/{sandbox_id}/settings/secrets/{name}."""
+
+    async def test_returns_raw_secret_value(self):
+        """Raw secret value returned as plain text."""
         secrets = {
             'GITHUB_TOKEN': StaticSecret(
-                value=SecretStr('ghp_test123'),
+                value=SecretStr('ghp_actual_secret'),
+                description='GitHub token',
             ),
         }
-        user_context = _make_user_context(secrets=secrets)
+        sandbox_info = _make_sandbox_info()
 
-        result = await get_secrets(
-            names=['NONEXISTENT_SECRET'],
-            user_context=user_context,
-        )
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_secrets = AsyncMock(return_value=secrets)
+            mock_ctx.return_value = ctx
 
-        assert len(result.secrets) == 0
+            response = await get_secret_value(
+                secret_name='GITHUB_TOKEN',
+                sandbox_info=sandbox_info,
+            )
 
-    async def test_skips_secrets_with_none_value(self):
-        """Test that secrets with None values are not included."""
+        assert response.body == b'ghp_actual_secret'
+        assert response.media_type == 'text/plain'
+
+    async def test_returns_404_for_unknown_secret(self):
+        """404 when requested secret doesn't exist."""
+        secrets = {}
+        sandbox_info = _make_sandbox_info()
+
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_secrets = AsyncMock(return_value=secrets)
+            mock_ctx.return_value = ctx
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_secret_value(
+                    secret_name='NONEXISTENT',
+                    sandbox_info=sandbox_info,
+                )
+
+        assert exc_info.value.status_code == 404
+
+    async def test_returns_404_for_none_value_secret(self):
+        """404 when secret exists but has None value."""
         secrets = {
-            'VALID_SECRET': StaticSecret(
-                value=SecretStr('valid-value'),
-            ),
-            'EMPTY_SECRET': StaticSecret(
-                value=None,
-            ),
+            'EMPTY_SECRET': StaticSecret(value=None),
         }
-        user_context = _make_user_context(secrets=secrets)
+        sandbox_info = _make_sandbox_info()
 
-        result = await get_secrets(names=None, user_context=user_context)
+        with patch(
+            'openhands.app_server.user.sdk_settings_router._get_user_context'
+        ) as mock_ctx:
+            ctx = AsyncMock()
+            ctx.get_secrets = AsyncMock(return_value=secrets)
+            mock_ctx.return_value = ctx
 
-        assert len(result.secrets) == 1
-        assert result.secrets[0].name == 'VALID_SECRET'
+            with pytest.raises(HTTPException) as exc_info:
+                await get_secret_value(
+                    secret_name='EMPTY_SECRET',
+                    sandbox_info=sandbox_info,
+                )
 
-    async def test_returns_401_when_not_authenticated(self):
-        """Test endpoint returns 401 when user is not authenticated."""
-        user_context = _make_user_context(user_id=None)
-
-        with pytest.raises(HTTPException) as exc_info:
-            await get_secrets(names=None, user_context=user_context)
-
-        assert exc_info.value.status_code == 401
-
-    async def test_returns_500_on_internal_error(self):
-        """Test endpoint returns 500 when an internal error occurs."""
-        user_context = _make_user_context(
-            user_id='test-user-id',
-            raise_on_get_secrets=True,
-        )
-
-        with pytest.raises(HTTPException) as exc_info:
-            await get_secrets(names=None, user_context=user_context)
-
-        assert exc_info.value.status_code == 500
-
-    async def test_secret_description_is_optional(self):
-        """Test that secrets without descriptions have None description."""
-        secrets = {
-            'NO_DESC_SECRET': StaticSecret(
-                value=SecretStr('some-value'),
-            ),
-        }
-        user_context = _make_user_context(secrets=secrets)
-
-        result = await get_secrets(names=None, user_context=user_context)
-
-        assert len(result.secrets) == 1
-        assert result.secrets[0].name == 'NO_DESC_SECRET'
-        assert result.secrets[0].value == 'some-value'
-        assert result.secrets[0].description is None
+        assert exc_info.value.status_code == 404
