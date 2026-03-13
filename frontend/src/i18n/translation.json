@@ -17263,6 +17263,22 @@
     "tr": "Zaman aşımı: {{timeout}}s",
     "uk": "Таймаут: {{timeout}}с"
   },
+  "HOOKS_MODAL$ASYNC": {
+    "en": "Async",
+    "ja": "非同期",
+    "zh-CN": "异步",
+    "zh-TW": "非同步",
+    "ko-KR": "비동기",
+    "no": "Asynkron",
+    "ar": "غير متزامن",
+    "de": "Asynchron",
+    "fr": "Asynchrone",
+    "it": "Asincrono",
+    "pt": "Assíncrono",
+    "es": "Asíncrono",
+    "tr": "Asenkron",
+    "uk": "Асинхронний"
+  },
   "HOOKS_MODAL$EVENT_PRE_TOOL_USE": {
     "en": "Pre Tool Use",
     "ja": "ツール使用前",

@@ -47,6 +47,11 @@ export function HookMatcherContent({ matcher }: HookMatcherContentProps) {
               <span>
                 {t(I18nKey.HOOKS_MODAL$TIMEOUT, { timeout: hook.timeout })}
               </span>
+              {hook.async ? (
+                <span className="rounded-full bg-emerald-900 px-2 py-0.5 text-emerald-300">
+                  {t(I18nKey.HOOKS_MODAL$ASYNC)}
+                </span>
+              ) : null}
             </div>
           </div>
         ))}

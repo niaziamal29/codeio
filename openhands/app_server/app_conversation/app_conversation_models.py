@@ -246,6 +246,7 @@ class HookDefinitionResponse(BaseModel):
     type: str  # 'command' or 'prompt'
     command: str
     timeout: int = 60
+    async_: bool = Field(default=False, serialization_alias='async')
 
 
 class HookMatcherResponse(BaseModel):

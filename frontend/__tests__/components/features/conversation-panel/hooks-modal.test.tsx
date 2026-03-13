@@ -28,6 +28,7 @@ vi.mock("react-i18next", async () => {
           HOOKS_MODAL$COMMANDS: "Commands",
           HOOKS_MODAL$TYPE: `Type: ${params?.type ?? ""}`,
           HOOKS_MODAL$TIMEOUT: `Timeout: ${params?.timeout ?? 0}s`,
+          HOOKS_MODAL$ASYNC: "Async",
           COMMON$FETCH_ERROR: "Failed to fetch data",
           CONVERSATION$NO_HOOKS: "No hooks configured",
           BUTTON$REFRESH: "Refresh",
@@ -119,6 +120,7 @@ describe("HookEventItem", () => {
             type: "command",
             command: ".openhands/hooks/on_stop.sh",
             timeout: 30,
+            async: true,
           },
         ],
       },
@@ -164,6 +166,11 @@ describe("HookEventItem", () => {
     render(<HookEventItem {...defaultProps} isExpanded={true} />);
     // Matcher content should be visible when expanded
     expect(screen.getByText("*")).toBeInTheDocument();
+  });
+
+  it("should render async badge for async hooks", () => {
+    render(<HookEventItem {...defaultProps} isExpanded={true} />);
+    expect(screen.getByText("Async")).toBeInTheDocument();
   });
 
   it("should render different event types with correct i18n labels", () => {

@@ -134,6 +134,7 @@ export interface HookDefinition {
   type: string; // 'command' or 'prompt'
   command: string;
   timeout: number;
+  async?: boolean;
 }
 
 export interface HookMatcher {

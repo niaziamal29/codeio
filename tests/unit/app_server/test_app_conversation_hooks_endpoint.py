@@ -81,6 +81,7 @@ class TestGetConversationHooks:
                                 'type': 'command',
                                 'command': '.openhands/hooks/on_stop.sh',
                                 'timeout': 60,
+                                'async': True,
                             }
                         ],
                     }
@@ -111,6 +112,8 @@ class TestGetConversationHooks:
             data['hooks'][0]['matchers'][0]['hooks'][0]['command']
             == '.openhands/hooks/on_stop.sh'
         )
+        assert data['hooks'][0]['matchers'][0]['hooks'][0]['async'] is True
+        assert 'async_' not in data['hooks'][0]['matchers'][0]['hooks'][0]
 
         mock_httpx_client.post.assert_called_once()
         called_url = mock_httpx_client.post.call_args[0][0]

@@ -769,6 +769,7 @@ async def get_conversation_hooks(
                                 else str(hook.type),
                                 command=hook.command,
                                 timeout=hook.timeout,
+                                async_=hook.async_,
                             )
                             for hook in matcher.hooks
                         ]
@@ -791,7 +792,7 @@ async def get_conversation_hooks(
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=GetHooksResponse(hooks=hooks_response).model_dump(),
+            content=GetHooksResponse(hooks=hooks_response).model_dump(by_alias=True),
         )
 
     except Exception as e:
