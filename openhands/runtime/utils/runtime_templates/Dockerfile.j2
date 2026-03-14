@@ -310,7 +310,6 @@ COPY --chown=openhands:openhands ./code/pyproject.toml ./code/poetry.lock /openh
 
 {{ install_dependencies_user() }}
 {{ install_dependencies_root() }}
-{{ install_vscode_extensions() }}
 
 # ================================================================
 # END: Build Runtime Image from Scratch
@@ -349,6 +348,14 @@ COPY --chown=openhands:openhands ./code/openhands /openhands/code/openhands
 RUN chmod a+rwx /openhands/code/openhands/__init__.py && \
     chown -R openhands:openhands /openhands/code
 
+
+# ================================================================
+# Install VSCode extensions for build_from_scratch
+# (must be after setup_vscode_server and source file copy)
+# ================================================================
+{% if build_from_scratch %}
+{{ install_vscode_extensions() }}
+{% endif %}
 
 # ================================================================
 # END: Build from versioned image
