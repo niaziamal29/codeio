@@ -25,7 +25,7 @@ from openhands.sdk import Event, MessageEvent
 
 _logger = logging.getLogger(__name__)
 
-# Poll ~3.75s total wait time before giving up
+# Poll with ~3.75s total wait per message event before retrying later.
 _TITLE_POLL_DELAYS_S = (0.25, 0.5, 1.0, 2.0)
 
 
@@ -77,9 +77,13 @@ class SetTitleCallbackProcessor(EventCallbackProcessor):
                         },
                     )
                     response.raise_for_status()
-                except httpx.HTTPError:
+                except httpx.HTTPError as exc:
                     # Transient agent-server failures are acceptable; retry later.
-                    pass
+                    _logger.debug(
+                        'Title poll failed for conversation %s: %s',
+                        conversation_id,
+                        exc,
+                    )
                 else:
                     title = response.json().get('title')
                     if title:
@@ -87,6 +91,7 @@ class SetTitleCallbackProcessor(EventCallbackProcessor):
                 await asyncio.sleep(delay_s)
 
             if not title:
+                # Keep the callback active so later message events can retry.
                 _logger.info(
                     f'Conversation {conversation_id} title not available yet; '
                     'will retry on a future message event.'

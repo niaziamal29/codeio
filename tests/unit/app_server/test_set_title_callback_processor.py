@@ -279,11 +279,16 @@ async def test_set_title_callback_processor_request_errors_return_none():
             'set_title_callback_processor.asyncio.sleep',
             new=AsyncMock(),
         ),
+        patch(
+            'openhands.app_server.event_callback.'
+            'set_title_callback_processor._logger.debug'
+        ) as logger_debug,
     ):
         result = await processor(conversation_id, callback, event)
 
     assert result is None
     assert len(httpx_client.calls) == 4
+    assert logger_debug.call_count == 4
     app_conversation_info_service.save_app_conversation_info.assert_not_called()
     event_callback_service.save_event_callback.assert_not_called()
     assert callback.status == EventCallbackStatus.ACTIVE
