@@ -1199,6 +1199,9 @@ class TestLiveStatusAppConversationService:
         self.service._configure_llm_and_mcp.assert_called_once_with(
             self.mock_user, 'gpt-4'
         )
+        # When selected_repository='test/repo', project_dir is resolved
+        # to '/test/dir/repo' via get_project_dir.  All downstream calls
+        # (agent context, workspace, skills) must use this path.
         self.service._create_agent_with_context.assert_called_once_with(
             mock_llm,
             AgentType.DEFAULT,
@@ -1207,7 +1210,7 @@ class TestLiveStatusAppConversationService:
             self.mock_user.condenser_max_size,
             secrets=mock_secrets,
             git_provider=ProviderType.GITHUB,
-            working_dir='/test/dir',
+            working_dir='/test/dir/repo',
         )
         self.service._finalize_conversation_request.assert_called_once()
 
@@ -1988,6 +1991,225 @@ class TestLiveStatusAppConversationService:
         stdio_server = mcp_servers['stdio-server']
         assert stdio_server['command'] == 'npx'
         assert stdio_server['env'] == {'TOKEN': 'value'}
+
+    # ------------------------------------------------------------------ #
+    #  Regression tests: workspace.working_dir == project_dir             #
+    # ------------------------------------------------------------------ #
+
+    def test_get_project_dir_with_repo(self):
+        """get_project_dir appends repo name to working_dir."""
+        from openhands.app_server.app_conversation.app_conversation_service_base import (
+            get_project_dir,
+        )
+
+        assert (
+            get_project_dir('/workspace/project', 'OpenHands/software-agent-sdk')
+            == '/workspace/project/software-agent-sdk'
+        )
+        assert get_project_dir('/w', 'org/repo-name') == '/w/repo-name'
+
+    def test_get_project_dir_without_repo(self):
+        """get_project_dir returns working_dir unchanged when no repo selected."""
+        from openhands.app_server.app_conversation.app_conversation_service_base import (
+            get_project_dir,
+        )
+
+        assert get_project_dir('/workspace/project', None) == '/workspace/project'
+        assert get_project_dir('/workspace/project', '') == '/workspace/project'
+
+    @pytest.mark.asyncio
+    async def test_build_request_workspace_uses_project_dir(self):
+        """workspace.working_dir in StartConversationRequest must equal project_dir.
+
+        This is the root cause of the V1 hook-stop bug: if workspace.working_dir
+        points to the sandbox mount root (/workspace/project) instead of the
+        cloned repo (/workspace/project/<repo>), the agent's CWD is wrong and
+        .openhands/hooks/on_stop.sh is not found.
+        """
+        self.mock_user_context.get_user_info.return_value = self.mock_user
+
+        mock_secrets = {'GITHUB_TOKEN': Mock()}
+        mock_llm = Mock(spec=LLM)
+        mock_agent = Mock(spec=Agent)
+
+        self.service._setup_secrets_for_git_providers = AsyncMock(
+            return_value=mock_secrets
+        )
+        self.service._configure_llm_and_mcp = AsyncMock(return_value=(mock_llm, {}))
+        self.service._create_agent_with_context = Mock(return_value=mock_agent)
+
+        captured = {}
+
+        async def capture_finalize(
+            agent, conversation_id, user, workspace, *args, **kwargs
+        ):
+            captured['workspace_working_dir'] = workspace.working_dir
+            return Mock(spec=StartConversationRequest)
+
+        self.service._finalize_conversation_request = AsyncMock(
+            side_effect=capture_finalize
+        )
+
+        await self.service._build_start_conversation_request_for_user(
+            sandbox=self.mock_sandbox,
+            initial_message=None,
+            system_message_suffix=None,
+            git_provider=None,
+            working_dir='/workspace/project',
+            selected_repository='OpenHands/software-agent-sdk',
+        )
+
+        assert (
+            captured['workspace_working_dir'] == '/workspace/project/software-agent-sdk'
+        ), 'workspace.working_dir must point to the repo root, not the sandbox mount'
+
+    @pytest.mark.asyncio
+    async def test_build_request_no_repo_workspace_unchanged(self):
+        """Without selected_repository, workspace.working_dir == sandbox working_dir."""
+        self.mock_user_context.get_user_info.return_value = self.mock_user
+
+        self.service._setup_secrets_for_git_providers = AsyncMock(return_value={})
+        self.service._configure_llm_and_mcp = AsyncMock(
+            return_value=(Mock(spec=LLM), {})
+        )
+        self.service._create_agent_with_context = Mock(return_value=Mock(spec=Agent))
+
+        captured = {}
+
+        async def capture_finalize(
+            agent, conversation_id, user, workspace, *args, **kwargs
+        ):
+            captured['workspace_working_dir'] = workspace.working_dir
+            return Mock(spec=StartConversationRequest)
+
+        self.service._finalize_conversation_request = AsyncMock(
+            side_effect=capture_finalize
+        )
+
+        await self.service._build_start_conversation_request_for_user(
+            sandbox=self.mock_sandbox,
+            initial_message=None,
+            system_message_suffix=None,
+            git_provider=None,
+            working_dir='/workspace/project',
+            selected_repository=None,
+        )
+
+        assert captured['workspace_working_dir'] == '/workspace/project'
+
+    @pytest.mark.asyncio
+    async def test_search_app_conversations_with_sandbox_id_filter(self):
+        """Test that search_app_conversations passes sandbox_id__eq to the info service.
+
+        This verifies that the sandbox_id filter is correctly propagated through
+        the service layer to the underlying info service.
+        """
+        from openhands.app_server.app_conversation.app_conversation_models import (
+            AppConversationInfoPage,
+        )
+
+        # Create test data with different sandbox IDs
+        sandbox_id_alpha = 'sandbox-alpha-123'
+        sandbox_id_beta = 'sandbox-beta-456'
+
+        conv_alpha = AppConversationInfo(
+            id=uuid4(),
+            created_by_user_id=None,
+            sandbox_id=sandbox_id_alpha,
+            title='Alpha Conversation',
+        )
+        conv_beta = AppConversationInfo(
+            id=uuid4(),
+            created_by_user_id=None,
+            sandbox_id=sandbox_id_beta,
+            title='Beta Conversation',
+        )
+
+        # Mock the info service to return filtered results based on sandbox_id__eq
+        async def mock_search(sandbox_id__eq=None, **kwargs):
+            if sandbox_id__eq == sandbox_id_alpha:
+                return AppConversationInfoPage(items=[conv_alpha])
+            elif sandbox_id__eq == sandbox_id_beta:
+                return AppConversationInfoPage(items=[conv_beta])
+            else:
+                return AppConversationInfoPage(items=[conv_alpha, conv_beta])
+
+        self.mock_app_conversation_info_service.search_app_conversation_info = (
+            AsyncMock(side_effect=mock_search)
+        )
+
+        # Mock sandbox service to return running status for sandbox lookups
+        self.mock_sandbox_service.batch_get_sandboxes = AsyncMock(return_value=[])
+
+        # Test filtering by sandbox_id_alpha
+        result = await self.service.search_app_conversations(
+            sandbox_id__eq=sandbox_id_alpha
+        )
+
+        # Verify the info service was called with the correct sandbox_id__eq
+        self.mock_app_conversation_info_service.search_app_conversation_info.assert_called()
+        call_kwargs = self.mock_app_conversation_info_service.search_app_conversation_info.call_args[
+            1
+        ]
+        assert call_kwargs.get('sandbox_id__eq') == sandbox_id_alpha
+
+        # Verify only alpha conversation is returned
+        assert len(result.items) == 1
+        assert result.items[0].sandbox_id == sandbox_id_alpha
+
+    @pytest.mark.asyncio
+    async def test_count_app_conversations_with_sandbox_id_filter(self):
+        """Test that count_app_conversations passes sandbox_id__eq to the info service.
+
+        This verifies that the sandbox_id filter is correctly propagated through
+        the service layer to the underlying info service for count operations.
+        """
+        sandbox_id = 'sandbox-count-test-789'
+
+        # Mock the info service to return count based on sandbox_id__eq
+        async def mock_count(sandbox_id__eq=None, **kwargs):
+            if sandbox_id__eq == sandbox_id:
+                return 3  # 3 conversations match this sandbox
+            else:
+                return 10  # 10 total conversations
+
+        self.mock_app_conversation_info_service.count_app_conversation_info = AsyncMock(
+            side_effect=mock_count
+        )
+
+        # Test counting with sandbox_id filter
+        result = await self.service.count_app_conversations(sandbox_id__eq=sandbox_id)
+
+        # Verify the info service was called with the correct sandbox_id__eq
+        self.mock_app_conversation_info_service.count_app_conversation_info.assert_called_once()
+        call_kwargs = self.mock_app_conversation_info_service.count_app_conversation_info.call_args[
+            1
+        ]
+        assert call_kwargs.get('sandbox_id__eq') == sandbox_id
+
+        # Verify filtered count is returned
+        assert result == 3
+
+    @pytest.mark.asyncio
+    async def test_search_app_conversations_sandbox_id_filter_returns_empty(self):
+        """Test that search with non-matching sandbox_id returns empty results."""
+        from openhands.app_server.app_conversation.app_conversation_models import (
+            AppConversationInfoPage,
+        )
+
+        # Mock the info service to return empty for non-matching sandbox
+        self.mock_app_conversation_info_service.search_app_conversation_info = (
+            AsyncMock(return_value=AppConversationInfoPage(items=[]))
+        )
+        self.mock_sandbox_service.batch_get_sandboxes = AsyncMock(return_value=[])
+
+        # Test filtering by non-existent sandbox_id
+        result = await self.service.search_app_conversations(
+            sandbox_id__eq='non-existent-sandbox'
+        )
+
+        # Verify empty results
+        assert len(result.items) == 0
 
 
 class TestPluginHandling:
