@@ -253,7 +253,7 @@ class V1ConversationService {
 
   /**
    * Upload a single file to the V1 conversation workspace
-   * V1 API endpoint: POST /api/file/upload/{path}
+   * V1 API endpoint: POST /api/file/upload?path={path}
    *
    * @param conversationUrl The conversation URL (e.g., "http://localhost:54928/api/conversations/...")
    * @param sessionApiKey Session API key for authentication (required for V1)
@@ -269,10 +269,11 @@ class V1ConversationService {
   ): Promise<void> {
     // Default to /workspace/{filename} if no path provided (must be absolute)
     const uploadPath = path || `/workspace/${file.name}`;
-    const encodedPath = encodeURIComponent(uploadPath);
+    const params = new URLSearchParams();
+    params.append("path", uploadPath);
     const url = this.buildRuntimeUrl(
       conversationUrl,
-      `/api/file/upload/${encodedPath}`,
+      `/api/file/upload?${params.toString()}`,
     );
     const headers = buildSessionHeaders(sessionApiKey);
 
@@ -315,6 +316,39 @@ class V1ConversationService {
     const { data } = await openHands.patch<V1AppConversation>(
       `/api/v1/app-conversations/${conversationId}`,
       { public: isPublic },
+    );
+    return data;
+  }
+
+  /**
+   * Update a V1 conversation's repository settings
+   * @param conversationId The conversation ID
+   * @param repository The repository to attach (e.g., "owner/repo") or null to remove
+   * @param branch The branch to use (optional)
+   * @param gitProvider The git provider (e.g., "github", "gitlab")
+   * @returns Updated conversation info
+   */
+  static async updateConversationRepository(
+    conversationId: string,
+    repository: string | null,
+    branch?: string | null,
+    gitProvider?: string | null,
+  ): Promise<V1AppConversation> {
+    const payload: Record<string, string | null | undefined> = {};
+
+    if (repository !== undefined) {
+      payload.selected_repository = repository;
+    }
+    if (branch !== undefined) {
+      payload.selected_branch = branch;
+    }
+    if (gitProvider !== undefined) {
+      payload.git_provider = gitProvider;
+    }
+
+    const { data } = await openHands.patch<V1AppConversation>(
+      `/api/v1/app-conversations/${conversationId}`,
+      payload,
     );
     return data;
   }

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { FaUserShield } from "react-icons/fa";
 import { I18nKey } from "#/i18n/declaration";
 import OpenHandsLogoWhite from "#/assets/branding/openhands-logo-white.svg?react";
 import GitHubLogo from "#/assets/branding/github-logo.svg?react";
@@ -59,6 +60,18 @@ export function LoginContent({
     authUrl,
   });
 
+  const bitbucketDataCenterAuthUrl = useAuthUrl({
+    appMode: appMode || null,
+    identityProvider: "bitbucket_data_center",
+    authUrl,
+  });
+
+  const enterpriseSsoAuthUrl = useAuthUrl({
+    appMode: appMode || null,
+    identityProvider: "enterprise_sso",
+    authUrl,
+  });
+
   const handleAuthRedirect = async (
     redirectUrl: string,
     provider: Provider,
@@ -115,6 +128,18 @@ export function LoginContent({
     }
   };
 
+  const handleBitbucketDataCenterAuth = () => {
+    if (bitbucketDataCenterAuthUrl) {
+      handleAuthRedirect(bitbucketDataCenterAuthUrl, "bitbucket_data_center");
+    }
+  };
+
+  const handleEnterpriseSsoAuth = () => {
+    if (enterpriseSsoAuthUrl) {
+      handleAuthRedirect(enterpriseSsoAuthUrl, "enterprise_sso");
+    }
+  };
+
   const showGithub =
     providersConfigured &&
     providersConfigured.length > 0 &&
@@ -127,6 +152,14 @@ export function LoginContent({
     providersConfigured &&
     providersConfigured.length > 0 &&
     providersConfigured.includes("bitbucket");
+  const showBitbucketDataCenter =
+    providersConfigured &&
+    providersConfigured.length > 0 &&
+    providersConfigured.includes("bitbucket_data_center");
+  const showEnterpriseSso =
+    providersConfigured &&
+    providersConfigured.length > 0 &&
+    providersConfigured.includes("enterprise_sso");
 
   const noProvidersConfigured =
     !providersConfigured || providersConfigured.length === 0;
@@ -136,7 +169,11 @@ export function LoginContent({
   const buttonLabelClasses = "text-sm font-medium leading-5 px-1";
 
   const shouldShownHelperText =
-    emailVerified || hasDuplicatedEmail || recaptchaBlocked || hasInvitation;
+    emailVerified ||
+    hasDuplicatedEmail ||
+    recaptchaBlocked ||
+    hasInvitation ||
+    showBitbucket;
 
   return (
     <div
@@ -171,6 +208,11 @@ export function LoginContent({
           {hasInvitation && (
             <p className="text-sm text-muted-foreground text-center">
               {t(I18nKey.AUTH$INVITATION_PENDING)}
+            </p>
+          )}
+          {showBitbucket && (
+            <p className="text-sm text-white text-center max-w-125">
+              {t(I18nKey.AUTH$BITBUCKET_SIGNUP_DISABLED)}
             </p>
           )}
         </div>
@@ -218,6 +260,34 @@ export function LoginContent({
                 <BitbucketLogo width={14} height={14} className="shrink-0" />
                 <span className={buttonLabelClasses}>
                   {t(I18nKey.BITBUCKET$CONNECT_TO_BITBUCKET)}
+                </span>
+              </button>
+            )}
+
+            {showBitbucketDataCenter && (
+              <button
+                type="button"
+                onClick={handleBitbucketDataCenterAuth}
+                className={`${buttonBaseClasses} bg-[#2684FF] text-white`}
+              >
+                <BitbucketLogo width={14} height={14} className="shrink-0" />
+                <span className={buttonLabelClasses}>
+                  {t(
+                    I18nKey.BITBUCKET_DATA_CENTER$CONNECT_TO_BITBUCKET_DATA_CENTER,
+                  )}
+                </span>
+              </button>
+            )}
+
+            {showEnterpriseSso && (
+              <button
+                type="button"
+                onClick={handleEnterpriseSsoAuth}
+                className={`${buttonBaseClasses} bg-[#374151] text-white`}
+              >
+                <FaUserShield size={14} className="shrink-0" />
+                <span className={buttonLabelClasses}>
+                  {t(I18nKey.ENTERPRISE_SSO$CONNECT_TO_ENTERPRISE_SSO)}
                 </span>
               </button>
             )}
