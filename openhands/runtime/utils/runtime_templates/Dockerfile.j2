@@ -310,6 +310,7 @@ COPY --chown=openhands:openhands ./code/pyproject.toml ./code/poetry.lock /openh
 
 {{ install_dependencies_user() }}
 {{ install_dependencies_root() }}
+{{ install_vscode_extensions() }}
 
 # ================================================================
 # END: Build Runtime Image from Scratch
