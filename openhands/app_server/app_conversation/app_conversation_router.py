@@ -49,6 +49,7 @@ from openhands.app_server.app_conversation.app_conversation_service import (
 )
 from openhands.app_server.app_conversation.app_conversation_service_base import (
     AppConversationServiceBase,
+    get_project_dir,
 )
 from openhands.app_server.app_conversation.app_conversation_start_task_service import (
     AppConversationStartTaskService,
@@ -116,6 +117,10 @@ async def search_app_conversations(
         datetime | None,
         Query(title='Filter by updated_at less than this datetime'),
     ] = None,
+    sandbox_id__eq: Annotated[
+        str | None,
+        Query(title='Filter by exact sandbox_id'),
+    ] = None,
     page_id: Annotated[
         str | None,
         Query(title='Optional next_page_id from the previously returned page'),
@@ -147,6 +152,7 @@ async def search_app_conversations(
         created_at__lt=created_at__lt,
         updated_at__gte=updated_at__gte,
         updated_at__lt=updated_at__lt,
+        sandbox_id__eq=sandbox_id__eq,
         page_id=page_id,
         limit=limit,
         include_sub_conversations=include_sub_conversations,
@@ -175,6 +181,10 @@ async def count_app_conversations(
         datetime | None,
         Query(title='Filter by updated_at less than this datetime'),
     ] = None,
+    sandbox_id__eq: Annotated[
+        str | None,
+        Query(title='Filter by exact sandbox_id'),
+    ] = None,
     app_conversation_service: AppConversationService = (
         app_conversation_service_dependency
     ),
@@ -186,6 +196,7 @@ async def count_app_conversations(
         created_at__lt=created_at__lt,
         updated_at__gte=updated_at__gte,
         updated_at__lt=updated_at__lt,
+        sandbox_id__eq=sandbox_id__eq,
     )
 
 
@@ -507,10 +518,11 @@ async def get_conversation_skills(
             sandbox.sandbox_spec_id
         )
         if not sandbox_spec:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={'error': 'Sandbox spec not found'},
-            )
+            # TODO: This is a temporary work around for the fact that we don't store previous
+            # sandbox spec versions when updating OpenHands. When the SandboxSpecServices
+            # transition to truly multi sandbox spec model this should raise a 404 error
+            logger.warning('Sandbox spec not found - using default.')
+            sandbox_spec = await sandbox_spec_service.get_default_sandbox_spec()
 
         # Get the agent server URL
         if not sandbox.exposed_urls:
@@ -539,10 +551,13 @@ async def get_conversation_skills(
         # Prefer the shared loader to avoid duplication; otherwise return empty list.
         all_skills: list = []
         if isinstance(app_conversation_service, AppConversationServiceBase):
+            project_dir = get_project_dir(
+                sandbox_spec.working_dir, conversation.selected_repository
+            )
             all_skills = await app_conversation_service.load_and_merge_all_skills(
                 sandbox,
                 conversation.selected_repository,
-                sandbox_spec.working_dir,
+                project_dir,
                 agent_server_url,
             )
 

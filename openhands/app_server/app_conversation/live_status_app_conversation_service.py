@@ -41,6 +41,7 @@ from openhands.app_server.app_conversation.app_conversation_service import (
 )
 from openhands.app_server.app_conversation.app_conversation_service_base import (
     AppConversationServiceBase,
+    get_project_dir,
 )
 from openhands.app_server.app_conversation.app_conversation_start_task_service import (
     AppConversationStartTaskService,
@@ -77,7 +78,6 @@ from openhands.app_server.utils.llm_metadata import (
     get_llm_metadata,
     should_set_litellm_extra_body,
 )
-from openhands.experiments.experiment_manager import ExperimentManagerImpl
 from openhands.integrations.provider import ProviderType
 from openhands.integrations.service_types import SuggestedTask
 from openhands.sdk import Agent, AgentContext, LocalWorkspace
@@ -98,6 +98,20 @@ from openhands.tools.preset.planning import (
 
 _conversation_info_type_adapter = TypeAdapter(list[ConversationInfo | None])
 _logger = logging.getLogger(__name__)
+
+# Planning agent instruction to prevent "Ready to proceed?" behavior
+PLANNING_AGENT_INSTRUCTION = """<IMPORTANT_PLANNING_BOUNDARIES>
+You are a Planning Agent that can ONLY create plans - you CANNOT execute code or make changes.
+
+After you finalize the plan in PLAN.md:
+- Do NOT ask "Ready to proceed?" or offer to execute the plan
+- Do NOT attempt to run any implementation commands
+- Instead, inform the user they have two options to proceed:
+  1. Click the **Build** button below the plan preview - this will automatically switch to the code agent and instruct it to execute the plan
+  2. Switch to the code agent manually (click the agent selector button or press Shift+Tab), then send a message instructing it to execute the plan
+
+Your role ends when the plan is finalized. Implementation is handled by the code agent.
+</IMPORTANT_PLANNING_BOUNDARIES>"""
 
 
 @dataclass
@@ -128,6 +142,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         created_at__lt: datetime | None = None,
         updated_at__gte: datetime | None = None,
         updated_at__lt: datetime | None = None,
+        sandbox_id__eq: str | None = None,
         sort_order: AppConversationSortOrder = AppConversationSortOrder.CREATED_AT_DESC,
         page_id: str | None = None,
         limit: int = 20,
@@ -140,6 +155,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             created_at__lt=created_at__lt,
             updated_at__gte=updated_at__gte,
             updated_at__lt=updated_at__lt,
+            sandbox_id__eq=sandbox_id__eq,
             sort_order=sort_order,
             page_id=page_id,
             limit=limit,
@@ -157,6 +173,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         created_at__lt: datetime | None = None,
         updated_at__gte: datetime | None = None,
         updated_at__lt: datetime | None = None,
+        sandbox_id__eq: str | None = None,
     ) -> int:
         return await self.app_conversation_info_service.count_app_conversation_info(
             title__contains=title__contains,
@@ -164,6 +181,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             created_at__lt=created_at__lt,
             updated_at__gte=updated_at__gte,
             updated_at__lt=updated_at__lt,
+            sandbox_id__eq=sandbox_id__eq,
         )
 
     async def get_app_conversation(
@@ -504,6 +522,17 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         # Update the listener with sandbox info
         task.status = AppConversationStartTaskStatus.WAITING_FOR_SANDBOX
         task.sandbox_id = sandbox.id
+
+        # Log sandbox assignment for observability
+        conversation_id_str = (
+            str(task.request.conversation_id)
+            if task.request.conversation_id is not None
+            else 'unknown'
+        )
+        _logger.info(
+            f'Assigned sandbox {sandbox.id} to conversation {conversation_id_str}'
+        )
+
         yield task
 
         # Resume if paused
@@ -953,9 +982,20 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
                 mcp_config=mcp_config,
             )
 
+        # Prepare system message suffix based on agent type
+        effective_system_message_suffix = system_message_suffix
+        if agent_type == AgentType.PLAN:
+            # Prepend planning-specific instruction to prevent "Ready to proceed?" behavior
+            if system_message_suffix:
+                effective_system_message_suffix = (
+                    f'{PLANNING_AGENT_INSTRUCTION}\n\n{system_message_suffix}'
+                )
+            else:
+                effective_system_message_suffix = PLANNING_AGENT_INSTRUCTION
+
         # Add agent context
         agent_context = AgentContext(
-            system_message_suffix=system_message_suffix, secrets=secrets
+            system_message_suffix=effective_system_message_suffix, secrets=secrets
         )
         agent = agent.model_copy(update={'agent_context': agent_context})
 
@@ -1104,7 +1144,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         working_dir: str,
         plugins: list[PluginSpec] | None = None,
     ) -> StartConversationRequest:
-        """Finalize the conversation request with experiment variants and skills.
+        """Finalize the conversation request with skills and metadata.
 
         Args:
             agent: The configured agent
@@ -1125,13 +1165,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         # Generate conversation ID if not provided
         conversation_id = conversation_id or uuid4()
 
-        # Apply experiment variants
-        agent = ExperimentManagerImpl.run_agent_variant_tests__v1(
-            user.id, conversation_id, agent
-        )
-
         # Update agent's LLM with litellm_extra_body metadata for tracing
-        # This is done after experiment variants to ensure the final LLM config is used
         agent = self._update_agent_with_llm_metadata(agent, conversation_id, user.id)
 
         # Load and merge skills if remote workspace is available
@@ -1194,11 +1228,16 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
         1. Setting up git provider secrets
         2. Configuring LLM and MCP settings
         3. Creating an agent with appropriate context
-        4. Finalizing the request with skills and experiment variants
+        4. Finalizing the request with skills and metadata
         5. Passing plugins to the agent server for remote plugin loading
         """
         user = await self.user_context.get_user_info()
-        workspace = LocalWorkspace(working_dir=working_dir)
+
+        # Compute the project root — this is the repo directory when a repo is
+        # selected, or the sandbox working_dir otherwise.  All tools, hooks,
+        # setup scripts, and plan paths must use this consistently.
+        project_dir = get_project_dir(working_dir, selected_repository)
+        workspace = LocalWorkspace(working_dir=project_dir)
 
         # Set up secrets for all git providers
         secrets = await self._setup_secrets_for_git_providers(user)
@@ -1215,7 +1254,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             user.condenser_max_size,
             secrets=secrets,
             git_provider=git_provider,
-            working_dir=working_dir,
+            working_dir=project_dir,
         )
 
         # Finalize and return the conversation request
@@ -1229,7 +1268,7 @@ class LiveStatusAppConversationService(AppConversationServiceBase):
             sandbox,
             remote_workspace,
             selected_repository,
-            working_dir,
+            project_dir,
             plugins=plugins,
         )
 
