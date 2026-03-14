@@ -88,6 +88,7 @@ class SetTitleCallbackProcessor(EventCallbackProcessor):
                     title = response.json().get('title')
                     if title:
                         break
+                # Backoff applies to both missing-title responses and transient errors.
                 await asyncio.sleep(delay_s)
 
             if not title:
