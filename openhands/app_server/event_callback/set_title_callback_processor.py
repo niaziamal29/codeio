@@ -2,6 +2,8 @@ import asyncio
 import logging
 from uuid import UUID
 
+import httpx
+
 from openhands.app_server.app_conversation.app_conversation_models import (
     AppConversationInfo,
 )
@@ -22,6 +24,9 @@ from openhands.app_server.utils.docker_utils import (
 from openhands.sdk import Event, MessageEvent
 
 _logger = logging.getLogger(__name__)
+
+# Poll ~3.75s total wait time before giving up
+_TITLE_POLL_DELAYS_S = (0.25, 0.5, 1.0, 2.0)
 
 
 class SetTitleCallbackProcessor(EventCallbackProcessor):
@@ -62,8 +67,7 @@ class SetTitleCallbackProcessor(EventCallbackProcessor):
                 app_conversation_url
             )
 
-            # Poll ~3.75s total wait time before giving up
-            _TITLE_POLL_DELAYS_S = (0.25, 0.5, 1.0, 2.0)
+            title = None
             for delay_s in _TITLE_POLL_DELAYS_S:
                 try:
                     response = await httpx_client.get(
@@ -73,8 +77,8 @@ class SetTitleCallbackProcessor(EventCallbackProcessor):
                         },
                     )
                     response.raise_for_status()
-                except Exception:
-                    # Network failures are acceptable - we'll retry on next message
+                except httpx.HTTPError:
+                    # Transient agent-server failures are acceptable; retry later.
                     pass
                 else:
                     title = response.json().get('title')
