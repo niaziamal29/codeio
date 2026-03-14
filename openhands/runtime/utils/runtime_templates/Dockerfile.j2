@@ -45,7 +45,10 @@ RUN apt-get update && \
         libasound2-plugins libatomic1 && \
     (apt-get install -y --no-install-recommends libgl1 || apt-get install -y --no-install-recommends libgl1-mesa-glx) && \
         # Install Docker dependencies
-    apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl gnupg lsb-release
+    apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl gnupg lsb-release && \
+    # Security upgrade: patch OpenSSL CVEs (CVE-2025-15467, CVE-2025-69419, CVE-2025-69421, et al.)
+    (apt-get install -y --no-install-recommends --only-upgrade \
+        openssl openssl-provider-legacy libssl3t64 || true)
 {% endif %}
 
 {% if (('ubuntu' in base_image) or ('mswebench' in base_image)) %}
