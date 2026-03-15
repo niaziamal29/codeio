@@ -2,6 +2,7 @@
 
 import { useUIModeStore } from "@/stores/ui-mode";
 import { DescribeView } from "@/components/describe-mode/describe-view";
+import { PowerView } from "@/components/power-mode/power-view";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/error-boundary";
 import Link from "next/link";
@@ -46,9 +47,7 @@ export default function ProjectPage() {
         {mode === "describe" ? (
           <DescribeView />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-400">
-            <p>Power Mode — coming in Task 2.5</p>
-          </div>
+          <PowerView />
         )}
       </ErrorBoundary>
     </div>
