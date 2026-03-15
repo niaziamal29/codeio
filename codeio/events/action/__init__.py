@@ -21,6 +21,7 @@ from codeio.events.action.files import (
     FileReadAction,
     FileWriteAction,
 )
+from codeio.events.action.checkpoint import CheckpointAction
 from codeio.events.action.mcp import MCPAction
 from codeio.events.action.message import MessageAction, SystemMessageAction
 
@@ -47,4 +48,5 @@ __all__ = [
     'TaskTrackingAction',
     'ActionSecurityRisk',
     'LoopRecoveryAction',
+    'CheckpointAction',
 ]

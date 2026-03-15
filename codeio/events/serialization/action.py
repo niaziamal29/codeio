@@ -25,6 +25,7 @@ from codeio.events.action.files import (
     FileReadAction,
     FileWriteAction,
 )
+from codeio.events.action.checkpoint import CheckpointAction
 from codeio.events.action.mcp import MCPAction
 from codeio.events.action.message import MessageAction, SystemMessageAction
 
@@ -50,6 +51,7 @@ actions = (
     MCPAction,
     TaskTrackingAction,
     LoopRecoveryAction,
+    CheckpointAction,
 )
 
 ACTION_TYPE_TO_CLASS = {action_class.action: action_class for action_class in actions}  # type: ignore[attr-defined]

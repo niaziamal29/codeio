@@ -1,3 +1,4 @@
+from codeio.events.observation.checkpoint import CheckpointObservation, CheckpointDecision
 from codeio.events.observation.agent import (
     AgentCondensationObservation,
     AgentStateChangedObservation,
@@ -52,4 +53,6 @@ __all__ = [
     'MCPObservation',
     'FileDownloadObservation',
     'TaskTrackingObservation',
+    'CheckpointObservation',
+    'CheckpointDecision',
 ]

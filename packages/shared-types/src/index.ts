@@ -22,3 +22,20 @@ export interface CheckpointEvent {
   qaStatus: "pending" | "passed" | "failed";
   gitCommitSha: string;
 }
+
+export type CheckpointDecision = "accept" | "revise" | "undo" | "continue";
+
+export interface CheckpointAction {
+  type: "checkpoint";
+  summary: string;
+  filesChanged: string[];
+  screenshotPath?: string;
+  suggestedNextSteps: string[];
+  confidence: number;
+}
+
+export interface CheckpointResponse {
+  decision: CheckpointDecision;
+  feedback?: string;
+  checkpointId: string;
+}

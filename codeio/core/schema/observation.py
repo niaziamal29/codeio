@@ -68,3 +68,6 @@ class ObservationType(str, Enum):
 
     LOOP_DETECTION = 'loop_detection'
     """Results of a dead-loop detection"""
+
+    CHECKPOINT_RESULT = 'checkpoint_result'
+    """User's response to a checkpoint (accept/revise/undo)"""

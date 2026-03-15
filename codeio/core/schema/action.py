@@ -107,3 +107,6 @@ class ActionType(str, Enum):
 
     LOOP_RECOVERY = 'loop_recovery'
     """Recover dead loop."""
+
+    CHECKPOINT = 'checkpoint'
+    """Agent requests a checkpoint pause for user review."""

@@ -1,6 +1,7 @@
 import copy
 from typing import Any
 
+from codeio.events.observation.checkpoint import CheckpointObservation
 from codeio.events.observation.agent import (
     AgentCondensationObservation,
     AgentStateChangedObservation,
@@ -53,6 +54,7 @@ observations = (
     FileDownloadObservation,
     TaskTrackingObservation,
     LoopDetectionObservation,
+    CheckpointObservation,
 )
 
 OBSERVATION_TYPE_TO_CLASS = {
