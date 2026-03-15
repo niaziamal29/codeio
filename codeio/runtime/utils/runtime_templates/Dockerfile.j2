@@ -3,14 +3,14 @@ FROM {{ base_image }}
 SHELL ["/bin/bash", "-c"]
 
 # Shared environment variables
-ENV POETRY_VIRTUALENVS_PATH=/openhands/poetry \
-    MAMBA_ROOT_PREFIX=/openhands/micromamba \
+ENV POETRY_VIRTUALENVS_PATH=/codeio/poetry \
+    MAMBA_ROOT_PREFIX=/codeio/micromamba \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     EDITOR=code \
     VISUAL=code \
     GIT_EDITOR="code --wait" \
-    OPENVSCODE_SERVER_ROOT=/openhands/.openvscode-server
+    OPENVSCODE_SERVER_ROOT=/codeio/.openvscode-server
 
 {% macro setup_base_system() %}
 
@@ -63,42 +63,42 @@ RUN ln -s "$(dirname $(which node))/corepack" /usr/local/bin/corepack && \
 {% endif %}
 
 # Install uv (required by MCP)
-RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/openhands/bin" sh
-# Add /openhands/bin to PATH
-ENV PATH="/openhands/bin:${PATH}"
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/codeio/bin" sh
+# Add /codeio/bin to PATH
+ENV PATH="/codeio/bin:${PATH}"
 
-# Remove UID 1000 and GID 1000 users/groups that might conflict with openhands user
+# Remove UID 1000 and GID 1000 users/groups that might conflict with codeio user
 RUN (if getent passwd 1000 | grep -q pn; then userdel pn; fi) && \
     (if getent passwd 1000 | grep -q ubuntu; then userdel ubuntu; fi) && \
     (if getent group 1000 | grep -q pn; then groupdel pn; fi) && \
     (if getent group 1000 | grep -q ubuntu; then groupdel ubuntu; fi)
 
-# Create openhands group and user (with fallback IDs if 1000 is taken)
+# Create codeio group and user (with fallback IDs if 1000 is taken)
 RUN (if getent group 1000 >/dev/null 2>&1; then \
-        groupadd openhands; \
+        groupadd codeio; \
     else \
-        groupadd -g 1000 openhands; \
+        groupadd -g 1000 codeio; \
     fi) && \
     (if getent passwd 1000 >/dev/null 2>&1; then \
-        useradd -g openhands -m -s /bin/bash openhands; \
+        useradd -g codeio -m -s /bin/bash codeio; \
     else \
-        useradd -u 1000 -g openhands -m -s /bin/bash openhands; \
+        useradd -u 1000 -g codeio -m -s /bin/bash codeio; \
     fi) && \
-    usermod -aG sudo openhands && \
-    echo 'openhands ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    # Set empty password for openhands user to allow passwordless su
-    passwd -d openhands && \
+    usermod -aG sudo codeio && \
+    echo 'codeio ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    # Set empty password for codeio user to allow passwordless su
+    passwd -d codeio && \
     # Set empty password for root user as well to ensure su works in both directions
     passwd -d root && \
-    # Ensure root can su to openhands without password by configuring PAM
+    # Ensure root can su to codeio without password by configuring PAM
     sed -i '/pam_rootok.so/d' /etc/pam.d/su && \
     sed -i '1i auth sufficient pam_rootok.so' /etc/pam.d/su
 
 # Create necessary directories
-RUN mkdir -p /openhands && \
-    mkdir -p /openhands/logs && \
-    mkdir -p /openhands/poetry && \
-    chown -R openhands:openhands /openhands
+RUN mkdir -p /codeio && \
+    mkdir -p /codeio/logs && \
+    mkdir -p /codeio/poetry && \
+    chown -R codeio:codeio /codeio
 
 
 # ================================================================
@@ -181,20 +181,20 @@ RUN if [ -z "${RELEASE_TAG}" ]; then \
     mv ${RELEASE_TAG}-linux-${arch} ${OPENVSCODE_SERVER_ROOT} && \
     cp ${OPENVSCODE_SERVER_ROOT}/bin/remote-cli/openvscode-server ${OPENVSCODE_SERVER_ROOT}/bin/remote-cli/code && \
     rm -f ${RELEASE_TAG}-linux-${arch}.tar.gz && \
-    chown -R openhands:openhands ${OPENVSCODE_SERVER_ROOT}
+    chown -R codeio:codeio ${OPENVSCODE_SERVER_ROOT}
 
 
 
 {% endmacro %}
 
 {% macro install_vscode_extensions() %}
-# Install our custom extensions as openhands user
-USER openhands
-RUN mkdir -p ${OPENVSCODE_SERVER_ROOT}/extensions/openhands-hello-world && \
-    cp -r /openhands/code/openhands/runtime/utils/vscode-extensions/hello-world/* ${OPENVSCODE_SERVER_ROOT}/extensions/openhands-hello-world/
+# Install our custom extensions as codeio user
+USER codeio
+RUN mkdir -p ${OPENVSCODE_SERVER_ROOT}/extensions/codeio-hello-world && \
+    cp -r /codeio/code/codeio/runtime/utils/vscode-extensions/hello-world/* ${OPENVSCODE_SERVER_ROOT}/extensions/codeio-hello-world/
 
-RUN mkdir -p ${OPENVSCODE_SERVER_ROOT}/extensions/openhands-memory-monitor && \
-    cp -r /openhands/code/openhands/runtime/utils/vscode-extensions/memory-monitor/* ${OPENVSCODE_SERVER_ROOT}/extensions/openhands-memory-monitor/
+RUN mkdir -p ${OPENVSCODE_SERVER_ROOT}/extensions/codeio-memory-monitor && \
+    cp -r /codeio/code/codeio/runtime/utils/vscode-extensions/memory-monitor/* ${OPENVSCODE_SERVER_ROOT}/extensions/codeio-memory-monitor/
 
 # Some extension dirs are removed because they trigger false positives in vulnerability scans.
 RUN rm -rf ${OPENVSCODE_SERVER_ROOT}/extensions/{handlebars,pug,json,diff,grunt,ini,npm}
@@ -216,57 +216,57 @@ RUN \
     # Install Playwright browsers in shared location accessible to all users
     export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers && \
     mkdir -p /opt/playwright-browsers && \
-    /openhands/micromamba/bin/micromamba run -n openhands poetry run playwright install --with-deps chromium && \
+    /codeio/micromamba/bin/micromamba run -n codeio poetry run playwright install --with-deps chromium && \
     # Set proper permissions for shared access
     chmod -R 755 /opt/playwright-browsers && \
     # Create cache directories and symlinks for both users
-    mkdir -p /home/openhands/.cache && \
+    mkdir -p /home/codeio/.cache && \
     mkdir -p /root/.cache && \
-    ln -sf /opt/playwright-browsers /home/openhands/.cache/ms-playwright && \
+    ln -sf /opt/playwright-browsers /home/codeio/.cache/ms-playwright && \
     ln -sf /opt/playwright-browsers /root/.cache/ms-playwright && \
-    chown -h openhands:openhands /home/openhands/.cache/ms-playwright && \
+    chown -h codeio:codeio /home/codeio/.cache/ms-playwright && \
     # Set environment variable for all users
     echo 'export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers' >> /etc/environment && \
     {% endif %}
     # Set environment variables (requires root)
-    /openhands/micromamba/bin/micromamba run -n openhands poetry run python -c "import sys; print('OH_INTERPRETER_PATH=' + sys.executable)" >> /etc/environment && \
+    /codeio/micromamba/bin/micromamba run -n codeio poetry run python -c "import sys; print('OH_INTERPRETER_PATH=' + sys.executable)" >> /etc/environment && \
     # Set permissions for shared read-only access
     # Note: chown -R operations removed - files are now created with correct ownership
-    # by running micromamba/poetry as openhands user (see install_dependencies_user)
-    chmod -R 755 /openhands/poetry && \
-    chmod -R 755 /openhands/micromamba && \
-    mkdir -p /openhands/workspace && chmod -R g+rws,o+rw /openhands/workspace && \
-    chown -R openhands:openhands /openhands/workspace && \
+    # by running micromamba/poetry as codeio user (see install_dependencies_user)
+    chmod -R 755 /codeio/poetry && \
+    chmod -R 755 /codeio/micromamba && \
+    mkdir -p /codeio/workspace && chmod -R g+rws,o+rw /codeio/workspace && \
+    chown -R codeio:codeio /codeio/workspace && \
     # Ensure PATH includes system binaries early in startup
     echo 'export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"' >> /etc/environment && \
     echo 'export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"' >> /etc/bash.bashrc && \
     # Set up conda environment activation for all users
-    echo 'eval "$(/openhands/micromamba/bin/micromamba shell hook --shell bash)"' >> /etc/bash.bashrc && \
-    echo 'micromamba activate openhands 2>/dev/null || true' >> /etc/bash.bashrc && \
+    echo 'eval "$(/codeio/micromamba/bin/micromamba shell hook --shell bash)"' >> /etc/bash.bashrc && \
+    echo 'micromamba activate codeio 2>/dev/null || true' >> /etc/bash.bashrc && \
     # Set up environment for root user
-    echo 'export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/openhands/micromamba/bin:$PATH"' >> /root/.bashrc && \
+    echo 'export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/codeio/micromamba/bin:$PATH"' >> /root/.bashrc && \
     echo 'export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers' >> /root/.bashrc && \
-    echo 'eval "$(/openhands/micromamba/bin/micromamba shell hook --shell bash)"' >> /root/.bashrc && \
-    echo 'micromamba activate openhands 2>/dev/null || true' >> /root/.bashrc && \
+    echo 'eval "$(/codeio/micromamba/bin/micromamba shell hook --shell bash)"' >> /root/.bashrc && \
+    echo 'micromamba activate codeio 2>/dev/null || true' >> /root/.bashrc && \
     # Clean up system packages (requires root)
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 {% endmacro %}
 
 {% macro install_dependencies_user() %}
-# Install user-level dependencies as openhands user
-WORKDIR /openhands/code
+# Install user-level dependencies as codeio user
+WORKDIR /codeio/code
 
-USER openhands
+USER codeio
 RUN \
-    /openhands/micromamba/bin/micromamba config set changeps1 False && \
-    /openhands/micromamba/bin/micromamba run -n openhands poetry config virtualenvs.path /openhands/poetry && \
-    /openhands/micromamba/bin/micromamba run -n openhands poetry env use python3.12 && \
+    /codeio/micromamba/bin/micromamba config set changeps1 False && \
+    /codeio/micromamba/bin/micromamba run -n codeio poetry config virtualenvs.path /codeio/poetry && \
+    /codeio/micromamba/bin/micromamba run -n codeio poetry env use python3.12 && \
     # Install project dependencies
-    /openhands/micromamba/bin/micromamba run -n openhands poetry install --only main,runtime --no-interaction --no-root && \
+    /codeio/micromamba/bin/micromamba run -n codeio poetry install --only main,runtime --no-interaction --no-root && \
     # Clean up user caches
-    /openhands/micromamba/bin/micromamba run -n openhands poetry cache clear --all . -n && \
-    /openhands/micromamba/bin/micromamba clean --all
+    /codeio/micromamba/bin/micromamba run -n codeio poetry cache clear --all . -n && \
+    /codeio/micromamba/bin/micromamba clean --all
 
 {% endmacro %}
 
@@ -275,46 +275,46 @@ RUN \
 # START: Build Runtime Image from Scratch
 # ================================================================
 # This is used in cases where the base image is something more generic like nikolaik/python-nodejs
-# rather than the current OpenHands release
+# rather than the current Codeio release
 
 {{ setup_base_system() }}
 
 # Install micromamba
-RUN mkdir -p /openhands/micromamba/bin && \
-    /bin/bash -c "PREFIX_LOCATION=/openhands/micromamba BIN_FOLDER=/openhands/micromamba/bin INIT_YES=no CONDA_FORGE_YES=yes $(curl -L https://micro.mamba.pm/install.sh)" && \
-    /openhands/micromamba/bin/micromamba config remove channels defaults && \
+RUN mkdir -p /codeio/micromamba/bin && \
+    /bin/bash -c "PREFIX_LOCATION=/codeio/micromamba BIN_FOLDER=/codeio/micromamba/bin INIT_YES=no CONDA_FORGE_YES=yes $(curl -L https://micro.mamba.pm/install.sh)" && \
+    /codeio/micromamba/bin/micromamba config remove channels defaults && \
     {%- if channel_alias %}
-    /openhands/micromamba/bin/micromamba config set channel_alias '{{ channel_alias }}' && \
+    /codeio/micromamba/bin/micromamba config set channel_alias '{{ channel_alias }}' && \
     {%- endif %}
-    /openhands/micromamba/bin/micromamba config list && \
-    chown -R openhands:openhands /openhands/micromamba && \
+    /codeio/micromamba/bin/micromamba config list && \
+    chown -R codeio:codeio /codeio/micromamba && \
     # Create read-only shared access to micromamba for all users
-    # This allows both root and openhands users to access the same packages
-    # while maintaining security by keeping openhands as the owner
-    chmod -R 755 /openhands/micromamba && \
+    # This allows both root and codeio users to access the same packages
+    # while maintaining security by keeping codeio as the owner
+    chmod -R 755 /codeio/micromamba && \
     # Create a separate writable location for root's micromamba cache/config
     mkdir -p /root/.local/share/micromamba && \
     # Set up environment variables for system-wide access
-    echo 'export PATH="/openhands/micromamba/bin:$PATH"' >> /etc/environment
+    echo 'export PATH="/codeio/micromamba/bin:$PATH"' >> /etc/environment
 
-# Create the openhands virtual environment and install poetry and python
-# Run as openhands user to avoid expensive chown -R operations later
-USER openhands
-RUN /openhands/micromamba/bin/micromamba create -n openhands -y && \
-    /openhands/micromamba/bin/micromamba install -n openhands -c conda-forge poetry python=3.12 -y
+# Create the codeio virtual environment and install poetry and python
+# Run as codeio user to avoid expensive chown -R operations later
+USER codeio
+RUN /codeio/micromamba/bin/micromamba create -n codeio -y && \
+    /codeio/micromamba/bin/micromamba install -n codeio -c conda-forge poetry python=3.12 -y
 USER root
 
-# Create a clean openhands directory including only the pyproject.toml, poetry.lock and openhands/__init__.py
+# Create a clean codeio directory including only the pyproject.toml, poetry.lock and codeio/__init__.py
 RUN \
-    if [ -d /openhands/code ]; then rm -rf /openhands/code; fi && \
-    mkdir -p /openhands/code/openhands && \
-    touch /openhands/code/openhands/__init__.py && \
-    chown -R openhands:openhands /openhands/code && \
+    if [ -d /codeio/code ]; then rm -rf /codeio/code; fi && \
+    mkdir -p /codeio/code/codeio && \
+    touch /codeio/code/codeio/__init__.py && \
+    chown -R codeio:codeio /codeio/code && \
     # Set global git configuration to ensure proper author/committer information
-    git config --global user.name "openhands" && \
-    git config --global user.email "openhands@all-hands.dev"
+    git config --global user.name "codeio" && \
+    git config --global user.email "codeio@all-hands.dev"
 
-COPY --chown=openhands:openhands ./code/pyproject.toml ./code/poetry.lock /openhands/code/
+COPY --chown=codeio:codeio ./code/pyproject.toml ./code/poetry.lock /codeio/code/
 
 {{ install_dependencies_user() }}
 {{ install_dependencies_root() }}
@@ -324,37 +324,37 @@ COPY --chown=openhands:openhands ./code/pyproject.toml ./code/poetry.lock /openh
 # ================================================================
 {% endif %}
 
-# Ensure openhands user/group and base dirs exist even when not building from scratch
+# Ensure codeio user/group and base dirs exist even when not building from scratch
 USER root
 RUN \
     # Ensure group exists (prefer GID 1000 if available)
-    if ! getent group openhands >/dev/null 2>&1; then \
-        if getent group 1000 >/dev/null 2>&1; then groupadd openhands; else groupadd -g 1000 openhands; fi; \
+    if ! getent group codeio >/dev/null 2>&1; then \
+        if getent group 1000 >/dev/null 2>&1; then groupadd codeio; else groupadd -g 1000 codeio; fi; \
     fi && \
     # Ensure user exists (prefer UID 1000 if available)
-    if ! id -u openhands >/dev/null 2>&1; then \
-        if getent passwd 1000 >/dev/null 2>&1; then useradd -m -s /bin/bash -g openhands openhands; else useradd -u 1000 -g openhands -m -s /bin/bash openhands; fi; \
+    if ! id -u codeio >/dev/null 2>&1; then \
+        if getent passwd 1000 >/dev/null 2>&1; then useradd -m -s /bin/bash -g codeio codeio; else useradd -u 1000 -g codeio -m -s /bin/bash codeio; fi; \
     fi && \
     # Ensure home and required directories exist before later steps
-    mkdir -p /home/openhands && \
-    mkdir -p /openhands && \
+    mkdir -p /home/codeio && \
+    mkdir -p /codeio && \
     mkdir -p $(dirname ${OPENVSCODE_SERVER_ROOT}) && \
-    # Ensure ownership is correct for all OpenHands paths
-    chown -R openhands:openhands /home/openhands || true && \
-    chown -R openhands:openhands /openhands || true
+    # Ensure ownership is correct for all Codeio paths
+    chown -R codeio:codeio /home/codeio || true && \
+    chown -R codeio:codeio /codeio || true
 
 {{ setup_vscode_server() }}
 
 # ================================================================
 # Copy Project source files
 # ================================================================
-RUN if [ -d /openhands/code/openhands ]; then rm -rf /openhands/code/openhands; fi
-COPY --chown=openhands:openhands ./code/pyproject.toml ./code/poetry.lock /openhands/code/
-RUN if [ -d /openhands/code/skills ]; then rm -rf /openhands/code/skills; fi
-COPY --chown=openhands:openhands ./code/skills /openhands/code/skills
-COPY --chown=openhands:openhands ./code/openhands /openhands/code/openhands
-RUN chmod a+rwx /openhands/code/openhands/__init__.py && \
-    chown -R openhands:openhands /openhands/code
+RUN if [ -d /codeio/code/codeio ]; then rm -rf /codeio/code/codeio; fi
+COPY --chown=codeio:codeio ./code/pyproject.toml ./code/poetry.lock /codeio/code/
+RUN if [ -d /codeio/code/skills ]; then rm -rf /codeio/code/skills; fi
+COPY --chown=codeio:codeio ./code/skills /codeio/code/skills
+COPY --chown=codeio:codeio ./code/codeio /codeio/code/codeio
+RUN chmod a+rwx /codeio/code/codeio/__init__.py && \
+    chown -R codeio:codeio /codeio/code
 
 
 # ================================================================
@@ -366,18 +366,18 @@ RUN chmod a+rwx /openhands/code/openhands/__init__.py && \
 {{ install_vscode_extensions() }}
 {% endif %}
 
-# Install extra dependencies if specified (as openhands user)
+# Install extra dependencies if specified (as codeio user)
 {% if extra_deps %}
-USER openhands
+USER codeio
 RUN {{ extra_deps }}
 {% endif %}
 
-# Set up environment for openhands user
+# Set up environment for codeio user
 USER root
 RUN \
-    # Set up environment for openhands user
-    echo 'export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/openhands/micromamba/bin:$PATH"' >> /home/openhands/.bashrc && \
-    echo 'export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers' >> /home/openhands/.bashrc && \
-    echo 'eval "$(/openhands/micromamba/bin/micromamba shell hook --shell bash)"' >> /home/openhands/.bashrc && \
-    echo 'micromamba activate openhands 2>/dev/null || true' >> /home/openhands/.bashrc && \
-    chown openhands:openhands /home/openhands/.bashrc
+    # Set up environment for codeio user
+    echo 'export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/codeio/micromamba/bin:$PATH"' >> /home/codeio/.bashrc && \
+    echo 'export PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers' >> /home/codeio/.bashrc && \
+    echo 'eval "$(/codeio/micromamba/bin/micromamba shell hook --shell bash)"' >> /home/codeio/.bashrc && \
+    echo 'micromamba activate codeio 2>/dev/null || true' >> /home/codeio/.bashrc && \
+    chown codeio:codeio /home/codeio/.bashrc

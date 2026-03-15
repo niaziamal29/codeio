@@ -1,5 +1,5 @@
 ARG OPENHANDS_VERSION=latest
-ARG BASE="ghcr.io/openhands/openhands"
+ARG BASE="ghcr.io/codeio/codeio"
 FROM ${BASE}:${OPENHANDS_VERSION}
 
 # Datadog labels
@@ -28,12 +28,12 @@ RUN /app/.venv/bin/pip install poetry poetry-plugin-export
 
 # Install Python dependencies from poetry.lock for reproducible builds
 # Copy lock files first for better Docker layer caching
-COPY --chown=openhands:openhands enterprise/pyproject.toml enterprise/poetry.lock /tmp/enterprise/
+COPY --chown=codeio:codeio enterprise/pyproject.toml enterprise/poetry.lock /tmp/enterprise/
 RUN cd /tmp/enterprise && \
     # Export only main dependencies with hashes for supply chain security
     /app/.venv/bin/poetry export --only main -o requirements.txt && \
-    # Remove the local path dependency (openhands-ai is already in base image)
-    sed -i '/^-e /d; /openhands-ai/d' requirements.txt && \
+    # Remove the local path dependency (codeio-ai is already in base image)
+    sed -i '/^-e /d; /codeio-ai/d' requirements.txt && \
     # Install pinned dependencies from lock file
     /app/.venv/bin/pip install -r requirements.txt && \
     # Cleanup - return to /app before removing /tmp/enterprise
@@ -42,9 +42,9 @@ RUN cd /tmp/enterprise && \
     /app/.venv/bin/pip uninstall -y poetry poetry-plugin-export
 
 WORKDIR /app
-COPY --chown=openhands:openhands --chmod=770 enterprise .
+COPY --chown=codeio:codeio --chmod=770 enterprise .
 
-USER openhands
+USER codeio
 
 # Command will be overridden by Kubernetes deployment template
 CMD ["uvicorn", "saas_server:app", "--host", "0.0.0.0", "--port", "3000"]
