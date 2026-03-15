@@ -2,9 +2,9 @@ import asyncio
 
 import pytest
 
-from openhands.core.config.mcp_config import MCPSSEServerConfig
-from openhands.mcp.client import MCPClient
-from openhands.mcp.utils import create_mcp_clients
+from codeio.core.config.mcp_config import MCPSSEServerConfig
+from codeio.mcp.client import MCPClient
+from codeio.mcp.utils import create_mcp_clients
 
 
 @pytest.mark.asyncio

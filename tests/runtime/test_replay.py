@@ -5,19 +5,19 @@ from pathlib import Path
 
 from conftest import _close_test_runtime, _load_runtime
 
-from openhands.controller.state.state import State
-from openhands.core.config.config_utils import OH_DEFAULT_AGENT
-from openhands.core.config.openhands_config import OpenHandsConfig
-from openhands.core.main import run_controller
-from openhands.core.schema.agent import AgentState
-from openhands.events.action.empty import NullAction
-from openhands.events.action.message import MessageAction
-from openhands.events.event import EventSource
-from openhands.events.observation.commands import CmdOutputObservation
+from codeio.controller.state.state import State
+from codeio.core.config.config_utils import OH_DEFAULT_AGENT
+from codeio.core.config.openhands_config import CodeioConfig
+from codeio.core.main import run_controller
+from codeio.core.schema.agent import AgentState
+from codeio.events.action.empty import NullAction
+from codeio.events.action.message import MessageAction
+from codeio.events.event import EventSource
+from codeio.events.observation.commands import CmdOutputObservation
 
 
 def _get_config(trajectory_name: str, agent: str = OH_DEFAULT_AGENT):
-    return OpenHandsConfig(
+    return CodeioConfig(
         default_agent=agent,
         run_as_openhands=False,
         # do not mount workspace

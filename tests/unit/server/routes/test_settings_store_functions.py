@@ -6,21 +6,21 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from openhands.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
-from openhands.integrations.provider import ProviderToken
-from openhands.integrations.service_types import ProviderType
-from openhands.server.routes.secrets import (
+from codeio.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
+from codeio.integrations.provider import ProviderToken
+from codeio.integrations.service_types import ProviderType
+from codeio.server.routes.secrets import (
     app as secrets_router,
 )
-from openhands.server.routes.secrets import (
+from codeio.server.routes.secrets import (
     check_provider_tokens,
 )
-from openhands.server.routes.settings import store_llm_settings
-from openhands.server.settings import POSTProviderModel
-from openhands.storage import get_file_store
-from openhands.storage.data_models.secrets import Secrets
-from openhands.storage.data_models.settings import Settings
-from openhands.storage.secrets.file_secrets_store import FileSecretsStore
+from codeio.server.routes.settings import store_llm_settings
+from codeio.server.settings import POSTProviderModel
+from codeio.storage import get_file_store
+from codeio.storage.data_models.secrets import Secrets
+from codeio.storage.data_models.settings import Settings
+from codeio.storage.secrets.file_secrets_store import FileSecretsStore
 
 
 # Mock functions to simulate the actual functions in settings.py
@@ -39,9 +39,9 @@ def test_client():
 
     with (
         patch.dict(os.environ, {'SESSION_API_KEY': ''}, clear=False),
-        patch('openhands.server.dependencies._SESSION_API_KEY', None),
+        patch('codeio.server.dependencies._SESSION_API_KEY', None),
         patch(
-            'openhands.server.routes.secrets.check_provider_tokens',
+            'codeio.server.routes.secrets.check_provider_tokens',
             AsyncMock(return_value=''),
         ),
     ):
@@ -59,7 +59,7 @@ def file_secrets_store(temp_dir):
     file_store = get_file_store('local', temp_dir)
     store = FileSecretsStore(file_store)
     with patch(
-        'openhands.storage.secrets.file_secrets_store.FileSecretsStore.get_instance',
+        'codeio.storage.secrets.file_secrets_store.FileSecretsStore.get_instance',
         AsyncMock(return_value=store),
     ):
         yield store
@@ -77,7 +77,7 @@ async def test_check_provider_tokens_valid():
 
     # Mock the validate_provider_token function to return GITHUB for valid tokens
     with patch(
-        'openhands.server.routes.secrets.validate_provider_token'
+        'codeio.server.routes.secrets.validate_provider_token'
     ) as mock_validate:
         mock_validate.return_value = ProviderType.GITHUB
 
@@ -99,7 +99,7 @@ async def test_check_provider_tokens_invalid():
 
     # Mock the validate_provider_token function to return None for invalid tokens
     with patch(
-        'openhands.server.routes.secrets.validate_provider_token'
+        'codeio.server.routes.secrets.validate_provider_token'
     ) as mock_validate:
         mock_validate.return_value = None
 
@@ -316,7 +316,7 @@ async def test_store_llm_settings_litellm_error_logged():
     )
 
     # The function should not raise even if litellm fails
-    with patch('openhands.server.routes.settings.logger') as mock_logger:
+    with patch('codeio.server.routes.settings.logger') as mock_logger:
         result = await store_llm_settings(settings, existing_settings)
 
         # llm_base_url should remain None since litellm couldn't find the model
@@ -335,7 +335,7 @@ async def test_store_llm_settings_openhands_model_gets_default_url():
     import os
 
     settings = Settings(
-        llm_model='openhands/claude-sonnet-4-5-20250929'  # openhands model
+        llm_model='codeio/claude-sonnet-4-5-20250929'  # openhands model
     )
 
     # Create existing settings
@@ -347,7 +347,7 @@ async def test_store_llm_settings_openhands_model_gets_default_url():
     result = await store_llm_settings(settings, existing_settings)
 
     # Should return settings with updated model
-    assert result.llm_model == 'openhands/claude-sonnet-4-5-20250929'
+    assert result.llm_model == 'codeio/claude-sonnet-4-5-20250929'
     # For SecretStr objects, we need to compare the secret value
     assert result.llm_api_key.get_secret_value() == 'existing-api-key'
     # openhands models get the LiteLLM proxy URL

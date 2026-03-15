@@ -4,19 +4,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from openhands.controller.agent import Agent
-from openhands.core.config import OpenHandsConfig, load_from_env
-from openhands.core.config.mcp_config import (
+from codeio.controller.agent import Agent
+from codeio.core.config import CodeioConfig, load_from_env
+from codeio.core.config.mcp_config import (
     MCPConfig,
     MCPSHTTPServerConfig,
     MCPSSEServerConfig,
     MCPStdioServerConfig,
 )
-from openhands.llm.llm_registry import LLMRegistry
-from openhands.server.services.conversation_stats import ConversationStats
-from openhands.server.session.conversation_init_data import ConversationInitData
-from openhands.server.session.session import Session
-from openhands.storage.memory import InMemoryFileStore
+from codeio.llm.llm_registry import LLMRegistry
+from codeio.server.services.conversation_stats import ConversationStats
+from codeio.server.session.conversation_init_data import ConversationInitData
+from codeio.server.session.session import Session
+from codeio.storage.memory import InMemoryFileStore
 
 
 def test_valid_sse_config():
@@ -292,7 +292,7 @@ def test_env_var_mcp_shttp_server_config(monkeypatch):
     )
 
     # Create a config object
-    config = OpenHandsConfig()
+    config = CodeioConfig()
 
     # Load from environment
     load_from_env(config, os.environ)
@@ -346,10 +346,10 @@ shttp_servers = [
     )
 
     # Create a config object
-    config = OpenHandsConfig()
+    config = CodeioConfig()
 
     # Load from TOML first
-    from openhands.core.config import load_from_toml
+    from codeio.core.config import load_from_toml
 
     load_from_toml(config, str(toml_file))
 
@@ -383,7 +383,7 @@ def test_env_var_mcp_shttp_servers_with_python_str_representation(monkeypatch):
     monkeypatch.setenv('MCP_SHTTP_SERVERS', str(mcp_shttp_servers))
 
     # Create a config object
-    config = OpenHandsConfig()
+    config = CodeioConfig()
 
     # Load from environment
     load_from_env(config, os.environ)
@@ -413,7 +413,7 @@ async def test_session_preserves_env_mcp_config(monkeypatch):
     monkeypatch.setenv('MCP_HOST', 'dummy')
 
     # Create a config object and load from environment
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     load_from_env(config, os.environ)
 
     # Verify the environment variables were loaded into the config
@@ -430,7 +430,7 @@ async def test_session_preserves_env_mcp_config(monkeypatch):
         file_store=InMemoryFileStore({}),
         config=config,
         sio=AsyncMock(),
-        llm_registry=LLMRegistry(config=OpenHandsConfig()),
+        llm_registry=LLMRegistry(config=CodeioConfig()),
         conversation_stats=ConversationStats(None, 'test-sid', None),
     )
 

@@ -2,13 +2,13 @@
 
 from unittest.mock import MagicMock, patch
 
-from openhands.integrations.service_types import ProviderType as ServiceProviderType
-from openhands.resolver.interfaces.issue import Issue
-from openhands.resolver.send_pull_request import PR_SIGNATURE, send_pull_request
+from codeio.integrations.service_types import ProviderType as ServiceProviderType
+from codeio.resolver.interfaces.issue import Issue
+from codeio.resolver.send_pull_request import PR_SIGNATURE, send_pull_request
 
 
-@patch('openhands.resolver.send_pull_request.ServiceContextIssue')
-@patch('openhands.resolver.send_pull_request.ForgejoIssueHandler')
+@patch('codeio.resolver.send_pull_request.ServiceContextIssue')
+@patch('codeio.resolver.send_pull_request.ForgejoIssueHandler')
 @patch('subprocess.run')
 def test_send_pull_request_forgejo(
     mock_run, mock_forgejo_handler, mock_service_context

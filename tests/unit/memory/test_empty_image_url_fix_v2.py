@@ -1,10 +1,10 @@
 """Test for fixing empty image URL issue in multimodal browsing."""
 
-from openhands.core.config.agent_config import AgentConfig
-from openhands.core.message import ImageContent
-from openhands.events.observation.browse import BrowserOutputObservation
-from openhands.memory.conversation_memory import ConversationMemory
-from openhands.utils.prompt import PromptManager
+from codeio.core.config.agent_config import AgentConfig
+from codeio.core.message import ImageContent
+from codeio.events.observation.browse import BrowserOutputObservation
+from codeio.memory.conversation_memory import ConversationMemory
+from codeio.utils.prompt import PromptManager
 
 
 def test_empty_image_url_handling():
@@ -21,7 +21,7 @@ def test_empty_image_url_handling():
     # Create conversation memory with vision enabled
     agent_config = AgentConfig(enable_som_visual_browsing=True)
     prompt_manager = PromptManager(
-        prompt_dir='openhands/agenthub/codeact_agent/prompts'
+        prompt_dir='codeio/agenthub/codeact_agent/prompts'
     )
     conv_memory = ConversationMemory(agent_config, prompt_manager)
 
@@ -83,7 +83,7 @@ def test_valid_image_url_handling():
     # Create conversation memory with vision enabled
     agent_config = AgentConfig(enable_som_visual_browsing=True)
     prompt_manager = PromptManager(
-        prompt_dir='openhands/agenthub/codeact_agent/prompts'
+        prompt_dir='codeio/agenthub/codeact_agent/prompts'
     )
     conv_memory = ConversationMemory(agent_config, prompt_manager)
 
@@ -131,7 +131,7 @@ def test_mixed_image_url_handling():
     # Create conversation memory with vision enabled
     agent_config = AgentConfig(enable_som_visual_browsing=True)
     prompt_manager = PromptManager(
-        prompt_dir='openhands/agenthub/codeact_agent/prompts'
+        prompt_dir='codeio/agenthub/codeact_agent/prompts'
     )
     conv_memory = ConversationMemory(agent_config, prompt_manager)
 
@@ -166,7 +166,7 @@ def test_mixed_image_url_handling():
 
 def test_ipython_empty_image_url_handling():
     """Test that empty image URLs in IPython observations are properly filtered with notification text."""
-    from openhands.events.observation.commands import IPythonRunCellObservation
+    from codeio.events.observation.commands import IPythonRunCellObservation
 
     # Create an IPython observation with empty image URLs
     ipython_obs = IPythonRunCellObservation(
@@ -178,7 +178,7 @@ def test_ipython_empty_image_url_handling():
     # Create conversation memory with vision enabled
     agent_config = AgentConfig(enable_som_visual_browsing=True)
     prompt_manager = PromptManager(
-        prompt_dir='openhands/agenthub/codeact_agent/prompts'
+        prompt_dir='codeio/agenthub/codeact_agent/prompts'
     )
     conv_memory = ConversationMemory(agent_config, prompt_manager)
 
@@ -212,7 +212,7 @@ def test_ipython_empty_image_url_handling():
 
 def test_ipython_mixed_image_url_handling():
     """Test handling of mixed valid and invalid image URLs in IPython observations."""
-    from openhands.events.observation.commands import IPythonRunCellObservation
+    from codeio.events.observation.commands import IPythonRunCellObservation
 
     # Create an IPython observation with mixed image URLs
     valid_base64_image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
@@ -225,7 +225,7 @@ def test_ipython_mixed_image_url_handling():
     # Create conversation memory with vision enabled
     agent_config = AgentConfig(enable_som_visual_browsing=True)
     prompt_manager = PromptManager(
-        prompt_dir='openhands/agenthub/codeact_agent/prompts'
+        prompt_dir='codeio/agenthub/codeact_agent/prompts'
     )
     conv_memory = ConversationMemory(agent_config, prompt_manager)
 

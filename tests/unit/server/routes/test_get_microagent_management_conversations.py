@@ -5,18 +5,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from openhands.app_server.app_conversation.app_conversation_service import (
+from codeio.app_server.app_conversation.app_conversation_service import (
     AppConversationService,
 )
-from openhands.integrations.provider import ProviderHandler
-from openhands.server.data_models.conversation_info_result_set import (
+from codeio.integrations.provider import ProviderHandler
+from codeio.server.data_models.conversation_info_result_set import (
     ConversationInfoResultSet,
 )
-from openhands.server.routes.manage_conversations import (
+from codeio.server.routes.manage_conversations import (
     get_microagent_management_conversations,
 )
-from openhands.storage.conversation.conversation_store import ConversationStore
-from openhands.storage.data_models.conversation_metadata import (
+from codeio.storage.conversation.conversation_store import ConversationStore
+from codeio.storage.data_models.conversation_metadata import (
     ConversationMetadata,
     ConversationTrigger,
 )
@@ -56,16 +56,16 @@ async def _mock_wait_all(coros):
 def _setup_common_mocks():
     """Set up common mocks used by all tests."""
     return {
-        'config': patch('openhands.server.routes.manage_conversations.config'),
+        'config': patch('codeio.server.routes.manage_conversations.config'),
         'conversation_manager': patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ),
         'wait_all': patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
         'provider_handler': patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler'
+            'codeio.server.routes.manage_conversations.ProviderHandler'
         ),
     }
 
@@ -122,15 +122,15 @@ async def test_get_microagent_management_conversations_success():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -181,13 +181,13 @@ async def test_get_microagent_management_conversations_no_results():
     mock_app_conversation_service = _create_mock_app_conversation_service()
 
     with (
-        patch('openhands.server.routes.manage_conversations.ProviderHandler'),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.ProviderHandler'),
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -257,15 +257,15 @@ async def test_get_microagent_management_conversations_filter_by_repository():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -335,15 +335,15 @@ async def test_get_microagent_management_conversations_filter_by_trigger():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -413,15 +413,15 @@ async def test_get_microagent_management_conversations_filter_inactive_pr():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -481,15 +481,15 @@ async def test_get_microagent_management_conversations_no_pr_number():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -549,15 +549,15 @@ async def test_get_microagent_management_conversations_no_repository():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -630,15 +630,15 @@ async def test_get_microagent_management_conversations_age_filter():
 
     with (
         patch(
-            'openhands.server.routes.manage_conversations.ProviderHandler',
+            'codeio.server.routes.manage_conversations.ProviderHandler',
             return_value=mock_provider_handler,
         ),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -676,13 +676,13 @@ async def test_get_microagent_management_conversations_pagination():
     mock_app_conversation_service = _create_mock_app_conversation_service()
 
     with (
-        patch('openhands.server.routes.manage_conversations.ProviderHandler'),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.ProviderHandler'),
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):
@@ -725,13 +725,13 @@ async def test_get_microagent_management_conversations_default_parameters():
     mock_app_conversation_service = _create_mock_app_conversation_service()
 
     with (
-        patch('openhands.server.routes.manage_conversations.ProviderHandler'),
-        patch('openhands.server.routes.manage_conversations.config') as mock_config,
+        patch('codeio.server.routes.manage_conversations.ProviderHandler'),
+        patch('codeio.server.routes.manage_conversations.config') as mock_config,
         patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_conv_mgr,
         patch(
-            'openhands.server.routes.manage_conversations.wait_all',
+            'codeio.server.routes.manage_conversations.wait_all',
             side_effect=_mock_wait_all,
         ),
     ):

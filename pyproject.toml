@@ -5,11 +5,11 @@ build-backend = "poetry.core.masonry.api"
 requires = [ "poetry-core" ]
 
 [project]
-name = "openhands-ai"
-description = "OpenHands: Code Less, Make More"
+name = "codeio"
+description = "Codeio: Vibe Coding Platform"
 readme = "README.md"
 license = "MIT"
-authors = [ { name = "OpenHands", email = "contact@all-hands.dev" } ]
+authors = [ { name = "Codeio", email = "contact@all-hands.dev" } ]
 requires-python = ">=3.12,<3.14"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -56,10 +56,10 @@ dependencies = [
   "memory-profiler>=0.61",
   "numpy",
   "openai==2.8",
-  "openhands-aci==0.3.3",
-  "openhands-agent-server==1.14",
-  "openhands-sdk==1.14",
-  "openhands-tools==1.14",
+  "codeio-aci==0.3.3",
+  "codeio-agent-server==1.14",
+  "codeio-sdk==1.14",
+  "codeio-tools==1.14",
   "opentelemetry-api>=1.33.1",
   "opentelemetry-exporter-otlp-proto-grpc>=1.33.1",
   "orjson>=3.11.6",
@@ -112,8 +112,8 @@ optional-dependencies.third_party_runtimes = [
   "modal>=0.66.26,<1.2",
   "runloop-api-client==0.50",
 ]
-urls.Homepage = "https://github.com/OpenHands/OpenHands"
-urls.Repository = "https://github.com/OpenHands/OpenHands"
+urls.Homepage = "https://github.com/Codeio/Codeio"
+urls.Repository = "https://github.com/Codeio/Codeio"
 
 [dependency-groups]
 dev = [
@@ -144,18 +144,18 @@ runtime = [
 ]
 
 [tool.poetry]
-name = "openhands-ai"
+name = "codeio"
 version = "1.5.0"
-description = "OpenHands: Code Less, Make More"
-authors = [ "OpenHands" ]
+description = "Codeio: Vibe Coding Platform"
+authors = [ "Codeio" ]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/OpenHands/OpenHands"
+repository = "https://github.com/Codeio/Codeio"
 packages = [
-  { include = "openhands/**/*" },
+  { include = "codeio/**/*" },
   { include = "third_party/**/*" },
-  { include = "pyproject.toml", to = "openhands" },
-  { include = "poetry.lock", to = "openhands" },
+  { include = "pyproject.toml", to = "codeio" },
+  { include = "poetry.lock", to = "codeio" },
 ]
 include = [
   "skills/**/*",
@@ -203,7 +203,7 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.33.1"
 libtmux = ">=0.46.2"
 pygithub = "^2.5.0"
 joblib = "*"
-openhands-aci = "0.3.3"
+codeio-aci = "0.3.3"
 python-socketio = "5.14.0"
 sse-starlette = "^3.0.2"
 psutil = "*"
@@ -251,9 +251,9 @@ e2b-code-interpreter = { version = "^2.0.0", optional = true }
 pybase62 = "^1.0.0"
 
 # V1 dependencies
-openhands-sdk = "1.14"
-openhands-agent-server = "1.14"
-openhands-tools = "1.14"
+codeio-sdk = "1.14"
+codeio-agent-server = "1.14"
+codeio-tools = "1.14"
 jwcrypto = ">=1.5.6"
 sqlalchemy = { extras = [ "asyncio" ], version = "^2.0.40" }
 pg8000 = "^1.31.5"

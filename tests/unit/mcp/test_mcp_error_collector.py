@@ -2,7 +2,7 @@
 
 import time
 
-from openhands.mcp.error_collector import (
+from codeio.mcp.error_collector import (
     MCPError,
     MCPErrorCollector,
     mcp_error_collector,

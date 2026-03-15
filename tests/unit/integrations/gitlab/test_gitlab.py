@@ -5,9 +5,9 @@ from unittest.mock import patch
 import pytest
 from pydantic import SecretStr
 
-from openhands.integrations.gitlab.gitlab_service import GitLabService
-from openhands.integrations.service_types import OwnerType, ProviderType, Repository
-from openhands.server.types import AppMode
+from codeio.integrations.gitlab.gitlab_service import GitLabService
+from codeio.integrations.service_types import OwnerType, ProviderType, Repository
+from codeio.server.types import AppMode
 
 
 @pytest.mark.asyncio

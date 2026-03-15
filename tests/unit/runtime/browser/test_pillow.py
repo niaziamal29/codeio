@@ -1,6 +1,6 @@
-"""Unit tests for Pillow (PIL) integration in OpenHands browser module.
+"""Unit tests for Pillow (PIL) integration in Codeio browser module.
 
-These tests verify that OpenHands' image_to_png_base64_url and png_base64_url_to_image
+These tests verify that Codeio' image_to_png_base64_url and png_base64_url_to_image
 functions work correctly with the updated pillow version.
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from openhands.runtime.browser.base64 import (
+from codeio.runtime.browser.base64 import (
     image_to_png_base64_url,
     png_base64_url_to_image,
 )
@@ -243,7 +243,7 @@ class TestScreenshotSaveWorkflow:
 
 
 class TestEdgeCases:
-    """Tests for edge cases in OpenHands integration functions."""
+    """Tests for edge cases in Codeio integration functions."""
 
     def test_single_pixel_image(self):
         """Test conversion of 1x1 pixel image."""

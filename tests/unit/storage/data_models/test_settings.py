@@ -3,17 +3,17 @@ from unittest.mock import patch
 
 from pydantic import SecretStr
 
-from openhands.core.config.llm_config import LLMConfig
-from openhands.core.config.openhands_config import OpenHandsConfig
-from openhands.core.config.sandbox_config import SandboxConfig
-from openhands.core.config.security_config import SecurityConfig
-from openhands.server.routes.settings import convert_to_settings
-from openhands.storage.data_models.settings import Settings
+from codeio.core.config.llm_config import LLMConfig
+from codeio.core.config.openhands_config import CodeioConfig
+from codeio.core.config.sandbox_config import SandboxConfig
+from codeio.core.config.security_config import SecurityConfig
+from codeio.server.routes.settings import convert_to_settings
+from codeio.storage.data_models.settings import Settings
 
 
 def test_settings_from_config():
     # Mock configuration
-    mock_app_config = OpenHandsConfig(
+    mock_app_config = CodeioConfig(
         default_agent='test-agent',
         max_iterations=100,
         security=SecurityConfig(
@@ -31,7 +31,7 @@ def test_settings_from_config():
     )
 
     with patch(
-        'openhands.storage.data_models.settings.load_openhands_config',
+        'codeio.storage.data_models.settings.load_openhands_config',
         return_value=mock_app_config,
     ):
         settings = Settings.from_config()
@@ -51,7 +51,7 @@ def test_settings_from_config():
 
 def test_settings_from_config_no_api_key():
     # Mock configuration without API key
-    mock_app_config = OpenHandsConfig(
+    mock_app_config = CodeioConfig(
         default_agent='test-agent',
         max_iterations=100,
         security=SecurityConfig(
@@ -67,7 +67,7 @@ def test_settings_from_config_no_api_key():
     )
 
     with patch(
-        'openhands.storage.data_models.settings.load_openhands_config',
+        'codeio.storage.data_models.settings.load_openhands_config',
         return_value=mock_app_config,
     ):
         settings = Settings.from_config()
@@ -114,7 +114,7 @@ def test_settings_no_pydantic_frozen_field_warning():
         # Re-import to trigger any warnings during model definition
         import importlib
 
-        import openhands.storage.data_models.settings
+        import codeio.storage.data_models.settings
 
         importlib.reload(openhands.storage.data_models.settings)
 

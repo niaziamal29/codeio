@@ -7,19 +7,19 @@ import time
 import pytest
 from pytest import TempPathFactory
 
-from openhands.core.config import MCPConfig, OpenHandsConfig, load_openhands_config
-from openhands.core.logger import openhands_logger as logger
-from openhands.events import EventStream
-from openhands.llm.llm_registry import LLMRegistry
-from openhands.runtime.base import Runtime
-from openhands.runtime.impl.cli.cli_runtime import CLIRuntime
-from openhands.runtime.impl.docker.docker_runtime import DockerRuntime
-from openhands.runtime.impl.local.local_runtime import LocalRuntime
-from openhands.runtime.impl.remote.remote_runtime import RemoteRuntime
-from openhands.runtime.plugins import AgentSkillsRequirement, JupyterRequirement
-from openhands.runtime.utils.port_lock import find_available_port_with_lock
-from openhands.storage import get_file_store
-from openhands.utils.async_utils import call_async_from_sync
+from codeio.core.config import MCPConfig, CodeioConfig, load_openhands_config
+from codeio.core.logger import openhands_logger as logger
+from codeio.events import EventStream
+from codeio.llm.llm_registry import LLMRegistry
+from codeio.runtime.base import Runtime
+from codeio.runtime.impl.cli.cli_runtime import CLIRuntime
+from codeio.runtime.impl.docker.docker_runtime import DockerRuntime
+from codeio.runtime.impl.local.local_runtime import LocalRuntime
+from codeio.runtime.impl.remote.remote_runtime import RemoteRuntime
+from codeio.runtime.plugins import AgentSkillsRequirement, JupyterRequirement
+from codeio.runtime.utils.port_lock import find_available_port_with_lock
+from codeio.storage import get_file_store
+from codeio.utils.async_utils import call_async_from_sync
 
 TEST_IN_CI = os.getenv('TEST_IN_CI', 'False').lower() in ['true', '1', 'yes']
 TEST_RUNTIME = os.getenv('TEST_RUNTIME', 'docker').lower()
@@ -215,7 +215,7 @@ def _load_runtime(
     docker_runtime_kwargs: dict[str, str] | None = None,
     override_mcp_config: MCPConfig | None = None,
     enable_browser: bool = False,
-) -> tuple[Runtime, OpenHandsConfig]:
+) -> tuple[Runtime, CodeioConfig]:
     sid = 'rt_' + str(random.randint(100000, 999999))
 
     # AgentSkills need to be initialized **before** Jupyter
@@ -271,7 +271,7 @@ def _load_runtime(
     event_stream = EventStream(sid, file_store)
 
     # Create a LLMRegistry instance for the runtime
-    llm_registry = LLMRegistry(config=OpenHandsConfig())
+    llm_registry = LLMRegistry(config=CodeioConfig())
 
     runtime = runtime_cls(
         config=config,

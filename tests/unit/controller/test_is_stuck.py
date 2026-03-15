@@ -4,26 +4,26 @@ from unittest.mock import Mock, patch
 import pytest
 from pytest import TempPathFactory
 
-from openhands.controller.agent_controller import AgentController
-from openhands.controller.state.state import State
-from openhands.controller.stuck import StuckDetector
-from openhands.events.action import (
+from codeio.controller.agent_controller import AgentController
+from codeio.controller.state.state import State
+from codeio.controller.stuck import StuckDetector
+from codeio.events.action import (
     CmdRunAction,
     FileReadAction,
     MessageAction,
 )
-from openhands.events.action.commands import IPythonRunCellAction
-from openhands.events.event import Event
-from openhands.events.observation import (
+from codeio.events.action.commands import IPythonRunCellAction
+from codeio.events.event import Event
+from codeio.events.observation import (
     CmdOutputObservation,
     FileReadObservation,
 )
-from openhands.events.observation.agent import AgentCondensationObservation
-from openhands.events.observation.commands import IPythonRunCellObservation
-from openhands.events.observation.empty import NullObservation
-from openhands.events.observation.error import ErrorObservation
-from openhands.events.stream import EventSource, EventStream
-from openhands.storage import get_file_store
+from codeio.events.observation.agent import AgentCondensationObservation
+from codeio.events.observation.commands import IPythonRunCellObservation
+from codeio.events.observation.empty import NullObservation
+from codeio.events.observation.error import ErrorObservation
+from codeio.events.stream import EventSource, EventStream
+from codeio.storage import get_file_store
 
 # Reusable action/observation mocks for stuck-pattern tests
 cmd_ls_action = CmdRunAction(command='ls')

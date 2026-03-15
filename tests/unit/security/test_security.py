@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openhands.core.config import LLMConfig
-from openhands.core.schema.action import ActionType
-from openhands.core.schema.agent import AgentState
-from openhands.events.action import (
+from codeio.core.config import LLMConfig
+from codeio.core.schema.action import ActionType
+from codeio.core.schema.agent import AgentState
+from codeio.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     BrowseInteractiveAction,
@@ -18,9 +18,9 @@ from openhands.events.action import (
     MessageAction,
     NullAction,
 )
-from openhands.events.action.action import ActionConfirmationStatus, ActionSecurityRisk
-from openhands.events.event import Event
-from openhands.events.observation import (
+from codeio.events.action.action import ActionConfirmationStatus, ActionSecurityRisk
+from codeio.events.event import Event
+from codeio.events.observation import (
     AgentDelegateObservation,
     AgentStateChangedObservation,
     BrowserOutputObservation,
@@ -28,12 +28,12 @@ from openhands.events.observation import (
     IPythonRunCellObservation,
     NullObservation,
 )
-from openhands.events.stream import EventSource, EventStream
-from openhands.security.invariant import InvariantAnalyzer
-from openhands.security.invariant.client import InvariantClient
-from openhands.security.invariant.nodes import Function, Message, ToolCall, ToolOutput
-from openhands.security.invariant.parser import parse_action, parse_observation
-from openhands.storage import get_file_store
+from codeio.events.stream import EventSource, EventStream
+from codeio.security.invariant import InvariantAnalyzer
+from codeio.security.invariant.client import InvariantClient
+from codeio.security.invariant.nodes import Function, Message, ToolCall, ToolOutput
+from codeio.security.invariant.parser import parse_action, parse_observation
+from codeio.storage import get_file_store
 
 
 @pytest.fixture

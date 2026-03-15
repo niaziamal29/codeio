@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pydantic import SecretStr
 
-from openhands.integrations.github.github_service import GitHubService
-from openhands.integrations.service_types import Branch, PaginatedBranchesResponse
+from codeio.integrations.github.github_service import GitHubService
+from codeio.integrations.service_types import Branch, PaginatedBranchesResponse
 
 
 @pytest.mark.asyncio

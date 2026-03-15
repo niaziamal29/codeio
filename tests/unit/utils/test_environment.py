@@ -1,7 +1,7 @@
 import pytest
 
-from openhands.utils import environment
-from openhands.utils.environment import StorageProvider, get_storage_provider
+from codeio.utils import environment
+from codeio.utils.environment import StorageProvider, get_storage_provider
 
 
 @pytest.fixture(autouse=True)

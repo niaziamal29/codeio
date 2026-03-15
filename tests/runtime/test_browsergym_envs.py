@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from openhands.core.logger import openhands_logger as logger
-from openhands.events.action.browse import BrowseInteractiveAction
-from openhands.events.observation.browse import BrowserOutputObservation
+from codeio.core.logger import openhands_logger as logger
+from codeio.events.action.browse import BrowseInteractiveAction
+from codeio.events.observation.browse import BrowserOutputObservation
 from tests.runtime.conftest import _close_test_runtime, _load_runtime
 
 
@@ -38,7 +38,7 @@ def test_browsergym_eval_env(runtime_cls, temp_dir):
         force_rebuild_runtime=True,
         enable_browser=True,
     )
-    from openhands.runtime.browser.browser_env import (
+    from codeio.runtime.browser.browser_env import (
         BROWSER_EVAL_GET_GOAL_ACTION,
         BROWSER_EVAL_GET_REWARDS_ACTION,
     )

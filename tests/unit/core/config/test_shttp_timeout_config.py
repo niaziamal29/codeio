@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from openhands.core.config.mcp_config import MCPSHTTPServerConfig
+from codeio.core.config.mcp_config import MCPSHTTPServerConfig
 
 
 class TestMCPSHTTPServerConfig:

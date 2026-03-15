@@ -5,10 +5,10 @@ from unittest.mock import MagicMock
 
 from conftest import _close_test_runtime, _load_runtime
 
-from openhands.core.logger import openhands_logger as logger
-from openhands.events.action import FileEditAction, FileWriteAction
-from openhands.runtime.action_execution_server import _execute_file_editor
-from openhands.runtime.impl.cli.cli_runtime import CLIRuntime
+from codeio.core.logger import openhands_logger as logger
+from codeio.events.action import FileEditAction, FileWriteAction
+from codeio.runtime.action_execution_server import _execute_file_editor
+from codeio.runtime.impl.cli.cli_runtime import CLIRuntime
 
 
 def test_view_file(temp_dir, runtime_cls, run_as_openhands):

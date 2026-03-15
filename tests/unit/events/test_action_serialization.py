@@ -1,4 +1,4 @@
-from openhands.events.action import (
+from codeio.events.action import (
     Action,
     AgentFinishAction,
     AgentRejectAction,
@@ -11,9 +11,9 @@ from openhands.events.action import (
     MessageAction,
     RecallAction,
 )
-from openhands.events.action.action import ActionConfirmationStatus
-from openhands.events.action.files import FileEditSource, FileReadSource
-from openhands.events.serialization import (
+from codeio.events.action.action import ActionConfirmationStatus
+from codeio.events.action.files import FileEditSource, FileReadSource
+from codeio.events.serialization import (
     event_from_dict,
     event_to_dict,
 )

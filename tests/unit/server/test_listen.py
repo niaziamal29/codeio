@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from openhands.core.config import OpenHandsConfig
+from codeio.core.config import CodeioConfig
 
 
 # Mock StaticFiles
@@ -13,14 +13,14 @@ class MockStaticFiles:
 with (
     patch('fastapi.staticfiles.StaticFiles', MockStaticFiles),
 ):
-    from openhands.server.file_config import (
+    from codeio.server.file_config import (
         is_extension_allowed,
         load_file_upload_config,
     )
 
 
 def test_load_file_upload_config():
-    config = OpenHandsConfig(
+    config = CodeioConfig(
         file_uploads_max_file_size_mb=10,
         file_uploads_restrict_file_types=True,
         file_uploads_allowed_extensions=['.txt', '.pdf'],
@@ -33,12 +33,12 @@ def test_load_file_upload_config():
 
 
 def test_load_file_upload_config_invalid_max_size():
-    config = OpenHandsConfig(
+    config = CodeioConfig(
         file_uploads_max_file_size_mb=-5,
         file_uploads_restrict_file_types=False,
         file_uploads_allowed_extensions=[],
     )
-    with patch('openhands.server.shared.config', config):
+    with patch('codeio.server.shared.config', config):
         max_size, restrict_types, allowed_extensions = load_file_upload_config()
 
         assert max_size == 0  # Should default to 0 when invalid
@@ -48,8 +48,8 @@ def test_load_file_upload_config_invalid_max_size():
 
 def test_is_extension_allowed():
     with (
-        patch('openhands.server.file_config.RESTRICT_FILE_TYPES', True),
-        patch('openhands.server.file_config.ALLOWED_EXTENSIONS', ['.txt', '.pdf']),
+        patch('codeio.server.file_config.RESTRICT_FILE_TYPES', True),
+        patch('codeio.server.file_config.ALLOWED_EXTENSIONS', ['.txt', '.pdf']),
     ):
         assert is_extension_allowed('file.txt')
         assert is_extension_allowed('file.pdf')
@@ -58,7 +58,7 @@ def test_is_extension_allowed():
 
 
 def test_is_extension_allowed_no_restrictions():
-    with patch('openhands.server.file_config.RESTRICT_FILE_TYPES', False):
+    with patch('codeio.server.file_config.RESTRICT_FILE_TYPES', False):
         assert is_extension_allowed('file.txt')
         assert is_extension_allowed('file.pdf')
         assert is_extension_allowed('file.doc')
@@ -67,8 +67,8 @@ def test_is_extension_allowed_no_restrictions():
 
 def test_is_extension_allowed_wildcard():
     with (
-        patch('openhands.server.file_config.RESTRICT_FILE_TYPES', True),
-        patch('openhands.server.file_config.ALLOWED_EXTENSIONS', ['.*']),
+        patch('codeio.server.file_config.RESTRICT_FILE_TYPES', True),
+        patch('codeio.server.file_config.ALLOWED_EXTENSIONS', ['.*']),
     ):
         assert is_extension_allowed('file.txt')
         assert is_extension_allowed('file.pdf')

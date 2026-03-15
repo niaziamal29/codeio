@@ -9,17 +9,17 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from openhands.integrations.provider import (
+from codeio.integrations.provider import (
     CustomSecret,
     ProviderToken,
     ProviderType,
 )
-from openhands.server.routes.secrets import (
+from codeio.server.routes.secrets import (
     app as secrets_app,
 )
-from openhands.storage import get_file_store
-from openhands.storage.data_models.secrets import Secrets
-from openhands.storage.secrets.file_secrets_store import FileSecretsStore
+from codeio.storage import get_file_store
+from codeio.storage.data_models.secrets import Secrets
+from codeio.storage.secrets.file_secrets_store import FileSecretsStore
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def test_client():
     # Mock SESSION_API_KEY to None to disable authentication in tests
     with patch.dict(os.environ, {'SESSION_API_KEY': ''}, clear=False):
         # Clear the SESSION_API_KEY to disable auth dependency
-        with patch('openhands.server.dependencies._SESSION_API_KEY', None):
+        with patch('codeio.server.dependencies._SESSION_API_KEY', None):
             yield TestClient(app)
 
 
@@ -45,7 +45,7 @@ def file_secrets_store(temp_dir):
     file_store = get_file_store('local', temp_dir)
     store = FileSecretsStore(file_store)
     with patch(
-        'openhands.storage.secrets.file_secrets_store.FileSecretsStore.get_instance',
+        'codeio.storage.secrets.file_secrets_store.FileSecretsStore.get_instance',
         AsyncMock(return_value=store),
     ):
         yield store
@@ -360,7 +360,7 @@ async def test_add_git_providers_with_host(test_client, file_secrets_store):
 
     # Mock check_provider_tokens to return empty string (no error)
     with patch(
-        'openhands.server.routes.secrets.check_provider_tokens',
+        'codeio.server.routes.secrets.check_provider_tokens',
         AsyncMock(return_value=''),
     ):
         # Add a GitHub provider with a host
@@ -399,7 +399,7 @@ async def test_add_git_providers_update_host_only(test_client, file_secrets_stor
 
     # Mock check_provider_tokens to return empty string (no error)
     with patch(
-        'openhands.server.routes.secrets.check_provider_tokens',
+        'codeio.server.routes.secrets.check_provider_tokens',
         AsyncMock(return_value=''),
     ):
         # Update only the host
@@ -438,7 +438,7 @@ async def test_add_git_providers_invalid_token_with_host(
 
     # Mock validate_provider_token to return None (invalid token)
     with patch(
-        'openhands.integrations.utils.validate_provider_token',
+        'codeio.integrations.utils.validate_provider_token',
         AsyncMock(return_value=None),
     ):
         # Try to add an invalid GitHub provider with a host
@@ -461,7 +461,7 @@ async def test_add_multiple_git_providers_with_hosts(test_client, file_secrets_s
 
     # Mock check_provider_tokens to return empty string (no error)
     with patch(
-        'openhands.server.routes.secrets.check_provider_tokens',
+        'codeio.server.routes.secrets.check_provider_tokens',
         AsyncMock(return_value=''),
     ):
         # Add multiple providers with hosts

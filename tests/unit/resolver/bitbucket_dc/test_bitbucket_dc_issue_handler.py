@@ -4,17 +4,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import SecretStr
 
-from openhands.core.config import LLMConfig
-from openhands.integrations.service_types import ProviderType
-from openhands.resolver.interfaces.bitbucket_data_center import (
+from codeio.core.config import LLMConfig
+from codeio.integrations.service_types import ProviderType
+from codeio.resolver.interfaces.bitbucket_data_center import (
     BitbucketDCIssueHandler,
     BitbucketDCPRHandler,
 )
-from openhands.resolver.interfaces.issue_definitions import (
+from codeio.resolver.interfaces.issue_definitions import (
     ServiceContextIssue,
     ServiceContextPR,
 )
-from openhands.resolver.issue_handler_factory import IssueHandlerFactory
+from codeio.resolver.issue_handler_factory import IssueHandlerFactory
 
 
 @pytest.fixture
@@ -217,10 +217,10 @@ def test_send_comment_msg_uses_text_field(handler):
     mock_response.raise_for_status = MagicMock()
 
     with patch('httpx.post', return_value=mock_response) as mock_post:
-        handler.send_comment_msg(7, 'Hello from OpenHands')
+        handler.send_comment_msg(7, 'Hello from Codeio')
 
     _, kwargs = mock_post.call_args
-    assert kwargs['json'] == {'text': 'Hello from OpenHands'}
+    assert kwargs['json'] == {'text': 'Hello from Codeio'}
 
 
 def test_reply_to_comment_posts_with_parent_id(handler):

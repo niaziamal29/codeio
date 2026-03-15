@@ -11,16 +11,16 @@ from conftest import (
     _load_runtime,
 )
 
-from openhands.core.config import MCPConfig
-from openhands.core.config.mcp_config import MCPStdioServerConfig
-from openhands.mcp.utils import add_mcp_tools_to_agent
-from openhands.microagent.microagent import (
+from codeio.core.config import MCPConfig
+from codeio.core.config.mcp_config import MCPStdioServerConfig
+from codeio.mcp.utils import add_mcp_tools_to_agent
+from codeio.microagent.microagent import (
     BaseMicroagent,
     KnowledgeMicroagent,
     RepoMicroagent,
     TaskMicroagent,
 )
-from openhands.microagent.types import MicroagentType
+from codeio.microagent.types import MicroagentType
 
 
 def _create_test_microagents(test_dir: str):
@@ -106,7 +106,7 @@ def test_load_microagents_with_trailing_slashes(
 def test_load_microagents_with_selected_repo(temp_dir, runtime_cls, run_as_openhands):
     """Test loading microagents from a selected repository."""
     # Create test files in a repository-like structure
-    repo_dir = Path(temp_dir) / 'OpenHands'
+    repo_dir = Path(temp_dir) / 'Codeio'
     repo_dir.mkdir(parents=True)
     _create_test_microagents(str(repo_dir))
 
@@ -114,7 +114,7 @@ def test_load_microagents_with_selected_repo(temp_dir, runtime_cls, run_as_openh
     try:
         # Load microagents with selected repository
         loaded_agents = runtime.get_microagents_from_selected_repo(
-            'OpenHands/OpenHands'
+            'Codeio/Codeio'
         )
 
         # Verify all agents are loaded
@@ -386,7 +386,7 @@ async def test_add_mcp_tools_from_microagents():
     """Test that add_mcp_tools_to_agent adds tools from microagents."""
     # Import ActionExecutionClient for mocking
 
-    from openhands.runtime.impl.action_execution.action_execution_client import (
+    from codeio.runtime.impl.action_execution.action_execution_client import (
         ActionExecutionClient,
     )
 
@@ -417,10 +417,10 @@ async def test_add_mcp_tools_from_microagents():
     }
 
     with patch(
-        'openhands.mcp.utils.fetch_mcp_tools_from_config',
+        'codeio.mcp.utils.fetch_mcp_tools_from_config',
         new=AsyncMock(return_value=[mock_tool]),
     ):
-        # Call the function with the OpenHandsConfig instead of MCPConfig
+        # Call the function with the CodeioConfig instead of MCPConfig
         await add_mcp_tools_to_agent(mock_agent, mock_runtime, mock_memory)
 
         # Verify that the memory's get_microagent_mcp_tools was called

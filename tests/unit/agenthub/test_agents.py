@@ -4,11 +4,11 @@ from unittest.mock import Mock
 import pytest
 from litellm import ChatCompletionMessageToolCall
 
-from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
-from openhands.agenthub.codeact_agent.function_calling import (
+from codeio.agenthub.codeact_agent.codeact_agent import CodeActAgent
+from codeio.agenthub.codeact_agent.function_calling import (
     response_to_actions as codeact_response_to_actions,
 )
-from openhands.agenthub.codeact_agent.tools import (
+from codeio.agenthub.codeact_agent.tools import (
     BrowserTool,
     IPythonTool,
     LLMBasedFileEditTool,
@@ -16,41 +16,41 @@ from openhands.agenthub.codeact_agent.tools import (
     create_cmd_run_tool,
     create_str_replace_editor_tool,
 )
-from openhands.agenthub.codeact_agent.tools.browser import (
+from codeio.agenthub.codeact_agent.tools.browser import (
     _BROWSER_DESCRIPTION,
     _BROWSER_TOOL_DESCRIPTION,
 )
-from openhands.agenthub.readonly_agent.function_calling import (
+from codeio.agenthub.readonly_agent.function_calling import (
     response_to_actions as readonly_response_to_actions,
 )
-from openhands.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
-from openhands.agenthub.readonly_agent.tools import (
+from codeio.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
+from codeio.agenthub.readonly_agent.tools import (
     GlobTool,
     GrepTool,
 )
-from openhands.controller.state.state import State
-from openhands.core.config import AgentConfig, LLMConfig
-from openhands.core.config.openhands_config import OpenHandsConfig
-from openhands.core.exceptions import FunctionCallNotExistsError
-from openhands.core.message import ImageContent, Message, TextContent
-from openhands.events.action import (
+from codeio.controller.state.state import State
+from codeio.core.config import AgentConfig, LLMConfig
+from codeio.core.config.openhands_config import CodeioConfig
+from codeio.core.exceptions import FunctionCallNotExistsError
+from codeio.core.message import ImageContent, Message, TextContent
+from codeio.events.action import (
     CmdRunAction,
     MessageAction,
 )
-from openhands.events.action.message import SystemMessageAction
-from openhands.events.event import EventSource
-from openhands.events.observation.commands import (
+from codeio.events.action.message import SystemMessageAction
+from codeio.events.event import EventSource
+from codeio.events.observation.commands import (
     CmdOutputObservation,
 )
-from openhands.events.tool import ToolCallMetadata
-from openhands.llm.llm_registry import LLMRegistry
-from openhands.memory.condenser import View
+from codeio.events.tool import ToolCallMetadata
+from codeio.llm.llm_registry import LLMRegistry
+from codeio.memory.condenser import View
 
 
 @pytest.fixture
 def create_llm_registry():
     def _get_registry(llm_config):
-        config = OpenHandsConfig()
+        config = CodeioConfig()
         config.set_llm_config(llm_config)
         return LLMRegistry(config=config)
 
@@ -62,7 +62,7 @@ def agent_class(request):
     if request.param == 'CodeActAgent':
         return CodeActAgent
     else:
-        from openhands.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
+        from codeio.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
 
         return ReadOnlyAgent
 
@@ -323,11 +323,11 @@ def test_correct_tool_description_loaded_based_on_model_name(
     """Tests that the simplified tool descriptions are loaded for specific models."""
     o3_mock_config = LLMConfig(model='mock_o3_model', api_key='test_key')
     if agent_type == 'CodeActAgent':
-        from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
+        from codeio.agenthub.codeact_agent.codeact_agent import CodeActAgent
 
         agent_class = CodeActAgent
     else:
-        from openhands.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
+        from codeio.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
 
         agent_class = ReadOnlyAgent
 
@@ -527,7 +527,7 @@ def test_get_system_message(create_llm_registry):
 
     # Check that the system message was created correctly
     assert isinstance(result, SystemMessageAction)
-    assert 'You are OpenHands agent' in result.content
+    assert 'You are Codeio agent' in result.content
     assert len(result.tools) > 0
     assert any(tool['function']['name'] == 'execute_bash' for tool in result.tools)
     assert result._source == EventSource.AGENT

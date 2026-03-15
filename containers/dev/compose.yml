@@ -5,14 +5,14 @@ services:
     build:
       context: ${OPENHANDS_WORKSPACE:-../../}
       dockerfile: ./containers/dev/Dockerfile
-    image: openhands:dev
-    container_name: openhands-dev
+    image: codeio:dev
+    container_name: codeio-dev
     environment:
       - BACKEND_HOST=${BACKEND_HOST:-"0.0.0.0"}
       - SANDBOX_API_HOSTNAME=host.docker.internal
       - DOCKER_HOST_ADDR=host.docker.internal
       #
-      - AGENT_SERVER_IMAGE_REPOSITORY=${AGENT_SERVER_IMAGE_REPOSITORY:-ghcr.io/openhands/agent-server}
+      - AGENT_SERVER_IMAGE_REPOSITORY=${AGENT_SERVER_IMAGE_REPOSITORY:-ghcr.io/codeio/agent-server}
       - AGENT_SERVER_IMAGE_TAG=${AGENT_SERVER_IMAGE_TAG:-1.12.0-python}
       - SANDBOX_USER_ID=${SANDBOX_USER_ID:-1234}
       - WORKSPACE_MOUNT_PATH=${WORKSPACE_BASE:-$PWD/workspace}

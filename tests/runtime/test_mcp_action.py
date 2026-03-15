@@ -12,11 +12,11 @@ from conftest import (
 )
 
 import openhands
-from openhands.core.config import MCPConfig
-from openhands.core.config.mcp_config import MCPSSEServerConfig, MCPStdioServerConfig
-from openhands.core.logger import openhands_logger as logger
-from openhands.events.action import CmdRunAction, MCPAction
-from openhands.events.observation import CmdOutputObservation, MCPObservation
+from codeio.core.config import MCPConfig
+from codeio.core.config.mcp_config import MCPSSEServerConfig, MCPStdioServerConfig
+from codeio.core.logger import openhands_logger as logger
+from codeio.events.action import CmdRunAction, MCPAction
+from codeio.events.observation import CmdOutputObservation, MCPObservation
 
 # ============================================================================================================================
 # Bash-specific tests
@@ -55,7 +55,7 @@ def sse_mcp_docker_server():
     log_streamer = None
 
     # Import LogStreamer here as it's specific to this fixture's needs
-    from openhands.runtime.utils.log_streamer import LogStreamer
+    from codeio.runtime.utils.log_streamer import LogStreamer
 
     try:
         logger.info(

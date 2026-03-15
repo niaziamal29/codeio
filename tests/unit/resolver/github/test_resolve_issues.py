@@ -4,23 +4,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from openhands.core.config import LLMConfig
-from openhands.events.action import CmdRunAction, MessageAction
-from openhands.events.observation import (
+from codeio.core.config import LLMConfig
+from codeio.events.action import CmdRunAction, MessageAction
+from codeio.events.observation import (
     CmdOutputMetadata,
     CmdOutputObservation,
     NullObservation,
 )
-from openhands.integrations.service_types import ProviderType
-from openhands.llm.llm import LLM
-from openhands.resolver.interfaces.github import GithubIssueHandler, GithubPRHandler
-from openhands.resolver.interfaces.issue import Issue, ReviewThread
-from openhands.resolver.interfaces.issue_definitions import (
+from codeio.integrations.service_types import ProviderType
+from codeio.llm.llm import LLM
+from codeio.resolver.interfaces.github import GithubIssueHandler, GithubPRHandler
+from codeio.resolver.interfaces.issue import Issue, ReviewThread
+from codeio.resolver.interfaces.issue_definitions import (
     ServiceContextIssue,
     ServiceContextPR,
 )
-from openhands.resolver.issue_resolver import IssueResolver
-from openhands.resolver.resolver_output import ResolverOutput
+from codeio.resolver.issue_resolver import IssueResolver
+from codeio.resolver.resolver_output import ResolverOutput
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def mock_github_token():
     This eliminates the need for repeated patching in each test function.
     """
     with patch(
-        'openhands.resolver.issue_resolver.identify_token',
+        'codeio.resolver.issue_resolver.identify_token',
         return_value=ProviderType.GITHUB,
     ) as patched:
         yield patched
@@ -487,8 +487,8 @@ async def test_process_issue(
 
     # Patch the necessary functions and methods
     with (
-        patch('openhands.resolver.issue_resolver.create_runtime', mock_create_runtime),
-        patch('openhands.resolver.issue_resolver.run_controller', mock_run_controller),
+        patch('codeio.resolver.issue_resolver.create_runtime', mock_create_runtime),
+        patch('codeio.resolver.issue_resolver.run_controller', mock_run_controller),
         patch.object(
             resolver, 'complete_runtime', return_value={'git_patch': 'test patch'}
         ),
@@ -605,12 +605,12 @@ def test_file_instruction():
         title='Test Issue',
         body='This is a test issue ![image](https://sampleimage.com/sample.png)',
     )
-    # load prompt from openhands/resolver/prompts/resolve/basic.jinja
-    with open('openhands/resolver/prompts/resolve/basic.jinja', 'r') as f:
+    # load prompt from codeio/resolver/prompts/resolve/basic.jinja
+    with open('codeio/resolver/prompts/resolve/basic.jinja', 'r') as f:
         prompt = f.read()
 
     with open(
-        'openhands/resolver/prompts/resolve/basic-conversation-instructions.jinja', 'r'
+        'codeio/resolver/prompts/resolve/basic-conversation-instructions.jinja', 'r'
     ) as f:
         conversation_instructions_template = f.read()
 
@@ -649,18 +649,18 @@ def test_file_instruction_with_repo_instruction():
         title='Test Issue',
         body='This is a test issue',
     )
-    # load prompt from openhands/resolver/prompts/resolve/basic.jinja
-    with open('openhands/resolver/prompts/resolve/basic.jinja', 'r') as f:
+    # load prompt from codeio/resolver/prompts/resolve/basic.jinja
+    with open('codeio/resolver/prompts/resolve/basic.jinja', 'r') as f:
         prompt = f.read()
 
     with open(
-        'openhands/resolver/prompts/resolve/basic-conversation-instructions.jinja', 'r'
+        'codeio/resolver/prompts/resolve/basic-conversation-instructions.jinja', 'r'
     ) as f:
         conversation_instructions_prompt = f.read()
 
-    # load repo instruction from openhands/resolver/prompts/repo_instructions/all-hands-ai___openhands-resolver.txt
+    # load repo instruction from codeio/resolver/prompts/repo_instructions/all-hands-ai___openhands-resolver.txt
     with open(
-        'openhands/resolver/prompts/repo_instructions/all-hands-ai___openhands-resolver.txt',
+        'codeio/resolver/prompts/repo_instructions/all-hands-ai___openhands-resolver.txt',
         'r',
     ) as f:
         repo_instruction = f.read()
@@ -685,7 +685,7 @@ This is a test issue"""
 You SHOULD INCLUDE PROPER INDENTATION in your edit commands.
 
 Some basic information about this repository:
-This is a Python repo for openhands-resolver, a library that attempts to resolve github issues with the AI agent OpenHands.
+This is a Python repo for openhands-resolver, a library that attempts to resolve github issues with the AI agent Codeio.
 
 - Setup: `poetry install --with test --with dev`
 - Testing: `poetry run pytest tests/test_*.py`
@@ -791,11 +791,11 @@ def test_instruction_with_thread_comments():
     )
 
     # Load the basic prompt template
-    with open('openhands/resolver/prompts/resolve/basic.jinja', 'r') as f:
+    with open('codeio/resolver/prompts/resolve/basic.jinja', 'r') as f:
         prompt = f.read()
 
     with open(
-        'openhands/resolver/prompts/resolve/basic-conversation-instructions.jinja', 'r'
+        'codeio/resolver/prompts/resolve/basic-conversation-instructions.jinja', 'r'
     ) as f:
         conversation_instructions_template = f.read()
 

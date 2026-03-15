@@ -2,10 +2,10 @@ import json
 
 import pytest
 
-from openhands.storage.conversation.file_conversation_store import FileConversationStore
-from openhands.storage.data_models.conversation_metadata import ConversationMetadata
-from openhands.storage.locations import get_conversation_metadata_filename
-from openhands.storage.memory import InMemoryFileStore
+from codeio.storage.conversation.file_conversation_store import FileConversationStore
+from codeio.storage.data_models.conversation_metadata import ConversationMetadata
+from codeio.storage.locations import get_conversation_metadata_filename
+from codeio.storage.memory import InMemoryFileStore
 
 
 @pytest.mark.asyncio

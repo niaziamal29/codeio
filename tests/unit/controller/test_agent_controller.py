@@ -10,46 +10,46 @@ from litellm import (
     ContextWindowExceededError,
 )
 
-from openhands.controller.agent import Agent
-from openhands.controller.agent_controller import AgentController
-from openhands.controller.state.control_flags import (
+from codeio.controller.agent import Agent
+from codeio.controller.agent_controller import AgentController
+from codeio.controller.state.control_flags import (
     BudgetControlFlag,
 )
-from openhands.controller.state.state import State
-from openhands.core.config import OpenHandsConfig
-from openhands.core.config.agent_config import AgentConfig
-from openhands.core.config.llm_config import LLMConfig
-from openhands.core.main import run_controller
-from openhands.core.schema import AgentState
-from openhands.events import Event, EventSource, EventStream, EventStreamSubscriber
-from openhands.events.action import ChangeAgentStateAction, CmdRunAction, MessageAction
-from openhands.events.action.agent import CondensationAction, RecallAction
-from openhands.events.action.empty import NullAction
-from openhands.events.action.message import SystemMessageAction
-from openhands.events.observation import (
+from codeio.controller.state.state import State
+from codeio.core.config import CodeioConfig
+from codeio.core.config.agent_config import AgentConfig
+from codeio.core.config.llm_config import LLMConfig
+from codeio.core.main import run_controller
+from codeio.core.schema import AgentState
+from codeio.events import Event, EventSource, EventStream, EventStreamSubscriber
+from codeio.events.action import ChangeAgentStateAction, CmdRunAction, MessageAction
+from codeio.events.action.agent import CondensationAction, RecallAction
+from codeio.events.action.empty import NullAction
+from codeio.events.action.message import SystemMessageAction
+from codeio.events.observation import (
     AgentStateChangedObservation,
     ErrorObservation,
 )
-from openhands.events.observation.agent import RecallObservation
-from openhands.events.observation.empty import NullObservation
-from openhands.events.recall_type import RecallType
-from openhands.events.serialization import event_to_dict
-from openhands.llm import LLM
-from openhands.llm.llm_registry import LLMRegistry, RegistryEvent
-from openhands.llm.metrics import Metrics, TokenUsage
-from openhands.memory.condenser.condenser import Condensation
-from openhands.memory.condenser.impl.conversation_window_condenser import (
+from codeio.events.observation.agent import RecallObservation
+from codeio.events.observation.empty import NullObservation
+from codeio.events.recall_type import RecallType
+from codeio.events.serialization import event_to_dict
+from codeio.llm import LLM
+from codeio.llm.llm_registry import LLMRegistry, RegistryEvent
+from codeio.llm.metrics import Metrics, TokenUsage
+from codeio.memory.condenser.condenser import Condensation
+from codeio.memory.condenser.impl.conversation_window_condenser import (
     ConversationWindowCondenser,
 )
-from openhands.memory.memory import Memory
-from openhands.memory.view import View
-from openhands.runtime.base import Runtime
-from openhands.runtime.impl.action_execution.action_execution_client import (
+from codeio.memory.memory import Memory
+from codeio.memory.view import View
+from codeio.runtime.base import Runtime
+from codeio.runtime.impl.action_execution.action_execution_client import (
     ActionExecutionClient,
 )
-from openhands.runtime.runtime_status import RuntimeStatus
-from openhands.server.services.conversation_stats import ConversationStats
-from openhands.storage.memory import InMemoryFileStore
+from codeio.runtime.runtime_status import RuntimeStatus
+from codeio.server.services.conversation_stats import ConversationStats
+from codeio.storage.memory import InMemoryFileStore
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ def mock_agent_with_stats():
     import uuid
 
     # Create LLM registry
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     llm_registry = LLMRegistry(config=config)
 
     # Create conversation stats
@@ -133,7 +133,7 @@ def test_event_stream():
 
 @pytest.fixture
 def mock_runtime() -> Runtime:
-    from openhands.runtime.impl.action_execution.action_execution_client import (
+    from codeio.runtime.impl.action_execution.action_execution_client import (
         ActionExecutionClient,
     )
 
@@ -362,7 +362,7 @@ async def test_tool_call_validation_error_handling(
 async def test_run_controller_with_fatal_error(
     test_event_stream, mock_memory, mock_agent_with_stats
 ):
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     mock_agent, conversation_stats, llm_registry = mock_agent_with_stats
 
     def agent_step_fn(state):
@@ -397,7 +397,7 @@ async def test_run_controller_with_fatal_error(
     )
 
     # Mock the create_agent function to return our mock agent
-    with patch('openhands.core.main.create_agent', return_value=mock_agent):
+    with patch('codeio.core.main.create_agent', return_value=mock_agent):
         state = await run_controller(
             config=config,
             initial_user_action=MessageAction(content='Test message'),
@@ -427,7 +427,7 @@ async def test_run_controller_with_fatal_error(
 async def test_run_controller_stop_with_stuck(
     test_event_stream, mock_memory, mock_agent_with_stats
 ):
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     mock_agent, conversation_stats, llm_registry = mock_agent_with_stats
 
     def agent_step_fn(state):
@@ -464,7 +464,7 @@ async def test_run_controller_stop_with_stuck(
     )
 
     # Mock the create_agent function to return our mock agent
-    with patch('openhands.core.main.create_agent', return_value=mock_agent):
+    with patch('codeio.core.main.create_agent', return_value=mock_agent):
         state = await run_controller(
             config=config,
             initial_user_action=MessageAction(content='Test message'),
@@ -941,7 +941,7 @@ async def test_reset_with_pending_action_no_metadata(
 async def test_run_controller_max_iterations_has_metrics(
     test_event_stream, mock_memory, mock_agent_with_stats
 ):
-    config = OpenHandsConfig(
+    config = CodeioConfig(
         max_iterations=3,
     )
     event_stream = test_event_stream
@@ -988,7 +988,7 @@ async def test_run_controller_max_iterations_has_metrics(
     event_stream.subscribe(EventStreamSubscriber.MEMORY, on_event_memory, str(uuid4()))
 
     # Mock the create_agent function to return our mock agent
-    with patch('openhands.core.main.create_agent', return_value=mock_agent):
+    with patch('codeio.core.main.create_agent', return_value=mock_agent):
         state = await run_controller(
             config=config,
             initial_user_action=MessageAction(content='Test message'),
@@ -1133,7 +1133,7 @@ async def test_context_window_exceeded_error_handling(
     test_event_stream.subscribe(
         EventStreamSubscriber.MEMORY, on_event_memory, str(uuid4())
     )
-    config = OpenHandsConfig(max_iterations=max_iterations)
+    config = CodeioConfig(max_iterations=max_iterations)
     mock_runtime.event_stream = test_event_stream
     mock_runtime.config = copy.deepcopy(config)
 
@@ -1142,7 +1142,7 @@ async def test_context_window_exceeded_error_handling(
     # record of the error being thrown we can be confident that the controller
     # handles the truncation correctly.
     # Mock the create_agent function to return our mock agent
-    with patch('openhands.core.main.create_agent', return_value=mock_agent):
+    with patch('codeio.core.main.create_agent', return_value=mock_agent):
         final_state = await asyncio.wait_for(
             run_controller(
                 config=config,
@@ -1290,12 +1290,12 @@ async def test_run_controller_with_context_window_exceeded_with_truncation(
         EventStreamSubscriber.MEMORY, on_event_memory, str(uuid4())
     )
     mock_runtime.event_stream = test_event_stream
-    config = OpenHandsConfig(max_iterations=5)
+    config = CodeioConfig(max_iterations=5)
     mock_runtime.config = copy.deepcopy(config)
 
     try:
         # Mock the create_agent function to return our mock agent
-        with patch('openhands.core.main.create_agent', return_value=mock_agent):
+        with patch('codeio.core.main.create_agent', return_value=mock_agent):
             state = await asyncio.wait_for(
                 run_controller(
                     config=config,
@@ -1374,11 +1374,11 @@ async def test_run_controller_with_context_window_exceeded_without_truncation(
         EventStreamSubscriber.MEMORY, on_event_memory, str(uuid4())
     )
     mock_runtime.event_stream = test_event_stream
-    config = OpenHandsConfig(max_iterations=3)
+    config = CodeioConfig(max_iterations=3)
     mock_runtime.config = copy.deepcopy(config)
     try:
         # Mock the create_agent function to return our mock agent
-        with patch('openhands.core.main.create_agent', return_value=mock_agent):
+        with patch('codeio.core.main.create_agent', return_value=mock_agent):
             state = await asyncio.wait_for(
                 run_controller(
                     config=config,
@@ -1428,7 +1428,7 @@ async def test_run_controller_with_memory_error(
 ):
     mock_agent, conversation_stats, llm_registry = mock_agent_with_stats
 
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     event_stream = test_event_stream
 
     # Create a proper agent that returns an action without an ID
@@ -1457,7 +1457,7 @@ async def test_run_controller_with_memory_error(
         memory, '_find_microagent_knowledge', side_effect=mock_find_microagent_knowledge
     ):
         # Mock the create_agent function to return our mock agent
-        with patch('openhands.core.main.create_agent', return_value=mock_agent):
+        with patch('codeio.core.main.create_agent', return_value=mock_agent):
             state = await run_controller(
                 config=config,
                 initial_user_action=MessageAction(content='Test message'),

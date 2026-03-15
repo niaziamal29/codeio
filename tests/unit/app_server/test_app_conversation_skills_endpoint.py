@@ -10,24 +10,24 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.app_server.app_conversation.app_conversation_models import (
     AppConversation,
 )
-from openhands.app_server.app_conversation.app_conversation_router import (
+from codeio.app_server.app_conversation.app_conversation_router import (
     get_conversation_skills,
 )
-from openhands.app_server.app_conversation.app_conversation_service_base import (
+from codeio.app_server.app_conversation.app_conversation_service_base import (
     AppConversationServiceBase,
 )
-from openhands.app_server.sandbox.sandbox_models import (
+from codeio.app_server.sandbox.sandbox_models import (
     AGENT_SERVER,
     ExposedUrl,
     SandboxInfo,
     SandboxStatus,
 )
-from openhands.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
-from openhands.app_server.user.user_context import UserContext
-from openhands.sdk.context.skills import KeywordTrigger, Skill, TaskTrigger
+from codeio.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
+from codeio.app_server.user.user_context import UserContext
+from codeio.sdk.context.skills import KeywordTrigger, Skill, TaskTrigger
 
 
 def _make_service_mock(

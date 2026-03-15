@@ -3,9 +3,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from openhands.integrations.service_types import GitService
-from openhands.server.routes.mcp import get_conversation_link
-from openhands.server.types import AppMode
+from codeio.integrations.service_types import GitService
+from codeio.server.routes.mcp import get_conversation_link
+from codeio.server.types import AppMode
 
 
 def test_mcp_server_no_stateless_http_deprecation_warning():
@@ -22,7 +22,7 @@ def test_mcp_server_no_stateless_http_deprecation_warning():
         warnings.simplefilter('always')
 
         # Import the mcp_server which triggers FastMCP creation
-        from openhands.server.routes.mcp import mcp_server
+        from codeio.server.routes.mcp import mcp_server
 
         # Check that no deprecation warning about stateless_http was raised
         stateless_http_warnings = [
@@ -47,7 +47,7 @@ async def test_get_conversation_link_non_saas_mode():
     mock_service = AsyncMock(spec=GitService)
 
     # Test with non-SAAS mode
-    with patch('openhands.server.routes.mcp.server_config') as mock_config:
+    with patch('codeio.server.routes.mcp.server_config') as mock_config:
         mock_config.app_mode = AppMode.OPENHANDS
 
         # Call the function
@@ -72,9 +72,9 @@ async def test_get_conversation_link_saas_mode():
 
     # Test with SAAS mode
     with (
-        patch('openhands.server.routes.mcp.server_config') as mock_config,
+        patch('codeio.server.routes.mcp.server_config') as mock_config,
         patch(
-            'openhands.server.routes.mcp.CONVERSATION_URL',
+            'codeio.server.routes.mcp.CONVERSATION_URL',
             'https://test.example.com/conversations/{}',
         ),
     ):
@@ -104,9 +104,9 @@ async def test_get_conversation_link_empty_body():
 
     # Test with SAAS mode and empty body
     with (
-        patch('openhands.server.routes.mcp.server_config') as mock_config,
+        patch('codeio.server.routes.mcp.server_config') as mock_config,
         patch(
-            'openhands.server.routes.mcp.CONVERSATION_URL',
+            'codeio.server.routes.mcp.CONVERSATION_URL',
             'https://test.example.com/conversations/{}',
         ),
     ):
@@ -130,7 +130,7 @@ async def test_get_conversation_link_none_conversation_id():
     """Test get_conversation_link returns body unchanged when conversation_id is None."""
     mock_service = AsyncMock(spec=GitService)
 
-    with patch('openhands.server.routes.mcp.server_config') as mock_config:
+    with patch('codeio.server.routes.mcp.server_config') as mock_config:
         mock_config.app_mode = AppMode.SAAS
 
         body = 'This is the PR body.'

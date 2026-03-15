@@ -10,12 +10,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import SecretStr
 
-from openhands.integrations.provider import ProviderToken, ProviderType
-from openhands.server.services.conversation_service import (
+from codeio.integrations.provider import ProviderToken, ProviderType
+from codeio.server.services.conversation_service import (
     setup_init_conversation_settings,
 )
-from openhands.server.types import AppMode
-from openhands.storage.data_models.settings import Settings
+from codeio.server.types import AppMode
+from codeio.storage.data_models.settings import Settings
 
 
 @pytest.fixture
@@ -57,13 +57,13 @@ async def test_setup_with_provided_tokens_uses_real_tokens(
 
     # Mock the stores to return our test settings
     with patch(
-        'openhands.server.services.conversation_service.SettingsStoreImpl.get_instance'
+        'codeio.server.services.conversation_service.SettingsStoreImpl.get_instance'
     ) as mock_settings_store_cls:
         with patch(
-            'openhands.server.services.conversation_service.SecretsStoreImpl.get_instance'
+            'codeio.server.services.conversation_service.SecretsStoreImpl.get_instance'
         ) as mock_secrets_store_cls:
             with patch(
-                'openhands.server.services.conversation_service.server_config'
+                'codeio.server.services.conversation_service.server_config'
             ) as mock_server_config:
                 # Setup mocks
                 mock_settings_store = AsyncMock()
@@ -102,9 +102,9 @@ async def test_setup_with_provided_tokens_uses_real_tokens(
 
 @pytest.mark.asyncio
 async def test_setup_without_tokens_non_saas_uses_user_secrets(mock_settings):
-    """Test that OpenHands (OSS mode) uses user_secrets.provider_tokens when no tokens provided.
+    """Test that Codeio (OSS mode) uses user_secrets.provider_tokens when no tokens provided.
 
-    This test verifies OpenHands (OSS mode) backward compatibility - tokens come from local config, not endpoint.
+    This test verifies Codeio (OSS mode) backward compatibility - tokens come from local config, not endpoint.
     """
     user_id = 'test_user_456'
     conversation_id = 'test_conv_123'
@@ -123,13 +123,13 @@ async def test_setup_without_tokens_non_saas_uses_user_secrets(mock_settings):
     mock_user_secrets.custom_secrets = MappingProxyType({})  # Empty dict is fine
 
     with patch(
-        'openhands.server.services.conversation_service.SettingsStoreImpl.get_instance'
+        'codeio.server.services.conversation_service.SettingsStoreImpl.get_instance'
     ) as mock_settings_store_cls:
         with patch(
-            'openhands.server.services.conversation_service.SecretsStoreImpl.get_instance'
+            'codeio.server.services.conversation_service.SecretsStoreImpl.get_instance'
         ) as mock_secrets_store_cls:
             with patch(
-                'openhands.server.services.conversation_service.server_config'
+                'codeio.server.services.conversation_service.server_config'
             ) as mock_server_config:
                 # Setup mocks
                 mock_settings_store = AsyncMock()

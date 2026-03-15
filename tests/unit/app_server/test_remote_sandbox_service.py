@@ -19,8 +19,8 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from openhands.app_server.errors import SandboxError
-from openhands.app_server.sandbox.remote_sandbox_service import (
+from codeio.app_server.errors import SandboxError
+from codeio.app_server.sandbox.remote_sandbox_service import (
     ALLOW_CORS_ORIGINS_VARIABLE,
     POD_STATUS_MAPPING,
     STATUS_MAPPING,
@@ -28,7 +28,7 @@ from openhands.app_server.sandbox.remote_sandbox_service import (
     RemoteSandboxService,
     StoredRemoteSandbox,
 )
-from openhands.app_server.sandbox.sandbox_models import (
+from codeio.app_server.sandbox.sandbox_models import (
     AGENT_SERVER,
     VSCODE,
     WORKER_1,
@@ -36,8 +36,8 @@ from openhands.app_server.sandbox.sandbox_models import (
     SandboxInfo,
     SandboxStatus,
 )
-from openhands.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
-from openhands.app_server.user.user_context import UserContext
+from codeio.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
+from codeio.app_server.user.user_context import UserContext
 
 
 @pytest.fixture
@@ -1004,7 +1004,7 @@ class TestGetSandboxBySessionApiKey:
         self, remote_sandbox_service
     ):
         """Test finding sandbox by session API key using stored hash."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _hash_session_api_key,
         )
 
@@ -1067,7 +1067,7 @@ class TestGetSandboxBySessionApiKey:
         self, remote_sandbox_service
     ):
         """Test legacy fallback finding sandbox via /list API and backfilling hash."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _hash_session_api_key,
         )
 
@@ -1116,7 +1116,7 @@ class TestGetSandboxBySessionApiKey:
         self, remote_sandbox_service
     ):
         """Test legacy fallback checking each sandbox's runtime when /list API fails."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _hash_session_api_key,
         )
 
@@ -1165,7 +1165,7 @@ class TestGetSandboxBySessionApiKey:
         self, remote_sandbox_service
     ):
         """Test handling runtime error when getting sandbox."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _hash_session_api_key,
         )
 
@@ -1198,7 +1198,7 @@ class TestUtilityFunctions:
 
     def test_build_service_url_subdomain_mode(self):
         """Test _build_service_url function with subdomain-based routing."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _build_service_url,
         )
 
@@ -1220,7 +1220,7 @@ class TestUtilityFunctions:
 
     def test_build_service_url_path_mode(self):
         """Test _build_service_url function with path-based routing."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _build_service_url,
         )
 
@@ -1244,7 +1244,7 @@ class TestUtilityFunctions:
 
     def test_hash_session_api_key(self):
         """Test _hash_session_api_key function."""
-        from openhands.app_server.sandbox.remote_sandbox_service import (
+        from codeio.app_server.sandbox.remote_sandbox_service import (
             _hash_session_api_key,
         )
 

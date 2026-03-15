@@ -3,12 +3,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openhands.core.config import LLMConfig
-from openhands.events.action.message import MessageAction
-from openhands.llm.llm import LLM
-from openhands.resolver.interfaces.gitlab import GitlabPRHandler
-from openhands.resolver.interfaces.issue import Issue, ReviewThread
-from openhands.resolver.interfaces.issue_definitions import ServiceContextPR
+from codeio.core.config import LLMConfig
+from codeio.events.action.message import MessageAction
+from codeio.llm.llm import LLM
+from codeio.resolver.interfaces.gitlab import GitlabPRHandler
+from codeio.resolver.interfaces.issue import Issue, ReviewThread
+from codeio.resolver.interfaces.issue_definitions import ServiceContextPR
 
 
 @pytest.fixture

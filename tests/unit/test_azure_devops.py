@@ -2,10 +2,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from openhands.integrations.azure_devops.azure_devops_service import (
+from codeio.integrations.azure_devops.azure_devops_service import (
     AzureDevOpsServiceImpl as AzureDevOpsService,
 )
-from openhands.integrations.service_types import ProviderType
+from codeio.integrations.service_types import ProviderType
 
 
 @pytest.mark.asyncio

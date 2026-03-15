@@ -6,13 +6,13 @@ import re
 import pytest
 from conftest import _close_test_runtime, _load_runtime
 
-from openhands.core.logger import openhands_logger as logger
-from openhands.events.action import (
+from codeio.core.logger import openhands_logger as logger
+from codeio.events.action import (
     BrowseInteractiveAction,
     BrowseURLAction,
     CmdRunAction,
 )
-from openhands.events.observation import (
+from codeio.events.observation import (
     BrowserOutputObservation,
     CmdOutputObservation,
     ErrorObservation,

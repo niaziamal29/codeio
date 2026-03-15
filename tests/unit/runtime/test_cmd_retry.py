@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openhands.events.observation import CmdOutputObservation, ErrorObservation
-from openhands.runtime.base import (
+from codeio.events.observation import CmdOutputObservation, ErrorObservation
+from codeio.runtime.base import (
     CMD_RETRY_BASE_DELAY_SECONDS,
     CMD_RETRY_MAX_ATTEMPTS,
     CMD_RETRY_TIMEOUT_EXIT_CODE,
@@ -22,7 +22,7 @@ class TestCmdRetryHelpers:
     @pytest.fixture
     def mock_runtime(self):
         """Create a mock runtime with the retry methods."""
-        from openhands.runtime.base import Runtime
+        from codeio.runtime.base import Runtime
 
         # Create a minimal mock that has the methods we need to test
         runtime = MagicMock(spec=Runtime)
@@ -98,7 +98,7 @@ class TestRunCmdWithRetry:
     @pytest.fixture
     def mock_runtime(self):
         """Create a mock runtime for retry testing."""
-        from openhands.runtime.base import Runtime
+        from codeio.runtime.base import Runtime
 
         runtime = MagicMock(spec=Runtime)
 
@@ -130,7 +130,7 @@ class TestRunCmdWithRetry:
         assert result == success_obs
         assert mock_runtime.run.call_count == 1
 
-    @patch('openhands.runtime.base.time.sleep')
+    @patch('codeio.runtime.base.time.sleep')
     def test_retry_on_timeout_then_success(self, mock_sleep, mock_runtime):
         """Test retry behavior when first attempt times out."""
         timeout_obs = CmdOutputObservation(
@@ -150,7 +150,7 @@ class TestRunCmdWithRetry:
         assert mock_runtime.run.call_count == 2
         mock_sleep.assert_called_once()
 
-    @patch('openhands.runtime.base.time.sleep')
+    @patch('codeio.runtime.base.time.sleep')
     def test_retry_exhaustion_raises_error(self, mock_sleep, mock_runtime):
         """Test that RuntimeError is raised after all retries fail."""
         timeout_obs = CmdOutputObservation(
@@ -190,7 +190,7 @@ class TestRunCmdWithRetry:
             mock_runtime._run_cmd_with_retry('cmd', 'Error', max_retries=0)
         assert 'max_retries' in str(exc_info.value).lower()
 
-    @patch('openhands.runtime.base.time.sleep')
+    @patch('codeio.runtime.base.time.sleep')
     def test_exponential_backoff_delays(self, mock_sleep, mock_runtime):
         """Test that delays follow exponential backoff pattern."""
         timeout_obs = CmdOutputObservation(content='', command='cmd', exit_code=-1)

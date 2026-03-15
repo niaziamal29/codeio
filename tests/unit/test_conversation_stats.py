@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from openhands.core.config import LLMConfig, OpenHandsConfig
-from openhands.llm.llm import LLM
-from openhands.llm.llm_registry import LLMRegistry, RegistryEvent
-from openhands.llm.metrics import Metrics
-from openhands.server.services.conversation_stats import ConversationStats
-from openhands.storage.memory import InMemoryFileStore
+from codeio.core.config import LLMConfig, CodeioConfig
+from codeio.llm.llm import LLM
+from codeio.llm.llm_registry import LLMRegistry, RegistryEvent
+from codeio.llm.metrics import Metrics
+from codeio.server.services.conversation_stats import ConversationStats
+from codeio.storage.memory import InMemoryFileStore
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def conversation_stats(mock_file_store):
 @pytest.fixture
 def mock_llm_registry():
     """Create a mock LLM registry that properly simulates LLM registration."""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     registry = LLMRegistry(config=config, agent_cls=None, retry_listener=None)
     return registry
 
@@ -93,7 +93,7 @@ def test_maybe_restore_metrics(mock_file_store):
     user_id = 'test-user-id'
 
     # Get the correct path using the same function as ConversationStats
-    from openhands.storage.locations import get_conversation_stats_filename
+    from codeio.storage.locations import get_conversation_stats_filename
 
     metrics_path = get_conversation_stats_filename(conversation_id, user_id)
 
@@ -185,7 +185,7 @@ def test_register_llm_with_new_service(conversation_stats):
     )
 
     # Patch the LLM class to avoid actual API calls
-    with patch('openhands.llm.llm.litellm_completion'):
+    with patch('codeio.llm.llm.litellm_completion'):
         llm = LLM(service_id='new-service', config=llm_config)
 
         # Create a registry event
@@ -218,7 +218,7 @@ def test_register_llm_with_restored_metrics(conversation_stats):
     )
 
     # Patch the LLM class to avoid actual API calls
-    with patch('openhands.llm.llm.litellm_completion'):
+    with patch('codeio.llm.llm.litellm_completion'):
         llm = LLM(service_id=service_id, config=llm_config)
 
         # Create a registry event
@@ -396,7 +396,7 @@ def test_register_llm_with_multiple_restored_services_bug(conversation_stats):
     )
 
     # Patch the LLM class to avoid actual API calls
-    with patch('openhands.llm.llm.litellm_completion'):
+    with patch('codeio.llm.llm.litellm_completion'):
         # Register first LLM
         llm_1 = LLM(service_id=service_id_1, config=llm_config_1)
         event_1 = RegistryEvent(llm=llm_1, service_id=service_id_1)
@@ -475,7 +475,7 @@ def test_save_and_restore_workflow(mock_file_store):
     )
 
     # Patch the LLM class to avoid actual API calls
-    with patch('openhands.llm.llm.litellm_completion'):
+    with patch('codeio.llm.llm.litellm_completion'):
         llm = LLM(service_id=service_id, config=llm_config)
 
         # Create a registry event
@@ -654,7 +654,7 @@ def test_save_metrics_preserves_restored_metrics_fix(mock_file_store):
         retry_max_wait=2,
     )
 
-    with patch('openhands.llm.llm.litellm_completion'):
+    with patch('codeio.llm.llm.litellm_completion'):
         llm_a = LLM(service_id=service_a, config=llm_config)
         event_a = RegistryEvent(llm=llm_a, service_id=service_a)
         stats2.register_llm(event_a)

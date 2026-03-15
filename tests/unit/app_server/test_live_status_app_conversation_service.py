@@ -11,37 +11,37 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretStr
 
-from openhands.agent_server.models import (
+from codeio.agent_server.models import (
     SendMessageRequest,
     StartConversationRequest,
     TextContent,
 )
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.app_server.app_conversation.app_conversation_models import (
     AgentType,
     AppConversationInfo,
     AppConversationStartRequest,
 )
-from openhands.app_server.app_conversation.live_status_app_conversation_service import (
+from codeio.app_server.app_conversation.live_status_app_conversation_service import (
     PLANNING_AGENT_INSTRUCTION,
     LiveStatusAppConversationService,
 )
-from openhands.app_server.sandbox.sandbox_models import (
+from codeio.app_server.sandbox.sandbox_models import (
     AGENT_SERVER,
     ExposedUrl,
     SandboxInfo,
     SandboxStatus,
 )
-from openhands.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
-from openhands.app_server.user.user_context import UserContext
-from openhands.integrations.provider import ProviderToken, ProviderType
-from openhands.integrations.service_types import SuggestedTask, TaskType
-from openhands.sdk import Agent, Event
-from openhands.sdk.llm import LLM
-from openhands.sdk.secret import LookupSecret, StaticSecret
-from openhands.sdk.workspace import LocalWorkspace
-from openhands.sdk.workspace.remote.async_remote_workspace import AsyncRemoteWorkspace
-from openhands.server.types import AppMode
-from openhands.storage.data_models.conversation_metadata import ConversationTrigger
+from codeio.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
+from codeio.app_server.user.user_context import UserContext
+from codeio.integrations.provider import ProviderToken, ProviderType
+from codeio.integrations.service_types import SuggestedTask, TaskType
+from codeio.sdk import Agent, Event
+from codeio.sdk.llm import LLM
+from codeio.sdk.secret import LookupSecret, StaticSecret
+from codeio.sdk.workspace import LocalWorkspace
+from codeio.sdk.workspace.remote.async_remote_workspace import AsyncRemoteWorkspace
+from codeio.server.types import AppMode
+from codeio.storage.data_models.conversation_metadata import ConversationTrigger
 
 # Env var used by openhands SDK LLM to skip context-window validation (e.g. for gpt-4 in tests)
 _ALLOW_SHORT_CONTEXT_WINDOWS = 'ALLOW_SHORT_CONTEXT_WINDOWS'
@@ -483,9 +483,9 @@ class TestLiveStatusAppConversationService:
 
     @pytest.mark.asyncio
     async def test_configure_llm_and_mcp_openhands_model_prefers_user_base_url(self):
-        """openhands/* model uses user.llm_base_url when provided."""
+        """codeio/* model uses user.llm_base_url when provided."""
         # Arrange
-        self.mock_user.llm_model = 'openhands/special'
+        self.mock_user.llm_model = 'codeio/special'
         self.mock_user.llm_base_url = 'https://user-llm.example.com'
         self.mock_user_context.get_mcp_api_key.return_value = None
 
@@ -499,9 +499,9 @@ class TestLiveStatusAppConversationService:
 
     @pytest.mark.asyncio
     async def test_configure_llm_and_mcp_openhands_model_uses_provider_default(self):
-        """openhands/* model falls back to configured provider base URL."""
+        """codeio/* model falls back to configured provider base URL."""
         # Arrange
-        self.mock_user.llm_model = 'openhands/default'
+        self.mock_user.llm_model = 'codeio/default'
         self.mock_user.llm_base_url = None
         self.mock_user_context.get_mcp_api_key.return_value = None
 
@@ -515,9 +515,9 @@ class TestLiveStatusAppConversationService:
 
     @pytest.mark.asyncio
     async def test_configure_llm_and_mcp_openhands_model_no_base_urls(self):
-        """openhands/* model sets base_url to None when no sources available."""
+        """codeio/* model sets base_url to None when no sources available."""
         # Arrange
-        self.mock_user.llm_model = 'openhands/default'
+        self.mock_user.llm_model = 'codeio/default'
         self.mock_user.llm_base_url = None
         self.service.openhands_provider_base_url = None
         self.mock_user_context.get_mcp_api_key.return_value = None
@@ -795,13 +795,13 @@ class TestLiveStatusAppConversationService:
         assert path == '/workspace/project/agents-tmp-config/PLAN.md'
 
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.get_planning_tools'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.get_planning_tools'
     )
     @patch(
-        'openhands.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
+        'codeio.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
     )
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.format_plan_structure'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.format_plan_structure'
     )
     def test_create_agent_with_context_planning_agent(
         self, mock_format_plan, mock_create_condenser, mock_get_tools
@@ -821,7 +821,7 @@ class TestLiveStatusAppConversationService:
 
         # Act
         with patch(
-            'openhands.app_server.app_conversation.live_status_app_conversation_service.Agent'
+            'codeio.app_server.app_conversation.live_status_app_conversation_service.Agent'
         ) as mock_agent_class:
             mock_agent_instance = Mock()
             mock_agent_instance.model_copy.return_value = mock_agent_instance
@@ -857,10 +857,10 @@ class TestLiveStatusAppConversationService:
             )
 
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.get_default_tools'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.get_default_tools'
     )
     @patch(
-        'openhands.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
+        'codeio.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
     )
     def test_create_agent_with_context_default_agent(
         self, mock_create_condenser, mock_get_tools
@@ -876,7 +876,7 @@ class TestLiveStatusAppConversationService:
 
         # Act
         with patch(
-            'openhands.app_server.app_conversation.live_status_app_conversation_service.Agent'
+            'codeio.app_server.app_conversation.live_status_app_conversation_service.Agent'
         ) as mock_agent_class:
             mock_agent_instance = Mock()
             mock_agent_instance.model_copy.return_value = mock_agent_instance
@@ -903,13 +903,13 @@ class TestLiveStatusAppConversationService:
             )
 
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.get_planning_tools'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.get_planning_tools'
     )
     @patch(
-        'openhands.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
+        'codeio.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
     )
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.format_plan_structure'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.format_plan_structure'
     )
     def test_create_agent_with_context_planning_agent_applies_instruction(
         self, mock_format_plan, mock_create_condenser, mock_get_tools
@@ -926,7 +926,7 @@ class TestLiveStatusAppConversationService:
 
         # Act
         with patch(
-            'openhands.app_server.app_conversation.live_status_app_conversation_service.Agent'
+            'codeio.app_server.app_conversation.live_status_app_conversation_service.Agent'
         ) as mock_agent_class:
             mock_agent_instance = Mock()
             mock_agent_instance.model_copy.return_value = mock_agent_instance
@@ -946,13 +946,13 @@ class TestLiveStatusAppConversationService:
             assert agent_context.system_message_suffix == PLANNING_AGENT_INSTRUCTION
 
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.get_planning_tools'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.get_planning_tools'
     )
     @patch(
-        'openhands.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
+        'codeio.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
     )
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.format_plan_structure'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.format_plan_structure'
     )
     def test_create_agent_with_context_planning_agent_prepends_to_existing_suffix(
         self, mock_format_plan, mock_create_condenser, mock_get_tools
@@ -970,7 +970,7 @@ class TestLiveStatusAppConversationService:
 
         # Act
         with patch(
-            'openhands.app_server.app_conversation.live_status_app_conversation_service.Agent'
+            'codeio.app_server.app_conversation.live_status_app_conversation_service.Agent'
         ) as mock_agent_class:
             mock_agent_instance = Mock()
             mock_agent_instance.model_copy.return_value = mock_agent_instance
@@ -993,10 +993,10 @@ class TestLiveStatusAppConversationService:
             assert existing_suffix in agent_context.system_message_suffix
 
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.get_default_tools'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.get_default_tools'
     )
     @patch(
-        'openhands.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
+        'codeio.app_server.app_conversation.app_conversation_service_base.AppConversationServiceBase._create_condenser'
     )
     def test_create_agent_with_context_default_agent_no_planning_instruction(
         self, mock_create_condenser, mock_get_tools
@@ -1012,7 +1012,7 @@ class TestLiveStatusAppConversationService:
 
         # Act
         with patch(
-            'openhands.app_server.app_conversation.live_status_app_conversation_service.Agent'
+            'codeio.app_server.app_conversation.live_status_app_conversation_service.Agent'
         ) as mock_agent_class:
             mock_agent_instance = Mock()
             mock_agent_instance.model_copy.return_value = mock_agent_instance
@@ -1133,7 +1133,7 @@ class TestLiveStatusAppConversationService:
 
         # Act
         with patch(
-            'openhands.app_server.app_conversation.live_status_app_conversation_service._logger'
+            'codeio.app_server.app_conversation.live_status_app_conversation_service._logger'
         ) as mock_logger:
             result = await self.service._finalize_conversation_request(
                 mock_agent,
@@ -1492,10 +1492,10 @@ class TestLiveStatusAppConversationService:
         assert self.mock_event_service.search_events.call_count == total_pages
 
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.AsyncRemoteWorkspace'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.AsyncRemoteWorkspace'
     )
     @patch(
-        'openhands.app_server.app_conversation.live_status_app_conversation_service.ConversationInfo'
+        'codeio.app_server.app_conversation.live_status_app_conversation_service.ConversationInfo'
     )
     async def test_start_app_conversation_default_title_uses_first_five_characters(
         self, mock_conversation_info_class, mock_remote_workspace_class
@@ -1598,7 +1598,7 @@ class TestLiveStatusAppConversationService:
         """Test _configure_llm_and_mcp merges custom SSE servers with UUID-based names."""
         # Arrange
 
-        from openhands.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             sse_servers=[
@@ -1641,7 +1641,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_with_custom_shttp_servers(self):
         """Test _configure_llm_and_mcp merges custom SHTTP servers with timeout."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig, MCPSHTTPServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPSHTTPServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             shttp_servers=[
@@ -1677,7 +1677,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_with_custom_stdio_servers(self):
         """Test _configure_llm_and_mcp merges custom STDIO servers with explicit names."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             stdio_servers=[
@@ -1711,7 +1711,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_merges_system_and_custom_servers(self):
         """Test _configure_llm_and_mcp merges both system and custom MCP servers."""
         # Arrange
-        from openhands.core.config.mcp_config import (
+        from codeio.core.config.mcp_config import (
             MCPConfig,
             MCPSSEServerConfig,
             MCPStdioServerConfig,
@@ -1796,7 +1796,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_empty_custom_config(self):
         """Test _configure_llm_and_mcp handles empty custom MCP config."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig
+        from codeio.core.config.mcp_config import MCPConfig
 
         self.mock_user.mcp_config = MCPConfig(
             sse_servers=[], stdio_servers=[], shttp_servers=[]
@@ -1818,7 +1818,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_sse_server_without_api_key(self):
         """Test _configure_llm_and_mcp handles SSE servers without API keys."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             sse_servers=[MCPSSEServerConfig(url='https://public.com/sse')]
@@ -1845,7 +1845,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_shttp_server_without_timeout(self):
         """Test _configure_llm_and_mcp handles SHTTP servers without timeout."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig, MCPSHTTPServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPSHTTPServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             shttp_servers=[MCPSHTTPServerConfig(url='https://example.com/mcp')]
@@ -1870,7 +1870,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_stdio_server_without_env(self):
         """Test _configure_llm_and_mcp handles STDIO servers without environment variables."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             stdio_servers=[
@@ -1900,7 +1900,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_multiple_servers_same_type(self):
         """Test _configure_llm_and_mcp handles multiple custom servers of the same type."""
         # Arrange
-        from openhands.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
+        from codeio.core.config.mcp_config import MCPConfig, MCPSSEServerConfig
 
         self.mock_user.mcp_config = MCPConfig(
             sse_servers=[
@@ -1937,7 +1937,7 @@ class TestLiveStatusAppConversationService:
     async def test_configure_llm_and_mcp_mixed_server_types(self):
         """Test _configure_llm_and_mcp handles all three server types together."""
         # Arrange
-        from openhands.core.config.mcp_config import (
+        from codeio.core.config.mcp_config import (
             MCPConfig,
             MCPSHTTPServerConfig,
             MCPSSEServerConfig,
@@ -1998,19 +1998,19 @@ class TestLiveStatusAppConversationService:
 
     def test_get_project_dir_with_repo(self):
         """get_project_dir appends repo name to working_dir."""
-        from openhands.app_server.app_conversation.app_conversation_service_base import (
+        from codeio.app_server.app_conversation.app_conversation_service_base import (
             get_project_dir,
         )
 
         assert (
-            get_project_dir('/workspace/project', 'OpenHands/software-agent-sdk')
+            get_project_dir('/workspace/project', 'Codeio/software-agent-sdk')
             == '/workspace/project/software-agent-sdk'
         )
         assert get_project_dir('/w', 'org/repo-name') == '/w/repo-name'
 
     def test_get_project_dir_without_repo(self):
         """get_project_dir returns working_dir unchanged when no repo selected."""
-        from openhands.app_server.app_conversation.app_conversation_service_base import (
+        from codeio.app_server.app_conversation.app_conversation_service_base import (
             get_project_dir,
         )
 
@@ -2024,7 +2024,7 @@ class TestLiveStatusAppConversationService:
         This is the root cause of the V1 hook-stop bug: if workspace.working_dir
         points to the sandbox mount root (/workspace/project) instead of the
         cloned repo (/workspace/project/<repo>), the agent's CWD is wrong and
-        .openhands/hooks/on_stop.sh is not found.
+        .codeio/hooks/on_stop.sh is not found.
         """
         self.mock_user_context.get_user_info.return_value = self.mock_user
 
@@ -2056,7 +2056,7 @@ class TestLiveStatusAppConversationService:
             system_message_suffix=None,
             git_provider=None,
             working_dir='/workspace/project',
-            selected_repository='OpenHands/software-agent-sdk',
+            selected_repository='Codeio/software-agent-sdk',
         )
 
         assert (
@@ -2104,7 +2104,7 @@ class TestLiveStatusAppConversationService:
         This verifies that the sandbox_id filter is correctly propagated through
         the service layer to the underlying info service.
         """
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationInfoPage,
         )
 
@@ -2193,7 +2193,7 @@ class TestLiveStatusAppConversationService:
     @pytest.mark.asyncio
     async def test_search_app_conversations_sandbox_id_filter_returns_empty(self):
         """Test that search with non-matching sandbox_id returns empty results."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationInfoPage,
         )
 
@@ -2269,7 +2269,7 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_plugin_params_no_plugins(self):
         """Test _construct_initial_message_with_plugin_params with no plugins returns original message."""
-        from openhands.agent_server.models import SendMessageRequest, TextContent
+        from codeio.agent_server.models import SendMessageRequest, TextContent
 
         # Test with None initial message and None plugins
         result = self.service._construct_initial_message_with_plugin_params(None, None)
@@ -2288,8 +2288,8 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_plugin_params_no_params(self):
         """Test _construct_initial_message_with_plugin_params with plugins but no parameters."""
-        from openhands.agent_server.models import SendMessageRequest, TextContent
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.agent_server.models import SendMessageRequest, TextContent
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2311,8 +2311,8 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_plugin_params_creates_new_message(self):
         """Test _construct_initial_message_with_plugin_params creates message when no initial message."""
-        from openhands.agent_server.models import TextContent
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.agent_server.models import TextContent
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2337,8 +2337,8 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_plugin_params_appends_to_message(self):
         """Test _construct_initial_message_with_plugin_params appends to existing message."""
-        from openhands.agent_server.models import SendMessageRequest, TextContent
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.agent_server.models import SendMessageRequest, TextContent
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2369,8 +2369,8 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_plugin_params_preserves_role(self):
         """Test _construct_initial_message_with_plugin_params preserves message role."""
-        from openhands.agent_server.models import SendMessageRequest, TextContent
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.agent_server.models import SendMessageRequest, TextContent
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2389,8 +2389,8 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_plugin_params_empty_content(self):
         """Test _construct_initial_message_with_plugin_params handles empty content list."""
-        from openhands.agent_server.models import SendMessageRequest, TextContent
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.agent_server.models import SendMessageRequest, TextContent
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2408,8 +2408,8 @@ class TestPluginHandling:
 
     def test_construct_initial_message_with_multiple_plugins(self):
         """Test _construct_initial_message_with_plugin_params handles multiple plugins."""
-        from openhands.agent_server.models import TextContent
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.agent_server.models import TextContent
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2442,7 +2442,7 @@ class TestPluginHandling:
     @pytest.mark.asyncio
     async def test_finalize_conversation_request_with_plugins(self):
         """Test _finalize_conversation_request passes plugins list to StartConversationRequest."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2539,7 +2539,7 @@ class TestPluginHandling:
     @pytest.mark.asyncio
     async def test_finalize_conversation_request_plugin_without_ref(self):
         """Test _finalize_conversation_request with plugin that has no ref."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2589,7 +2589,7 @@ class TestPluginHandling:
     @pytest.mark.asyncio
     async def test_finalize_conversation_request_plugin_with_repo_path(self):
         """Test _finalize_conversation_request passes repo_path to PluginSource."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2644,7 +2644,7 @@ class TestPluginHandling:
     @pytest.mark.asyncio
     async def test_finalize_conversation_request_multiple_plugins(self):
         """Test _finalize_conversation_request with multiple plugins."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2702,7 +2702,7 @@ class TestPluginHandling:
     @pytest.mark.asyncio
     async def test_build_start_conversation_request_for_user_with_plugins(self):
         """Test _build_start_conversation_request_for_user passes plugins to finalize method."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2772,7 +2772,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_with_all_fields(self):
         """Test PluginSpec with all fields provided."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2790,7 +2790,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_with_only_source(self):
         """Test PluginSpec with only source provided."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2803,7 +2803,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_serialization(self):
         """Test PluginSpec serialization to JSON."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2824,7 +2824,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_deserialization(self):
         """Test PluginSpec deserialization from dict."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2844,7 +2844,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_display_name_github_format(self):
         """Test display_name extracts repo name from github:owner/repo format."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2853,7 +2853,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_display_name_git_url(self):
         """Test display_name extracts repo name from git URL."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2862,7 +2862,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_display_name_local_path(self):
         """Test display_name extracts directory name from local path."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2871,7 +2871,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_display_name_no_slash(self):
         """Test display_name returns source as-is when no slash present."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2880,7 +2880,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_format_params_as_text(self):
         """Test format_params_as_text formats parameters as text."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2894,7 +2894,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_format_params_as_text_with_indent(self):
         """Test format_params_as_text with custom indent."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2908,7 +2908,7 @@ class TestPluginSpecModel:
 
     def test_plugin_spec_format_params_as_text_no_params(self):
         """Test format_params_as_text returns None when no parameters."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2919,7 +2919,7 @@ class TestPluginSpecModel:
         """Test PluginSpec inherits validation from SDK's PluginSource."""
         import pytest
 
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             PluginSpec,
         )
 
@@ -2937,7 +2937,7 @@ class TestAppConversationStartRequestWithPlugins:
 
     def test_start_request_with_plugins(self):
         """Test AppConversationStartRequest with plugins field."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationStartRequest,
             PluginSpec,
         )
@@ -2963,7 +2963,7 @@ class TestAppConversationStartRequestWithPlugins:
 
     def test_start_request_without_plugins(self):
         """Test AppConversationStartRequest without plugins field (backwards compatible)."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationStartRequest,
         )
 
@@ -2975,7 +2975,7 @@ class TestAppConversationStartRequestWithPlugins:
 
     def test_start_request_serialization_with_plugins(self):
         """Test AppConversationStartRequest serialization includes plugins."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationStartRequest,
             PluginSpec,
         )
@@ -2991,7 +2991,7 @@ class TestAppConversationStartRequestWithPlugins:
 
     def test_start_request_deserialization_with_plugins(self):
         """Test AppConversationStartRequest deserialization from JSON with plugins."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationStartRequest,
         )
 
@@ -3016,7 +3016,7 @@ class TestAppConversationStartRequestWithPlugins:
 
     def test_start_request_with_multiple_plugins(self):
         """Test AppConversationStartRequest with multiple plugins."""
-        from openhands.app_server.app_conversation.app_conversation_models import (
+        from codeio.app_server.app_conversation.app_conversation_models import (
             AppConversationStartRequest,
             PluginSpec,
         )

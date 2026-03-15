@@ -1,23 +1,23 @@
 from unittest.mock import MagicMock
 
-from openhands.events.action import (
+from codeio.events.action import (
     Action,
     ChangeAgentStateAction,
     CmdRunAction,
     MessageAction,
     NullAction,
 )
-from openhands.events.event import Event, EventSource
-from openhands.events.event_filter import (
+from codeio.events.event import Event, EventSource
+from codeio.events.event_filter import (
     EventFilter,  # Needed for ANY matcher type check
 )
-from openhands.events.observation import (
+from codeio.events.observation import (
     AgentStateChangedObservation,
     CmdOutputObservation,
     NullObservation,
 )
-from openhands.events.stream import EventStream
-from openhands.server.routes.manage_conversations import _get_contextual_events
+from codeio.events.stream import EventStream
+from codeio.server.routes.manage_conversations import _get_contextual_events
 
 
 # Helper to create event instances for testing, inspired by test_agent_history.py

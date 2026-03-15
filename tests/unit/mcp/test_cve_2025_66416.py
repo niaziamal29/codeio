@@ -201,16 +201,16 @@ class TestSecurityIntegration:
         )
 
     def test_openhands_mcp_client_imports(self):
-        """Test OpenHands MCP client can import required dependencies."""
-        from openhands.mcp.client import MCPClient
-        from openhands.mcp.tool import MCPClientTool
+        """Test Codeio MCP client can import required dependencies."""
+        from codeio.mcp.client import MCPClient
+        from codeio.mcp.tool import MCPClientTool
 
         assert MCPClient is not None
         assert MCPClientTool is not None
 
     def test_openhands_mcp_config_types(self):
-        """Test OpenHands MCP config types are available."""
-        from openhands.core.config.mcp_config import (
+        """Test Codeio MCP config types are available."""
+        from codeio.core.config.mcp_config import (
             MCPSHTTPServerConfig,
             MCPSSEServerConfig,
             MCPStdioServerConfig,

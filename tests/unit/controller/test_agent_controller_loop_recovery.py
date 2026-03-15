@@ -4,14 +4,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from openhands.controller.agent_controller import AgentController
-from openhands.controller.stuck import StuckDetector
-from openhands.core.schema import AgentState
-from openhands.events import EventStream
-from openhands.events.action import LoopRecoveryAction, MessageAction
-from openhands.events.observation import LoopDetectionObservation
-from openhands.server.services.conversation_stats import ConversationStats
-from openhands.storage.memory import InMemoryFileStore
+from codeio.controller.agent_controller import AgentController
+from codeio.controller.stuck import StuckDetector
+from codeio.core.schema import AgentState
+from codeio.events import EventStream
+from codeio.events.action import LoopRecoveryAction, MessageAction
+from codeio.events.observation import LoopDetectionObservation
+from codeio.server.services.conversation_stats import ConversationStats
+from codeio.storage.memory import InMemoryFileStore
 
 
 class TestAgentControllerLoopRecovery:
@@ -287,8 +287,8 @@ class TestAgentControllerLoopRecovery:
     ):
         """Test that controller correctly truncates history during loop recovery."""
         # Setup mock history with events
-        from openhands.events.action import CmdRunAction
-        from openhands.events.observation import CmdOutputObservation, NullObservation
+        from codeio.events.action import CmdRunAction
+        from codeio.events.observation import CmdOutputObservation, NullObservation
 
         # Create a realistic history with 10 events
         mock_history = []
@@ -375,7 +375,7 @@ class TestAgentControllerLoopRecovery:
 
     def test_stuck_detection_config_option_exists(self):
         """Test that the enable_stuck_detection config option exists and defaults to True."""
-        from openhands.core.config.agent_config import AgentConfig
+        from codeio.core.config.agent_config import AgentConfig
 
         # Create a default config
         config = AgentConfig()
@@ -392,7 +392,7 @@ class TestAgentControllerLoopRecovery:
         """Test that enable_stuck_detection can be set via environment variable."""
         import os
 
-        from openhands.core.config.agent_config import AgentConfig
+        from codeio.core.config.agent_config import AgentConfig
 
         # Test with enabled (default)
         os.environ.pop('AGENT_ENABLE_STUCK_DETECTION', None)

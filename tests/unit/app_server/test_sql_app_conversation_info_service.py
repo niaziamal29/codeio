@@ -13,19 +13,19 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.app_server.app_conversation.app_conversation_models import (
     AppConversationInfo,
     AppConversationSortOrder,
 )
-from openhands.app_server.app_conversation.sql_app_conversation_info_service import (
+from codeio.app_server.app_conversation.sql_app_conversation_info_service import (
     SQLAppConversationInfoService,
 )
-from openhands.app_server.user.specifiy_user_context import SpecifyUserContext
-from openhands.app_server.utils.sql_utils import Base
-from openhands.integrations.service_types import ProviderType
-from openhands.sdk.llm import MetricsSnapshot
-from openhands.sdk.llm.utils.metrics import TokenUsage
-from openhands.storage.data_models.conversation_metadata import ConversationTrigger
+from codeio.app_server.user.specifiy_user_context import SpecifyUserContext
+from codeio.app_server.utils.sql_utils import Base
+from codeio.integrations.service_types import ProviderType
+from codeio.sdk.llm import MetricsSnapshot
+from codeio.sdk.llm.utils.metrics import TokenUsage
+from codeio.storage.data_models.conversation_metadata import ConversationTrigger
 
 # Note: org_id column exists but foreign key constraint is not enforced in tests
 

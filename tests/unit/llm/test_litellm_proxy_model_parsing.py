@@ -162,10 +162,10 @@ if 'deprecated' not in sys.modules:
     deprecated_mod.deprecated = deprecated
     sys.modules['deprecated'] = deprecated_mod
 
-# Import OpenHands after stubbing optional deps
-from openhands.core.config.llm_config import LLMConfig
-from openhands.llm.llm import LLM
-from openhands.llm.metrics import Metrics
+# Import Codeio after stubbing optional deps
+from codeio.core.config.llm_config import LLMConfig
+from codeio.llm.llm import LLM
+from codeio.llm.metrics import Metrics
 
 
 class DummyResponse:

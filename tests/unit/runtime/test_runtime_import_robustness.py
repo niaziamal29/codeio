@@ -2,7 +2,7 @@
 
 This test specifically addresses the issue where broken third-party runtime dependencies
 (like runloop-api-client with incompatible httpx_aiohttp versions) would break the entire
-OpenHands CLI and system.
+Codeio CLI and system.
 """
 
 import logging
@@ -14,13 +14,13 @@ import pytest
 def test_runtime_import_robustness():
     """Test that runtime import system is robust against broken dependencies."""
     # Clear any cached runtime modules
-    modules_to_clear = [k for k in sys.modules.keys() if 'openhands.runtime' in k]
+    modules_to_clear = [k for k in sys.modules.keys() if 'codeio.runtime' in k]
     for module in modules_to_clear:
         del sys.modules[module]
 
     # Import the runtime module - should succeed even with broken third-party runtimes
     try:
-        import openhands.runtime  # noqa: F401
+        import codeio.runtime  # noqa: F401
 
         assert True
     except Exception as e:
@@ -30,7 +30,7 @@ def test_runtime_import_robustness():
 def test_get_runtime_cls_works():
     """Test that get_runtime_cls works even when third-party runtimes are broken."""
     # Import the runtime module
-    import openhands.runtime
+    import codeio.runtime
 
     # Test that we can still get core runtime classes
     docker_runtime = openhands.runtime.get_runtime_cls('docker')
@@ -46,11 +46,11 @@ def test_get_runtime_cls_works():
 
 def test_runtime_exception_handling():
     """Test that the runtime discovery code properly handles exceptions."""
-    # This test verifies that the fix in openhands/runtime/__init__.py
+    # This test verifies that the fix in codeio/runtime/__init__.py
     # properly catches all exceptions (not just ImportError) during
     # third-party runtime discovery
 
-    import openhands.runtime
+    import codeio.runtime
 
     # The fact that we can import this module successfully means
     # the exception handling is working correctly, even if there
@@ -64,14 +64,14 @@ def test_runtime_import_exception_handling_behavior():
     # Test the exception handling logic by simulating the exact code from runtime init
     from io import StringIO
 
-    from openhands.core.logger import openhands_logger as logger
+    from codeio.core.logger import openhands_logger as logger
 
     # Create a string buffer to capture log output
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
     handler.setLevel(logging.WARNING)
 
-    # Add our test handler to the OpenHands logger
+    # Add our test handler to the Codeio logger
     logger.addHandler(handler)
     original_level = logger.level
     logger.setLevel(logging.WARNING)
@@ -116,7 +116,7 @@ def test_runtime_import_exception_handling_behavior():
 def test_import_error_handled_silently(caplog):
     """Test that ImportError is handled silently (no logging) as it means library is not installed."""
     # Simulate the exact code path for ImportError
-    logging.getLogger('openhands.runtime')
+    logging.getLogger('codeio.runtime')
 
     with caplog.at_level(logging.WARNING):
         # Simulate ImportError handling - this should NOT log anything

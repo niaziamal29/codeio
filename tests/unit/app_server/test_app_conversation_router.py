@@ -10,16 +10,16 @@ from uuid import uuid4
 import pytest
 from fastapi import HTTPException, status
 
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.app_server.app_conversation.app_conversation_models import (
     AppConversation,
     AppConversationPage,
 )
-from openhands.app_server.app_conversation.app_conversation_router import (
+from codeio.app_server.app_conversation.app_conversation_router import (
     batch_get_app_conversations,
     count_app_conversations,
     search_app_conversations,
 )
-from openhands.app_server.sandbox.sandbox_models import SandboxStatus
+from codeio.app_server.sandbox.sandbox_models import SandboxStatus
 
 
 def _make_mock_app_conversation(

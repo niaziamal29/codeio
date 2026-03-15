@@ -5,41 +5,41 @@ from uuid import uuid4
 
 import pytest
 
-from openhands.controller.agent import Agent
-from openhands.controller.agent_controller import AgentController
-from openhands.controller.state.control_flags import (
+from codeio.controller.agent import Agent
+from codeio.controller.agent_controller import AgentController
+from codeio.controller.state.control_flags import (
     BudgetControlFlag,
     IterationControlFlag,
 )
-from openhands.controller.state.state import State
-from openhands.core.config import OpenHandsConfig
-from openhands.core.config.agent_config import AgentConfig
-from openhands.core.config.llm_config import LLMConfig
-from openhands.core.schema import AgentState
-from openhands.events import EventSource, EventStream
-from openhands.events.action import (
+from codeio.controller.state.state import State
+from codeio.core.config import CodeioConfig
+from codeio.core.config.agent_config import AgentConfig
+from codeio.core.config.llm_config import LLMConfig
+from codeio.core.schema import AgentState
+from codeio.events import EventSource, EventStream
+from codeio.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     MessageAction,
 )
-from openhands.events.action.agent import RecallAction
-from openhands.events.action.commands import CmdRunAction
-from openhands.events.action.message import SystemMessageAction
-from openhands.events.event import Event
-from openhands.events.observation.agent import RecallObservation
-from openhands.events.recall_type import RecallType
-from openhands.events.stream import EventStreamSubscriber
-from openhands.llm.llm import LLM
-from openhands.llm.llm_registry import LLMRegistry
-from openhands.llm.metrics import Metrics
-from openhands.memory.memory import Memory
-from openhands.server.services.conversation_stats import ConversationStats
-from openhands.storage.memory import InMemoryFileStore
+from codeio.events.action.agent import RecallAction
+from codeio.events.action.commands import CmdRunAction
+from codeio.events.action.message import SystemMessageAction
+from codeio.events.event import Event
+from codeio.events.observation.agent import RecallObservation
+from codeio.events.recall_type import RecallType
+from codeio.events.stream import EventStreamSubscriber
+from codeio.llm.llm import LLM
+from codeio.llm.llm_registry import LLMRegistry
+from codeio.llm.metrics import Metrics
+from codeio.memory.memory import Memory
+from codeio.server.services.conversation_stats import ConversationStats
+from codeio.storage.memory import InMemoryFileStore
 
 
 @pytest.fixture
 def llm_registry():
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     return LLMRegistry(config=config)
 
 

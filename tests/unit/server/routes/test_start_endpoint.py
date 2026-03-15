@@ -6,16 +6,16 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pydantic import SecretStr
 
-from openhands.integrations.provider import ProviderToken, ProviderType
-from openhands.server.data_models.agent_loop_info import AgentLoopInfo
-from openhands.server.routes.manage_conversations import (
+from codeio.integrations.provider import ProviderToken, ProviderType
+from codeio.server.data_models.agent_loop_info import AgentLoopInfo
+from codeio.server.routes.manage_conversations import (
     ProvidersSetModel,
     start_conversation,
 )
-from openhands.server.types import AppMode
-from openhands.storage.data_models.conversation_metadata import ConversationMetadata
-from openhands.storage.data_models.conversation_status import ConversationStatus
-from openhands.storage.data_models.settings import Settings
+from codeio.server.types import AppMode
+from codeio.storage.data_models.conversation_metadata import ConversationMetadata
+from codeio.storage.data_models.conversation_status import ConversationStatus
+from codeio.storage.data_models.settings import Settings
 
 
 @pytest.fixture
@@ -85,17 +85,17 @@ async def test_start_endpoint_passes_provider_tokens(
 
     # Mock only infrastructure - let setup_init_conversation_settings run for real
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         # Mock the stores that setup_init_conversation_settings needs
         with patch(
-            'openhands.server.services.conversation_service.SettingsStoreImpl.get_instance'
+            'codeio.server.services.conversation_service.SettingsStoreImpl.get_instance'
         ) as mock_settings_store_cls:
             with patch(
-                'openhands.server.services.conversation_service.SecretsStoreImpl.get_instance'
+                'codeio.server.services.conversation_service.SecretsStoreImpl.get_instance'
             ) as mock_secrets_store_cls:
                 with patch(
-                    'openhands.server.services.conversation_service.server_config'
+                    'codeio.server.services.conversation_service.server_config'
                 ) as mock_server_config:
                     # Setup store mocks
                     mock_settings_store = AsyncMock()

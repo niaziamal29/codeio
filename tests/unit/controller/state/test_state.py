@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
-from openhands.controller.state.state import State, TrafficControlState
-from openhands.core.schema import AgentState
-from openhands.events.event import Event
-from openhands.llm.metrics import Metrics
-from openhands.storage.memory import InMemoryFileStore
+from codeio.controller.state.state import State, TrafficControlState
+from codeio.core.schema import AgentState
+from codeio.events.event import Event
+from codeio.llm.metrics import Metrics
+from codeio.storage.memory import InMemoryFileStore
 
 
 def example_event(index: int) -> Event:

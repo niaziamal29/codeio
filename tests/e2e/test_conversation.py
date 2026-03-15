@@ -33,9 +33,9 @@ def get_readme_line_count():
 
 def test_conversation_start(page: Page, base_url: str):
     """
-    Test starting a conversation with the OpenHands agent:
-    1. Navigate to OpenHands (assumes GitHub token is already configured)
-    2. Select the OpenHands repository
+    Test starting a conversation with the Codeio agent:
+    1. Navigate to Codeio (assumes GitHub token is already configured)
+    2. Select the Codeio repository
     3. Click Launch
     4. Wait for the agent to initialize
     5. Ask a question about the README.md file
@@ -51,8 +51,8 @@ def test_conversation_start(page: Page, base_url: str):
     expected_line_count = get_readme_line_count()
     print(f'Expected README.md line count: {expected_line_count}')
 
-    # Navigate to the OpenHands application
-    print(f'Step 1: Navigating to OpenHands application at {base_url}...')
+    # Navigate to the Codeio application
+    print(f'Step 1: Navigating to Codeio application at {base_url}...')
     page.goto(base_url)
     page.wait_for_load_state('networkidle', timeout=30000)
 
@@ -60,8 +60,8 @@ def test_conversation_start(page: Page, base_url: str):
     page.screenshot(path='test-results/conv_01_initial_load.png')
     print('Screenshot saved: conv_01_initial_load.png')
 
-    # Step 2: Select the OpenHands repository
-    print('Step 2: Selecting openhands-agent/OpenHands repository...')
+    # Step 2: Select the Codeio repository
+    print('Step 2: Selecting openhands-agent/Codeio repository...')
 
     # Wait for the home screen to load
     home_screen = page.locator('[data-testid="home-screen"]')
@@ -80,7 +80,7 @@ def test_conversation_start(page: Page, base_url: str):
     # Type the repository name
     try:
         page.keyboard.press('Control+a')  # Select all
-        page.keyboard.type('openhands-agent/OpenHands')
+        page.keyboard.type('openhands-agent/Codeio')
         print('Used keyboard.type() for React Select component')
     except Exception as e:
         print(f'Keyboard input failed: {e}')
@@ -89,14 +89,14 @@ def test_conversation_start(page: Page, base_url: str):
 
     # Try to find and click the repository option
     option_selectors = [
-        '[data-testid="repo-dropdown"] [role="option"]:has-text("openhands-agent/OpenHands")',
-        '[data-testid="repo-dropdown"] [role="option"]:has-text("OpenHands")',
-        '[data-testid="repo-dropdown"] div[id*="option"]:has-text("openhands-agent/OpenHands")',
-        '[data-testid="repo-dropdown"] div[id*="option"]:has-text("OpenHands")',
-        '[role="option"]:has-text("openhands-agent/OpenHands")',
-        '[role="option"]:has-text("OpenHands")',
-        'div:has-text("openhands-agent/OpenHands"):not([id="aria-results"])',
-        'div:has-text("OpenHands"):not([id="aria-results"])',
+        '[data-testid="repo-dropdown"] [role="option"]:has-text("openhands-agent/Codeio")',
+        '[data-testid="repo-dropdown"] [role="option"]:has-text("Codeio")',
+        '[data-testid="repo-dropdown"] div[id*="option"]:has-text("openhands-agent/Codeio")',
+        '[data-testid="repo-dropdown"] div[id*="option"]:has-text("Codeio")',
+        '[role="option"]:has-text("openhands-agent/Codeio")',
+        '[role="option"]:has-text("Codeio")',
+        'div:has-text("openhands-agent/Codeio"):not([id="aria-results"])',
+        'div:has-text("Codeio"):not([id="aria-results"])',
     ]
 
     option_found = False

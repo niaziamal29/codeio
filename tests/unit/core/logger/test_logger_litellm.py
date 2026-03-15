@@ -14,14 +14,14 @@ def reset_litellm():
     litellm.suppress_debug_info = False
     litellm.set_verbose = False
     # Remove logger module from sys.modules to force reload
-    if 'openhands.core.logger' in sys.modules:
-        del sys.modules['openhands.core.logger']
+    if 'codeio.core.logger' in sys.modules:
+        del sys.modules['codeio.core.logger']
 
 
 def test_litellm_settings_debug_llm_disabled(reset_litellm):
     """Test that litellm settings are properly configured when DEBUG_LLM is disabled."""
     with mock.patch.dict(os.environ, {'DEBUG_LLM': 'false'}):
-        import openhands.core.logger  # noqa: F401
+        import codeio.core.logger  # noqa: F401
 
         importlib.reload(openhands.core.logger)
 
@@ -35,7 +35,7 @@ def test_litellm_settings_debug_llm_enabled(reset_litellm):
         mock.patch.dict(os.environ, {'DEBUG_LLM': 'true'}),
         mock.patch('builtins.input', return_value='y'),
     ):
-        import openhands.core.logger  # noqa: F401
+        import codeio.core.logger  # noqa: F401
 
         importlib.reload(openhands.core.logger)
 
@@ -49,7 +49,7 @@ def test_litellm_settings_debug_llm_enabled_but_declined(reset_litellm):
         mock.patch.dict(os.environ, {'DEBUG_LLM': 'true'}),
         mock.patch('builtins.input', return_value='n'),
     ):
-        import openhands.core.logger  # noqa: F401
+        import codeio.core.logger  # noqa: F401
 
         importlib.reload(openhands.core.logger)
 
@@ -74,7 +74,7 @@ def test_litellm_loggers_suppressed_with_uvicorn_json_config(reset_litellm):
 
     # Find the logger.py file path relative to the openhands package
     # __file__ is tests/unit/core/logger/test_logger_litellm.py
-    # We need to go up to tests/, then find openhands/core/logger.py
+    # We need to go up to tests/, then find codeio/core/logger.py
     test_dir = pathlib.Path(__file__).parent  # tests/unit/core/logger
     project_root = test_dir.parent.parent.parent.parent  # workspace/openhands
     logger_file = project_root / 'openhands' / 'core' / 'logger.py'

@@ -2,13 +2,13 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from openhands.events.action import CmdRunAction, FileReadAction
-from openhands.events.observation import (
+from codeio.events.action import CmdRunAction, FileReadAction
+from codeio.events.observation import (
     CmdOutputObservation,
     ErrorObservation,
     FileReadObservation,
 )
-from openhands.runtime.base import Runtime
+from codeio.runtime.base import Runtime
 
 
 class TestGitHooks:
@@ -20,10 +20,10 @@ class TestGitHooks:
 
         # Set up read to return different values based on the path
         def mock_read(action):
-            if action.path == '.openhands/pre-commit.sh':
+            if action.path == '.codeio/pre-commit.sh':
                 return FileReadObservation(
                     content="#!/bin/bash\necho 'Test pre-commit hook'\nexit 0",
-                    path='.openhands/pre-commit.sh',
+                    path='.codeio/pre-commit.sh',
                 )
             elif action.path == '.git/hooks/pre-commit':
                 # Simulate no existing pre-commit hook
@@ -44,7 +44,7 @@ class TestGitHooks:
 
         # Verify that the runtime tried to read the pre-commit script
         assert mock_runtime.read.call_args_list[0] == call(
-            FileReadAction(path='.openhands/pre-commit.sh')
+            FileReadAction(path='.codeio/pre-commit.sh')
         )
 
         # Verify that the runtime created the git hooks directory
@@ -77,7 +77,7 @@ class TestGitHooks:
 
         # Verify that the runtime tried to read the pre-commit script
         mock_runtime.read.assert_called_with(
-            FileReadAction(path='.openhands/pre-commit.sh')
+            FileReadAction(path='.codeio/pre-commit.sh')
         )
 
         # Verify that no other actions were taken
@@ -116,10 +116,10 @@ class TestGitHooks:
     def test_maybe_setup_git_hooks_with_existing_hook(self, mock_runtime):
         # Test when there's an existing pre-commit hook
         def mock_read(action):
-            if action.path == '.openhands/pre-commit.sh':
+            if action.path == '.codeio/pre-commit.sh':
                 return FileReadObservation(
                     content="#!/bin/bash\necho 'Test pre-commit hook'\nexit 0",
-                    path='.openhands/pre-commit.sh',
+                    path='.codeio/pre-commit.sh',
                 )
             elif action.path == '.git/hooks/pre-commit':
                 # Simulate existing pre-commit hook

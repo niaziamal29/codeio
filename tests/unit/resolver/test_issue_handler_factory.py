@@ -1,20 +1,20 @@
 import pytest
 from pydantic import SecretStr
 
-from openhands.core.config import LLMConfig
-from openhands.integrations.provider import ProviderType
-from openhands.resolver.interfaces.azure_devops import AzureDevOpsIssueHandler
-from openhands.resolver.interfaces.forgejo import (
+from codeio.core.config import LLMConfig
+from codeio.integrations.provider import ProviderType
+from codeio.resolver.interfaces.azure_devops import AzureDevOpsIssueHandler
+from codeio.resolver.interfaces.forgejo import (
     ForgejoIssueHandler,
     ForgejoPRHandler,
 )
-from openhands.resolver.interfaces.github import GithubIssueHandler, GithubPRHandler
-from openhands.resolver.interfaces.gitlab import GitlabIssueHandler, GitlabPRHandler
-from openhands.resolver.interfaces.issue_definitions import (
+from codeio.resolver.interfaces.github import GithubIssueHandler, GithubPRHandler
+from codeio.resolver.interfaces.gitlab import GitlabIssueHandler, GitlabPRHandler
+from codeio.resolver.interfaces.issue_definitions import (
     ServiceContextIssue,
     ServiceContextPR,
 )
-from openhands.resolver.issue_handler_factory import IssueHandlerFactory
+from codeio.resolver.issue_handler_factory import IssueHandlerFactory
 
 
 @pytest.fixture

@@ -15,17 +15,17 @@ from unittest.mock import patch
 
 import pytest
 
-from openhands.events import EventSource
-from openhands.events.action import CmdRunAction, MessageAction, RecallAction
-from openhands.events.action.agent import CondensationAction
-from openhands.events.action.message import SystemMessageAction
-from openhands.events.observation import (
+from codeio.events import EventSource
+from codeio.events.action import CmdRunAction, MessageAction, RecallAction
+from codeio.events.action.agent import CondensationAction
+from codeio.events.action.message import SystemMessageAction
+from codeio.events.observation import (
     CmdOutputObservation,
     RecallObservation,
 )
-from openhands.events.recall_type import RecallType
-from openhands.memory.condenser.condenser import Condensation, View
-from openhands.memory.condenser.impl.conversation_window_condenser import (
+from codeio.events.recall_type import RecallType
+from codeio.memory.condenser.condenser import Condensation, View
+from codeio.memory.condenser.impl.conversation_window_condenser import (
     ConversationWindowCondenser,
 )
 
@@ -34,8 +34,8 @@ from openhands.memory.condenser.impl.conversation_window_condenser import (
 def create_events(event_data):
     events = []
     # Import necessary types here to avoid repeated imports inside the loop
-    from openhands.events.action import CmdRunAction, RecallAction
-    from openhands.events.observation import CmdOutputObservation, RecallObservation
+    from codeio.events.action import CmdRunAction, RecallAction
+    from codeio.events.observation import CmdOutputObservation, RecallObservation
 
     for i, data in enumerate(event_data):
         event_type = data['type']
@@ -468,7 +468,7 @@ def test_only_dangling_observations_in_recent_slice(condenser_fixture):
     # Expected kept IDs: [1, 2, 3, 4]. Length 4.
     # Forgotten IDs: [5, 6]
     with patch(
-        'openhands.memory.condenser.impl.conversation_window_condenser.logger.warning'
+        'codeio.memory.condenser.impl.conversation_window_condenser.logger.warning'
     ) as mock_log_warning:
         condensation = condenser.get_condensation(view)
 

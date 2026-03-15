@@ -4,21 +4,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import SecretStr
 
-from openhands.core.config import OpenHandsConfig
-from openhands.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
-from openhands.events.action import Action
-from openhands.events.action.commands import CmdRunAction
-from openhands.events.observation import (
+from codeio.core.config import CodeioConfig
+from codeio.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
+from codeio.events.action import Action
+from codeio.events.action.commands import CmdRunAction
+from codeio.events.observation import (
     CmdOutputObservation,
     NullObservation,
     Observation,
 )
-from openhands.events.stream import EventStream
-from openhands.integrations.provider import ProviderHandler, ProviderToken, ProviderType
-from openhands.integrations.service_types import AuthenticationError, Repository
-from openhands.llm.llm_registry import LLMRegistry
-from openhands.runtime.base import Runtime
-from openhands.storage import get_file_store
+from codeio.events.stream import EventStream
+from codeio.integrations.provider import ProviderHandler, ProviderToken, ProviderType
+from codeio.integrations.service_types import AuthenticationError, Repository
+from codeio.llm.llm_registry import LLMRegistry
+from codeio.runtime.base import Runtime
+from codeio.storage import get_file_store
 
 
 class MockRuntime(Runtime):
@@ -33,7 +33,7 @@ class MockRuntime(Runtime):
                 if 'config' in kwargs
                 else args[0]
                 if args
-                else OpenHandsConfig()
+                else CodeioConfig()
             )
             kwargs['llm_registry'] = LLMRegistry(config=config)
         super().__init__(*args, **kwargs)
@@ -129,7 +129,7 @@ def temp_dir(tmp_path_factory: pytest.TempPathFactory) -> str:
 @pytest.fixture
 def runtime(temp_dir):
     """Fixture for runtime testing"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     git_provider_tokens = MappingProxyType(
         {ProviderType.GITHUB: ProviderToken(token=SecretStr('test_token'))}
     )
@@ -166,7 +166,7 @@ def mock_repo_and_patch(
 @pytest.mark.asyncio
 async def test_export_latest_git_provider_tokens_no_user_id(temp_dir):
     """Test that no token export happens when user_id is not set"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
     runtime = MockRuntime(config=config, event_stream=event_stream, sid='test')
@@ -184,7 +184,7 @@ async def test_export_latest_git_provider_tokens_no_user_id(temp_dir):
 @pytest.mark.asyncio
 async def test_export_latest_git_provider_tokens_no_token_ref(temp_dir):
     """Test that no token export happens when command doesn't reference tokens"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
     runtime = MockRuntime(
@@ -217,7 +217,7 @@ async def test_export_latest_git_provider_tokens_success(runtime):
 @pytest.mark.asyncio
 async def test_export_latest_git_provider_tokens_multiple_refs(temp_dir):
     """Test token export with multiple token references"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     # Initialize with GitHub, GitLab, and Azure DevOps tokens
     git_provider_tokens = MappingProxyType(
         {
@@ -283,7 +283,7 @@ async def test_export_latest_git_provider_tokens_token_update(runtime, monkeypat
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_no_repo_init_git_in_empty_workspace(temp_dir):
     """Test that git init is run when no repository is selected and init_git_in_empty_workspace"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     config.init_git_in_empty_workspace = True
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
@@ -307,7 +307,7 @@ async def test_clone_or_init_repo_no_repo_init_git_in_empty_workspace(temp_dir):
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_no_repo_no_user_id_with_workspace_base(temp_dir):
     """Test that git init is not run when no repository is selected, no user_id, but workspace_base is set"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     config.workspace_base = '/some/path'  # Set workspace_base
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
@@ -326,7 +326,7 @@ async def test_clone_or_init_repo_no_repo_no_user_id_with_workspace_base(temp_di
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_auth_error(temp_dir):
     """Test that RuntimeError is raised when authentication fails"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
     runtime = MockRuntime(
@@ -351,7 +351,7 @@ async def test_clone_or_init_repo_auth_error(temp_dir):
 
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_github_with_token(temp_dir, monkeypatch):
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
 
@@ -401,7 +401,7 @@ async def test_clone_or_init_repo_github_with_token(temp_dir, monkeypatch):
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_github_no_token(temp_dir, monkeypatch):
     """Test cloning a GitHub repository without a token"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
 
@@ -439,7 +439,7 @@ async def test_clone_or_init_repo_github_no_token(temp_dir, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_gitlab_with_token(temp_dir, monkeypatch):
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
 
@@ -489,7 +489,7 @@ async def test_clone_or_init_repo_gitlab_with_token(temp_dir, monkeypatch):
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_azure_devops_with_token(temp_dir, monkeypatch):
     """Test cloning Azure DevOps repository with token"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
 
     # Set up Azure DevOps token
     azure_devops_token = 'azure_devops_test_token'
@@ -540,7 +540,7 @@ async def test_clone_or_init_repo_azure_devops_with_token(temp_dir, monkeypatch)
 @pytest.mark.asyncio
 async def test_clone_or_init_repo_with_branch(temp_dir, monkeypatch):
     """Test cloning a repository with a specified branch"""
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     file_store = get_file_store('local', temp_dir)
     event_stream = EventStream('abc', file_store)
 

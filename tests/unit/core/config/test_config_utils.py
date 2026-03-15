@@ -1,8 +1,8 @@
 import pytest
 
-from openhands.core.config.agent_config import AgentConfig
-from openhands.core.config.openhands_config import OpenHandsConfig
-from openhands.core.config.utils import finalize_config
+from codeio.core.config.agent_config import AgentConfig
+from codeio.core.config.openhands_config import CodeioConfig
+from codeio.core.config.utils import finalize_config
 
 # Define a dummy agent name often used in tests or as a default
 DEFAULT_AGENT_NAME = 'CodeActAgent'
@@ -12,7 +12,7 @@ def test_finalize_config_cli_disables_jupyter_and_browsing_when_true():
     """Test that finalize_config sets enable_jupyter and enable_browsing to False
     when runtime is 'cli' and they were initially True.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'cli'
 
     agent_config = AgentConfig(enable_jupyter=True, enable_browsing=True)
@@ -32,7 +32,7 @@ def test_finalize_config_cli_keeps_jupyter_and_browsing_false_when_false():
     """Test that finalize_config keeps enable_jupyter and enable_browsing as False
     when runtime is 'cli' and they were initially False.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'cli'
 
     agent_config = AgentConfig(enable_jupyter=False, enable_browsing=False)
@@ -52,7 +52,7 @@ def test_finalize_config_other_runtime_keeps_jupyter_and_browsing_true_by_defaul
     """Test that finalize_config keeps enable_jupyter and enable_browsing as True (default)
     when runtime is not 'cli'.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'docker'  # A non-cli runtime
 
     # AgentConfig defaults enable_jupyter and enable_browsing to True
@@ -73,7 +73,7 @@ def test_finalize_config_other_runtime_keeps_jupyter_and_browsing_false_if_set()
     """Test that finalize_config keeps enable_jupyter and enable_browsing as False
     when runtime is not 'cli' but they were explicitly set to False.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'docker'  # A non-cli runtime
 
     agent_config = AgentConfig(enable_jupyter=False, enable_browsing=False)
@@ -93,7 +93,7 @@ def test_finalize_config_no_agents_defined():
     """Test that finalize_config runs without error if no agents are defined in the config,
     even when runtime is 'cli'.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'cli'
     # No agents are added to app_config.agents
 
@@ -107,7 +107,7 @@ def test_finalize_config_multiple_agents_cli_runtime():
     """Test that finalize_config correctly disables jupyter and browsing for multiple agents
     when runtime is 'cli'.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'cli'
 
     agent_config1 = AgentConfig(enable_jupyter=True, enable_browsing=True)
@@ -135,7 +135,7 @@ def test_finalize_config_multiple_agents_other_runtime():
     """Test that finalize_config correctly keeps jupyter and browsing enabled (or as set)
     for multiple agents when runtime is not 'cli'.
     """
-    app_config = OpenHandsConfig()
+    app_config = CodeioConfig()
     app_config.runtime = 'docker'
 
     agent_config1 = AgentConfig(enable_jupyter=True, enable_browsing=True)  # Defaults

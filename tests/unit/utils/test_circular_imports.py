@@ -22,20 +22,20 @@ class TestCircularImports(unittest.TestCase):
 
         # Map module names to file paths
         module_paths = {
-            'openhands.utils.prompt': os.path.join(
-                project_root, 'openhands/utils/prompt.py'
+            'codeio.utils.prompt': os.path.join(
+                project_root, 'codeio/utils/prompt.py'
             ),
-            'openhands.agenthub.codeact_agent.tools.bash': os.path.join(
-                project_root, 'openhands/agenthub/codeact_agent/tools/bash.py'
+            'codeio.agenthub.codeact_agent.tools.bash': os.path.join(
+                project_root, 'codeio/agenthub/codeact_agent/tools/bash.py'
             ),
-            'openhands.agenthub.codeact_agent.tools.prompt': os.path.join(
-                project_root, 'openhands/agenthub/codeact_agent/tools/prompt.py'
+            'codeio.agenthub.codeact_agent.tools.prompt': os.path.join(
+                project_root, 'codeio/agenthub/codeact_agent/tools/prompt.py'
             ),
-            'openhands.memory.memory': os.path.join(
-                project_root, 'openhands/memory/memory.py'
+            'codeio.memory.memory': os.path.join(
+                project_root, 'codeio/memory/memory.py'
             ),
-            'openhands.memory.conversation_memory': os.path.join(
-                project_root, 'openhands/memory/conversation_memory.py'
+            'codeio.memory.conversation_memory': os.path.join(
+                project_root, 'codeio/memory/conversation_memory.py'
             ),
         }
 
@@ -89,12 +89,12 @@ class TestCircularImports(unittest.TestCase):
                         parts = line[7:].split(',')
                         for part in parts:
                             module_part = part.strip().split(' as ')[0].strip()
-                            if module_part.startswith('openhands.'):
+                            if module_part.startswith('codeio.'):
                                 imported_modules.append(module_part)
                     elif line.startswith('from '):
                         # Handle "from module import name" or "from module import name as alias"
                         module_part = line[5:].split(' import ')[0].strip()
-                        if module_part.startswith('openhands.'):
+                        if module_part.startswith('codeio.'):
                             imported_modules.append(module_part)
 
                 module_imports[module_name] = imported_modules
@@ -114,20 +114,20 @@ class TestCircularImports(unittest.TestCase):
         Test for the specific circular import pattern that caused the issue in the stack trace.
 
         The problematic pattern was:
-        openhands.utils.prompt imports from openhands.agenthub.codeact_agent.tools.bash
-        openhands.agenthub.codeact_agent.tools.bash imports from openhands.agenthub.codeact_agent.tools.prompt
-        openhands.agenthub.codeact_agent.tools.prompt imports from openhands.utils.prompt
+        openhands.utils.prompt imports from codeio.agenthub.codeact_agent.tools.bash
+        openhands.agenthub.codeact_agent.tools.bash imports from codeio.agenthub.codeact_agent.tools.prompt
+        openhands.agenthub.codeact_agent.tools.prompt imports from codeio.utils.prompt
         """
         # Get the project root directory
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
         # Check if the problematic pattern exists
-        prompt_path = os.path.join(project_root, 'openhands/utils/prompt.py')
+        prompt_path = os.path.join(project_root, 'codeio/utils/prompt.py')
         bash_path = os.path.join(
-            project_root, 'openhands/agenthub/codeact_agent/tools/bash.py'
+            project_root, 'codeio/agenthub/codeact_agent/tools/bash.py'
         )
         tools_prompt_path = os.path.join(
-            project_root, 'openhands/agenthub/codeact_agent/tools/prompt.py'
+            project_root, 'codeio/agenthub/codeact_agent/tools/prompt.py'
         )
 
         # Check if all files exist
@@ -174,9 +174,9 @@ class TestCircularImports(unittest.TestCase):
         ):
             self.fail(
                 'Circular import pattern detected:\n'
-                'openhands.utils.prompt imports from openhands.agenthub.codeact_agent.tools.bash\n'
-                'openhands.agenthub.codeact_agent.tools.bash imports from openhands.agenthub.codeact_agent.tools.prompt\n'
-                'openhands.agenthub.codeact_agent.tools.prompt imports from openhands.utils.prompt'
+                'codeio.utils.prompt imports from codeio.agenthub.codeact_agent.tools.bash\n'
+                'codeio.agenthub.codeact_agent.tools.bash imports from codeio.agenthub.codeact_agent.tools.prompt\n'
+                'codeio.agenthub.codeact_agent.tools.prompt imports from codeio.utils.prompt'
             )
 
     def test_detect_circular_imports_in_server_modules(self):
@@ -195,21 +195,21 @@ class TestCircularImports(unittest.TestCase):
 
         # Map module names to file paths
         module_paths = {
-            'openhands.server.shared': os.path.join(
-                project_root, 'openhands/server/shared.py'
+            'codeio.server.shared': os.path.join(
+                project_root, 'codeio/server/shared.py'
             ),
-            'openhands.server.conversation_manager.conversation_manager': os.path.join(
+            'codeio.server.conversation_manager.conversation_manager': os.path.join(
                 project_root,
-                'openhands/server/conversation_manager/conversation_manager.py',
+                'codeio/server/conversation_manager/conversation_manager.py',
             ),
-            'openhands.server.session.agent_session': os.path.join(
-                project_root, 'openhands/server/session/agent_session.py'
+            'codeio.server.session.agent_session': os.path.join(
+                project_root, 'codeio/server/session/agent_session.py'
             ),
-            'openhands.server.session.__init__': os.path.join(
-                project_root, 'openhands/server/session/__init__.py'
+            'codeio.server.session.__init__': os.path.join(
+                project_root, 'codeio/server/session/__init__.py'
             ),
-            'openhands.server.session.session': os.path.join(
-                project_root, 'openhands/server/session/session.py'
+            'codeio.server.session.session': os.path.join(
+                project_root, 'codeio/server/session/session.py'
             ),
         }
 
@@ -242,12 +242,12 @@ class TestCircularImports(unittest.TestCase):
 
         # Map module names to file paths
         module_paths = {
-            'openhands.mcp.__init__': os.path.join(
-                project_root, 'openhands/mcp/__init__.py'
+            'codeio.mcp.__init__': os.path.join(
+                project_root, 'codeio/mcp/__init__.py'
             ),
-            'openhands.mcp.utils': os.path.join(project_root, 'openhands/mcp/utils.py'),
-            'openhands.memory.memory': os.path.join(
-                project_root, 'openhands/memory/memory.py'
+            'codeio.mcp.utils': os.path.join(project_root, 'codeio/mcp/utils.py'),
+            'codeio.memory.memory': os.path.join(
+                project_root, 'codeio/memory/memory.py'
             ),
         }
 
@@ -278,18 +278,18 @@ class TestCircularImports(unittest.TestCase):
 
         # Define the modules involved in the stack trace
         modules = [
-            'openhands.utils.prompt',
-            'openhands.agenthub.codeact_agent.tools.bash',
-            'openhands.agenthub.codeact_agent.tools.prompt',
-            'openhands.memory.memory',
-            'openhands.memory.conversation_memory',
-            'openhands.server.shared',
-            'openhands.server.conversation_manager.conversation_manager',
-            'openhands.server.session.agent_session',
-            'openhands.server.session.__init__',
-            'openhands.server.session.session',
-            'openhands.mcp.__init__',
-            'openhands.mcp.utils',
+            'codeio.utils.prompt',
+            'codeio.agenthub.codeact_agent.tools.bash',
+            'codeio.agenthub.codeact_agent.tools.prompt',
+            'codeio.memory.memory',
+            'codeio.memory.conversation_memory',
+            'codeio.server.shared',
+            'codeio.server.conversation_manager.conversation_manager',
+            'codeio.server.session.agent_session',
+            'codeio.server.session.__init__',
+            'codeio.server.session.session',
+            'codeio.mcp.__init__',
+            'codeio.mcp.utils',
         ]
 
         # Map module names to file paths
@@ -329,12 +329,12 @@ class TestCircularImports(unittest.TestCase):
                     parts = line[7:].split(',')
                     for part in parts:
                         module_part = part.strip().split(' as ')[0].strip()
-                        if module_part.startswith('openhands.'):
+                        if module_part.startswith('codeio.'):
                             imported_modules.append(module_part)
                 elif line.startswith('from '):
                     # Handle "from module import name" or "from module import name as alias"
                     module_part = line[5:].split(' import ')[0].strip()
-                    if module_part.startswith('openhands.'):
+                    if module_part.startswith('codeio.'):
                         imported_modules.append(module_part)
 
             import_graph[module_name] = [

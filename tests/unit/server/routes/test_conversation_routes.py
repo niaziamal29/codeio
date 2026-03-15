@@ -8,10 +8,10 @@ import pytest
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from openhands.app_server.app_conversation.app_conversation_info_service import (
+from codeio.app_server.app_conversation.app_conversation_info_service import (
     AppConversationInfoService,
 )
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.app_server.app_conversation.app_conversation_models import (
     AgentType,
     AppConversation,
     AppConversationInfo,
@@ -20,26 +20,26 @@ from openhands.app_server.app_conversation.app_conversation_models import (
     AppConversationStartTask,
     AppConversationStartTaskStatus,
 )
-from openhands.app_server.app_conversation.app_conversation_service import (
+from codeio.app_server.app_conversation.app_conversation_service import (
     AppConversationService,
 )
-from openhands.app_server.sandbox.sandbox_models import SandboxStatus
-from openhands.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
-from openhands.microagent.microagent import KnowledgeMicroagent, RepoMicroagent
-from openhands.microagent.types import MicroagentMetadata, MicroagentType
-from openhands.runtime.runtime_status import RuntimeStatus
-from openhands.sdk.conversation.state import ConversationExecutionStatus
-from openhands.server.data_models.agent_loop_info import AgentLoopInfo
-from openhands.server.data_models.conversation_info import ConversationStatus
-from openhands.server.data_models.conversation_info_result_set import (
+from codeio.app_server.sandbox.sandbox_models import SandboxStatus
+from codeio.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
+from codeio.microagent.microagent import KnowledgeMicroagent, RepoMicroagent
+from codeio.microagent.types import MicroagentMetadata, MicroagentType
+from codeio.runtime.runtime_status import RuntimeStatus
+from codeio.sdk.conversation.state import ConversationExecutionStatus
+from codeio.server.data_models.agent_loop_info import AgentLoopInfo
+from codeio.server.data_models.conversation_info import ConversationStatus
+from codeio.server.data_models.conversation_info_result_set import (
     ConversationInfoResultSet,
 )
-from openhands.server.routes.conversation import (
+from codeio.server.routes.conversation import (
     AddMessageRequest,
     add_message,
     get_microagents,
 )
-from openhands.server.routes.manage_conversations import (
+from codeio.server.routes.manage_conversations import (
     _RESUME_GRACE_PERIOD,
     UpdateConversationRequest,
     _get_conversation_info,
@@ -48,9 +48,9 @@ from openhands.server.routes.manage_conversations import (
     search_conversations,
     update_conversation,
 )
-from openhands.server.session.conversation import ServerConversation
-from openhands.storage.conversation.conversation_store import ConversationStore
-from openhands.storage.data_models.conversation_metadata import (
+from codeio.server.session.conversation import ServerConversation
+from codeio.storage.conversation.conversation_store import ConversationStore
+from codeio.storage.data_models.conversation_metadata import (
     ConversationMetadata,
     ConversationTrigger,
 )
@@ -111,7 +111,7 @@ async def test_get_microagents():
 
     # Mock the conversation manager
     with patch(
-        'openhands.server.routes.conversation.conversation_manager'
+        'codeio.server.routes.conversation.conversation_manager'
     ) as mock_manager:
         # Set up the mocks
         mock_manager.get_agent_session.return_value = mock_agent_session
@@ -156,7 +156,7 @@ async def test_get_microagents_no_agent_session():
 
     # Mock the conversation manager
     with patch(
-        'openhands.server.routes.conversation.conversation_manager'
+        'codeio.server.routes.conversation.conversation_manager'
     ) as mock_manager:
         # Set up the mocks
         mock_manager.get_agent_session.return_value = None
@@ -183,7 +183,7 @@ async def test_get_microagents_exception():
 
     # Mock the conversation manager
     with patch(
-        'openhands.server.routes.conversation.conversation_manager'
+        'codeio.server.routes.conversation.conversation_manager'
     ) as mock_manager:
         # Set up the mocks to raise an exception
         mock_manager.get_agent_session.side_effect = Exception('Test exception')
@@ -232,7 +232,7 @@ async def test_update_conversation_success():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -409,7 +409,7 @@ async def test_update_conversation_socket_emission_error():
     mock_sio.emit.side_effect = Exception('Socket error')
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -493,7 +493,7 @@ async def test_update_conversation_title_whitespace_trimming():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -543,7 +543,7 @@ async def test_update_conversation_user_owns_conversation():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -590,7 +590,7 @@ async def test_update_conversation_last_updated_at_set():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -640,7 +640,7 @@ async def test_update_conversation_no_user_id_no_metadata_user_id():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -963,7 +963,7 @@ async def test_update_v1_conversation_invalid_uuid_falls_back_to_v0():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -1023,7 +1023,7 @@ async def test_update_v1_conversation_no_socket_emission():
     mock_sio = AsyncMock()
 
     with patch(
-        'openhands.server.routes.manage_conversations.conversation_manager'
+        'codeio.server.routes.manage_conversations.conversation_manager'
     ) as mock_manager:
         mock_manager.sio = mock_sio
 
@@ -1055,7 +1055,7 @@ async def test_add_message_success():
 
     # Mock the conversation manager
     with patch(
-        'openhands.server.routes.conversation.conversation_manager'
+        'codeio.server.routes.conversation.conversation_manager'
     ) as mock_manager:
         mock_manager.send_event_to_conversation = AsyncMock()
 
@@ -1095,7 +1095,7 @@ async def test_add_message_conversation_manager_error():
 
     # Mock the conversation manager to raise an exception
     with patch(
-        'openhands.server.routes.conversation.conversation_manager'
+        'codeio.server.routes.conversation.conversation_manager'
     ) as mock_manager:
         mock_manager.send_event_to_conversation = AsyncMock(
             side_effect=Exception('Conversation manager error')
@@ -1128,7 +1128,7 @@ async def test_add_message_empty_message():
 
     # Mock the conversation manager
     with patch(
-        'openhands.server.routes.conversation.conversation_manager'
+        'codeio.server.routes.conversation.conversation_manager'
     ) as mock_manager:
         mock_manager.send_event_to_conversation = AsyncMock()
 
@@ -1221,10 +1221,10 @@ async def test_create_sub_conversation_with_planning_agent():
 @pytest.mark.asyncio
 async def test_search_conversations_include_sub_conversations_default_false():
     """Test that include_sub_conversations defaults to False when not provided."""
-    with patch('openhands.server.routes.manage_conversations.config') as mock_config:
+    with patch('codeio.server.routes.manage_conversations.config') as mock_config:
         mock_config.conversation_max_age_seconds = 864000  # 10 days
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_manager:
 
             async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1240,7 +1240,7 @@ async def test_search_conversations_include_sub_conversations_default_false():
             mock_manager.get_connections = mock_get_connections
             mock_manager.get_agent_loop_info = get_agent_loop_info
             with patch(
-                'openhands.server.routes.manage_conversations.datetime'
+                'codeio.server.routes.manage_conversations.datetime'
             ) as mock_datetime:
                 mock_datetime.now.return_value = datetime.fromisoformat(
                     '2025-01-01T00:00:00+00:00'
@@ -1281,10 +1281,10 @@ async def test_search_conversations_include_sub_conversations_default_false():
 @pytest.mark.asyncio
 async def test_search_conversations_include_sub_conversations_explicit_false():
     """Test that include_sub_conversations=False is properly passed through."""
-    with patch('openhands.server.routes.manage_conversations.config') as mock_config:
+    with patch('codeio.server.routes.manage_conversations.config') as mock_config:
         mock_config.conversation_max_age_seconds = 864000  # 10 days
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_manager:
 
             async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1300,7 +1300,7 @@ async def test_search_conversations_include_sub_conversations_explicit_false():
             mock_manager.get_connections = mock_get_connections
             mock_manager.get_agent_loop_info = get_agent_loop_info
             with patch(
-                'openhands.server.routes.manage_conversations.datetime'
+                'codeio.server.routes.manage_conversations.datetime'
             ) as mock_datetime:
                 mock_datetime.now.return_value = datetime.fromisoformat(
                     '2025-01-01T00:00:00+00:00'
@@ -1342,10 +1342,10 @@ async def test_search_conversations_include_sub_conversations_explicit_false():
 @pytest.mark.asyncio
 async def test_search_conversations_include_sub_conversations_explicit_true():
     """Test that include_sub_conversations=True is properly passed through."""
-    with patch('openhands.server.routes.manage_conversations.config') as mock_config:
+    with patch('codeio.server.routes.manage_conversations.config') as mock_config:
         mock_config.conversation_max_age_seconds = 864000  # 10 days
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_manager:
 
             async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1361,7 +1361,7 @@ async def test_search_conversations_include_sub_conversations_explicit_true():
             mock_manager.get_connections = mock_get_connections
             mock_manager.get_agent_loop_info = get_agent_loop_info
             with patch(
-                'openhands.server.routes.manage_conversations.datetime'
+                'codeio.server.routes.manage_conversations.datetime'
             ) as mock_datetime:
                 mock_datetime.now.return_value = datetime.fromisoformat(
                     '2025-01-01T00:00:00+00:00'
@@ -1403,10 +1403,10 @@ async def test_search_conversations_include_sub_conversations_explicit_true():
 @pytest.mark.asyncio
 async def test_search_conversations_include_sub_conversations_with_other_filters():
     """Test that include_sub_conversations works correctly with other filters."""
-    with patch('openhands.server.routes.manage_conversations.config') as mock_config:
+    with patch('codeio.server.routes.manage_conversations.config') as mock_config:
         mock_config.conversation_max_age_seconds = 864000  # 10 days
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_manager:
 
             async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1422,7 +1422,7 @@ async def test_search_conversations_include_sub_conversations_with_other_filters
             mock_manager.get_connections = mock_get_connections
             mock_manager.get_agent_loop_info = get_agent_loop_info
             with patch(
-                'openhands.server.routes.manage_conversations.datetime'
+                'codeio.server.routes.manage_conversations.datetime'
             ) as mock_datetime:
                 mock_datetime.now.return_value = datetime.fromisoformat(
                     '2025-01-01T00:00:00+00:00'

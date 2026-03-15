@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import httpx
 import pytest
 
-from openhands.app_server.app_conversation.skill_loader import (
+from codeio.app_server.app_conversation.skill_loader import (
     OrgConfig,
     SandboxConfig,
     SkillInfo,
@@ -24,15 +24,15 @@ from openhands.app_server.app_conversation.skill_loader import (
     build_sandbox_config,
     load_skills_from_agent_server,
 )
-from openhands.app_server.sandbox.sandbox_models import (
+from codeio.app_server.sandbox.sandbox_models import (
     ExposedUrl,
     SandboxInfo,
     SandboxStatus,
 )
-from openhands.app_server.user.user_context import UserContext
-from openhands.integrations.provider import ProviderType
-from openhands.integrations.service_types import AuthenticationError
-from openhands.sdk.context.skills import KeywordTrigger, Skill, TaskTrigger
+from codeio.app_server.user.user_context import UserContext
+from codeio.integrations.provider import ProviderType
+from codeio.integrations.service_types import AuthenticationError
+from codeio.sdk.context.skills import KeywordTrigger, Skill, TaskTrigger
 
 # ===== Test Fixtures =====
 
@@ -100,9 +100,9 @@ class TestGetProviderType:
     """Test _get_provider_type function."""
 
     @pytest.mark.asyncio
-    @patch('openhands.app_server.app_conversation.skill_loader._is_gitlab_repository')
+    @patch('codeio.app_server.app_conversation.skill_loader._is_gitlab_repository')
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._is_azure_devops_repository'
+        'codeio.app_server.app_conversation.skill_loader._is_azure_devops_repository'
     )
     async def test_returns_gitlab_for_gitlab_repo(
         self, mock_is_azure, mock_is_gitlab, mock_user_context
@@ -120,9 +120,9 @@ class TestGetProviderType:
         mock_is_gitlab.assert_called_once_with('owner/repo', mock_user_context)
 
     @pytest.mark.asyncio
-    @patch('openhands.app_server.app_conversation.skill_loader._is_gitlab_repository')
+    @patch('codeio.app_server.app_conversation.skill_loader._is_gitlab_repository')
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._is_azure_devops_repository'
+        'codeio.app_server.app_conversation.skill_loader._is_azure_devops_repository'
     )
     async def test_returns_azure_for_azure_repo(
         self, mock_is_azure, mock_is_gitlab, mock_user_context
@@ -140,9 +140,9 @@ class TestGetProviderType:
         mock_is_azure.assert_called_once_with('org/project/repo', mock_user_context)
 
     @pytest.mark.asyncio
-    @patch('openhands.app_server.app_conversation.skill_loader._is_gitlab_repository')
+    @patch('codeio.app_server.app_conversation.skill_loader._is_gitlab_repository')
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._is_azure_devops_repository'
+        'codeio.app_server.app_conversation.skill_loader._is_azure_devops_repository'
     )
     async def test_returns_github_for_github_repo(
         self, mock_is_azure, mock_is_gitlab, mock_user_context
@@ -164,10 +164,10 @@ class TestBuildOrgConfig:
 
     @pytest.mark.asyncio
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._determine_org_repo_path'
+        'codeio.app_server.app_conversation.skill_loader._determine_org_repo_path'
     )
-    @patch('openhands.app_server.app_conversation.skill_loader._get_org_repository_url')
-    @patch('openhands.app_server.app_conversation.skill_loader._get_provider_type')
+    @patch('codeio.app_server.app_conversation.skill_loader._get_org_repository_url')
+    @patch('codeio.app_server.app_conversation.skill_loader._get_provider_type')
     async def test_builds_config_successfully(
         self, mock_get_provider, mock_get_url, mock_determine_path, mock_user_context
     ):
@@ -210,9 +210,9 @@ class TestBuildOrgConfig:
 
     @pytest.mark.asyncio
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._determine_org_repo_path'
+        'codeio.app_server.app_conversation.skill_loader._determine_org_repo_path'
     )
-    @patch('openhands.app_server.app_conversation.skill_loader._get_org_repository_url')
+    @patch('codeio.app_server.app_conversation.skill_loader._get_org_repository_url')
     async def test_returns_none_when_url_not_available(
         self, mock_get_url, mock_determine_path, mock_user_context
     ):
@@ -579,9 +579,9 @@ class TestDetermineOrgRepoPath:
     """Test _determine_org_repo_path helper function."""
 
     @pytest.mark.asyncio
-    @patch('openhands.app_server.app_conversation.skill_loader._is_gitlab_repository')
+    @patch('codeio.app_server.app_conversation.skill_loader._is_gitlab_repository')
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._is_azure_devops_repository'
+        'codeio.app_server.app_conversation.skill_loader._is_azure_devops_repository'
     )
     async def test_github_repository_path(self, mock_is_azure, mock_is_gitlab):
         """Test org path for GitHub repository."""
@@ -600,9 +600,9 @@ class TestDetermineOrgRepoPath:
         assert org_name == 'owner'
 
     @pytest.mark.asyncio
-    @patch('openhands.app_server.app_conversation.skill_loader._is_gitlab_repository')
+    @patch('codeio.app_server.app_conversation.skill_loader._is_gitlab_repository')
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._is_azure_devops_repository'
+        'codeio.app_server.app_conversation.skill_loader._is_azure_devops_repository'
     )
     async def test_gitlab_repository_path(self, mock_is_azure, mock_is_gitlab):
         """Test org path for GitLab repository."""
@@ -621,9 +621,9 @@ class TestDetermineOrgRepoPath:
         assert org_name == 'owner'
 
     @pytest.mark.asyncio
-    @patch('openhands.app_server.app_conversation.skill_loader._is_gitlab_repository')
+    @patch('codeio.app_server.app_conversation.skill_loader._is_gitlab_repository')
     @patch(
-        'openhands.app_server.app_conversation.skill_loader._is_azure_devops_repository'
+        'codeio.app_server.app_conversation.skill_loader._is_azure_devops_repository'
     )
     async def test_azure_devops_repository_path(self, mock_is_azure, mock_is_gitlab):
         """Test org path for Azure DevOps repository."""

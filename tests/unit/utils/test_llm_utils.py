@@ -1,19 +1,19 @@
 """Tests for openhands.utils.llm module."""
 
-from openhands.utils.llm import get_provider_api_base, is_openhands_model
+from codeio.utils.llm import get_provider_api_base, is_openhands_model
 
 
 class TestIsOpenhandsModel:
     """Tests for the is_openhands_model function."""
 
     def test_openhands_model_returns_true(self):
-        """Test that models with 'openhands/' prefix return True."""
-        assert is_openhands_model('openhands/claude-sonnet-4-5-20250929') is True
-        assert is_openhands_model('openhands/gpt-5-2025-08-07') is True
-        assert is_openhands_model('openhands/gemini-2.5-pro') is True
+        """Test that models with 'codeio/' prefix return True."""
+        assert is_openhands_model('codeio/claude-sonnet-4-5-20250929') is True
+        assert is_openhands_model('codeio/gpt-5-2025-08-07') is True
+        assert is_openhands_model('codeio/gemini-2.5-pro') is True
 
     def test_non_openhands_model_returns_false(self):
-        """Test that models without 'openhands/' prefix return False."""
+        """Test that models without 'codeio/' prefix return False."""
         assert is_openhands_model('gpt-4') is False
         assert is_openhands_model('claude-3-opus-20240229') is False
         assert is_openhands_model('anthropic/claude-3-opus-20240229') is False

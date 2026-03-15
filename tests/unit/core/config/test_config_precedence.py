@@ -2,10 +2,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openhands.core.config import (
+from codeio.core.config import (
     OH_DEFAULT_AGENT,
     OH_MAX_ITERATIONS,
-    OpenHandsConfig,
+    CodeioConfig,
     get_llm_config_arg,
     setup_config_from_args,
 )
@@ -13,18 +13,18 @@ from openhands.core.config import (
 
 @pytest.fixture
 def default_config():
-    """Fixture to provide a default OpenHandsConfig instance."""
-    yield OpenHandsConfig()
+    """Fixture to provide a default CodeioConfig instance."""
+    yield CodeioConfig()
 
 
 @pytest.fixture
 def temp_config_files(tmp_path):
     """Create temporary config files for testing precedence."""
-    # Create a directory structure mimicking ~/.openhands/
+    # Create a directory structure mimicking ~/.codeio/
     user_config_dir = tmp_path / 'home' / '.openhands'
     user_config_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create ~/.openhands/config.toml
+    # Create ~/.codeio/config.toml
     user_config_toml = user_config_dir / 'config.toml'
     user_config_toml.write_text("""
 [llm]
@@ -36,7 +36,7 @@ model = "user-specific-model"
 api_key = "user-specific-api-key"
 """)
 
-    # Create ~/.openhands/settings.json
+    # Create ~/.codeio/settings.json
     user_settings_json = user_config_dir / 'settings.json'
     user_settings_json.write_text("""
 {
@@ -67,7 +67,7 @@ api_key = "current-dir-specific-api-key"
     }
 
 
-@patch('openhands.core.config.utils.os.path.expanduser')
+@patch('codeio.core.config.utils.os.path.expanduser')
 def test_llm_config_precedence_cli_highest(mock_expanduser, temp_config_files):
     """Test that CLI parameters have the highest precedence."""
     mock_expanduser.side_effect = lambda path: path.replace(
@@ -95,11 +95,11 @@ def test_llm_config_precedence_cli_highest(mock_expanduser, temp_config_files):
     )
 
 
-@patch('openhands.core.config.utils.os.path.expanduser')
+@patch('codeio.core.config.utils.os.path.expanduser')
 def test_current_dir_toml_precedence_over_user_config(
     mock_expanduser, temp_config_files
 ):
-    """Test that config.toml in current directory has precedence over ~/.openhands/config.toml."""
+    """Test that config.toml in current directory has precedence over ~/.codeio/config.toml."""
     mock_expanduser.side_effect = lambda path: path.replace(
         '~', temp_config_files['home_dir']
     )
@@ -122,7 +122,7 @@ def test_current_dir_toml_precedence_over_user_config(
     assert config.get_llm_config().api_key.get_secret_value() == 'current-dir-api-key'
 
 
-@patch('openhands.core.config.utils.os.path.expanduser')
+@patch('codeio.core.config.utils.os.path.expanduser')
 def test_get_llm_config_arg_precedence(mock_expanduser, temp_config_files):
     """Test that get_llm_config_arg prioritizes the specified config file."""
     mock_expanduser.side_effect = lambda path: path.replace(
@@ -164,8 +164,8 @@ def test_default_values_applied_when_none():
 
     # Load config
     with patch(
-        'openhands.core.config.utils.load_openhands_config',
-        return_value=OpenHandsConfig(),
+        'codeio.core.config.utils.load_openhands_config',
+        return_value=CodeioConfig(),
     ):
         config = setup_config_from_args(mock_args)
 
@@ -185,8 +185,8 @@ def test_cli_args_override_defaults():
 
     # Load config
     with patch(
-        'openhands.core.config.utils.load_openhands_config',
-        return_value=OpenHandsConfig(),
+        'codeio.core.config.utils.load_openhands_config',
+        return_value=CodeioConfig(),
     ):
         config = setup_config_from_args(mock_args)
 
@@ -205,13 +205,13 @@ def test_cli_args_none_uses_config_toml_values():
     mock_args.max_iterations = None
 
     # Create a config with specific values from config.toml
-    config_from_toml = OpenHandsConfig()
+    config_from_toml = CodeioConfig()
     config_from_toml.default_agent = 'ConfigTomlAgent'
     config_from_toml.max_iterations = 100
 
     # Load config
     with patch(
-        'openhands.core.config.utils.load_openhands_config',
+        'codeio.core.config.utils.load_openhands_config',
         return_value=config_from_toml,
     ):
         config = setup_config_from_args(mock_args)

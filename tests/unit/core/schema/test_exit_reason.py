@@ -1,4 +1,4 @@
-from openhands.core.schema.exit_reason import ExitReason
+from codeio.core.schema.exit_reason import ExitReason
 
 
 def test_exit_reason_enum_values():

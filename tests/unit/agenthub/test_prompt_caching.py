@@ -1,11 +1,11 @@
 import pytest
 from litellm import ModelResponse
 
-from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
-from openhands.core.config import AgentConfig, LLMConfig
-from openhands.core.config.openhands_config import OpenHandsConfig
-from openhands.events.action import MessageAction
-from openhands.llm.llm_registry import LLMRegistry
+from codeio.agenthub.codeact_agent.codeact_agent import CodeActAgent
+from codeio.core.config import AgentConfig, LLMConfig
+from codeio.core.config.openhands_config import CodeioConfig
+from codeio.events.action import MessageAction
+from codeio.llm.llm_registry import LLMRegistry
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def llm_config():
 
 @pytest.fixture
 def llm_registry():
-    registry = LLMRegistry(config=OpenHandsConfig())
+    registry = LLMRegistry(config=CodeioConfig())
     return registry
 
 
@@ -135,5 +135,5 @@ def test_get_messages_prompt_caching(codeact_agent: CodeActAgent):
     )  # Including the initial system message + last user message
 
     # Verify that these are indeed the last user message (from start)
-    assert cached_user_messages[0].content[0].text.startswith('You are OpenHands agent')
+    assert cached_user_messages[0].content[0].text.startswith('You are Codeio agent')
     assert cached_user_messages[1].content[0].text.startswith('User message 14')

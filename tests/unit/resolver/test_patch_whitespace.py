@@ -1,5 +1,5 @@
-from openhands.resolver.patching.apply import apply_diff
-from openhands.resolver.patching.patch import parse_patch
+from codeio.resolver.patching.apply import apply_diff
+from codeio.resolver.patching.patch import parse_patch
 
 
 def test_patch_whitespace_mismatch():

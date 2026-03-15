@@ -3,8 +3,8 @@
 import os
 from unittest.mock import patch
 
-from openhands.core.config import OpenHandsConfig, load_from_env
-from openhands.runtime.utils.command import get_action_execution_server_startup_command
+from codeio.core.config import CodeioConfig, load_from_env
+from codeio.runtime.utils.command import get_action_execution_server_startup_command
 
 
 class TestGitConfig:
@@ -12,7 +12,7 @@ class TestGitConfig:
 
     def test_default_git_config(self):
         """Test that default git configuration is set correctly."""
-        config = OpenHandsConfig()
+        config = CodeioConfig()
         assert config.git_user_name == 'openhands'
         assert config.git_user_email == 'openhands@all-hands.dev'
 
@@ -22,7 +22,7 @@ class TestGitConfig:
             os.environ,
             {'GIT_USER_NAME': 'testuser', 'GIT_USER_EMAIL': 'testuser@example.com'},
         ):
-            config = OpenHandsConfig()
+            config = CodeioConfig()
             load_from_env(config, os.environ)
 
             assert config.git_user_name == 'testuser'
@@ -34,7 +34,7 @@ class TestGitConfig:
         Git configuration is handled by the runtime base class via git config commands,
         not through command line arguments to the action execution server.
         """
-        config = OpenHandsConfig()
+        config = CodeioConfig()
         config.git_user_name = 'customuser'
         config.git_user_email = 'customuser@example.com'
 
@@ -59,7 +59,7 @@ class TestGitConfig:
         Git configuration is handled by the runtime base class via git config commands,
         not through command line arguments to the action execution server.
         """
-        config = OpenHandsConfig()
+        config = CodeioConfig()
         config.git_user_name = 'User With Spaces'
         config.git_user_email = 'user+tag@example.com'
 
@@ -78,7 +78,7 @@ class TestGitConfig:
     def test_git_config_empty_values(self):
         """Test behavior with empty git configuration values."""
         with patch.dict(os.environ, {'GIT_USER_NAME': '', 'GIT_USER_EMAIL': ''}):
-            config = OpenHandsConfig()
+            config = CodeioConfig()
             load_from_env(config, os.environ)
 
             # Empty values should fall back to defaults

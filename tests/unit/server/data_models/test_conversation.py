@@ -11,45 +11,45 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.app_server.app_conversation.app_conversation_models import (
     AppConversation,
     AppConversationPage,
 )
-from openhands.app_server.app_conversation.app_conversation_router import (
+from codeio.app_server.app_conversation.app_conversation_router import (
     read_conversation_file,
 )
-from openhands.app_server.app_conversation.live_status_app_conversation_service import (
+from codeio.app_server.app_conversation.live_status_app_conversation_service import (
     LiveStatusAppConversationService,
 )
-from openhands.app_server.app_conversation.sql_app_conversation_info_service import (
+from codeio.app_server.app_conversation.sql_app_conversation_info_service import (
     SQLAppConversationInfoService,
 )
-from openhands.app_server.sandbox.sandbox_models import (
+from codeio.app_server.sandbox.sandbox_models import (
     AGENT_SERVER,
     ExposedUrl,
     SandboxInfo,
     SandboxStatus,
 )
-from openhands.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
-from openhands.app_server.user.user_context import UserContext
-from openhands.integrations.service_types import (
+from codeio.app_server.sandbox.sandbox_spec_models import SandboxSpecInfo
+from codeio.app_server.user.user_context import UserContext
+from codeio.integrations.service_types import (
     AuthenticationError,
     CreateMicroagent,
     ProviderType,
     SuggestedTask,
     TaskType,
 )
-from openhands.runtime.runtime_status import RuntimeStatus
-from openhands.sdk.conversation.state import ConversationExecutionStatus
-from openhands.sdk.workspace.models import FileOperationResult
-from openhands.sdk.workspace.remote.async_remote_workspace import (
+from codeio.runtime.runtime_status import RuntimeStatus
+from codeio.sdk.conversation.state import ConversationExecutionStatus
+from codeio.sdk.workspace.models import FileOperationResult
+from codeio.sdk.workspace.remote.async_remote_workspace import (
     AsyncRemoteWorkspace,
 )
-from openhands.server.data_models.conversation_info import ConversationInfo
-from openhands.server.data_models.conversation_info_result_set import (
+from codeio.server.data_models.conversation_info import ConversationInfo
+from codeio.server.data_models.conversation_info_result_set import (
     ConversationInfoResultSet,
 )
-from openhands.server.routes.manage_conversations import (
+from codeio.server.routes.manage_conversations import (
     ConversationResponse,
     InitSessionRequest,
     delete_conversation,
@@ -57,16 +57,16 @@ from openhands.server.routes.manage_conversations import (
     new_conversation,
     search_conversations,
 )
-from openhands.server.routes.manage_conversations import app as conversation_app
-from openhands.server.types import LLMAuthenticationError, MissingSettingsError
-from openhands.server.user_auth.user_auth import AuthType
-from openhands.storage.data_models.conversation_metadata import (
+from codeio.server.routes.manage_conversations import app as conversation_app
+from codeio.server.types import LLMAuthenticationError, MissingSettingsError
+from codeio.server.user_auth.user_auth import AuthType
+from codeio.storage.data_models.conversation_metadata import (
     ConversationMetadata,
     ConversationTrigger,
 )
-from openhands.storage.data_models.conversation_status import ConversationStatus
-from openhands.storage.locations import get_conversation_metadata_filename
-from openhands.storage.memory import InMemoryFileStore
+from codeio.storage.data_models.conversation_status import ConversationStatus
+from codeio.storage.locations import get_conversation_metadata_filename
+from codeio.storage.memory import InMemoryFileStore
 
 
 @contextmanager
@@ -86,11 +86,11 @@ def _patch_store():
         ),
     )
     with patch(
-        'openhands.storage.conversation.file_conversation_store.get_file_store',
+        'codeio.storage.conversation.file_conversation_store.get_file_store',
         MagicMock(return_value=file_store),
     ):
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager.file_store',
+            'codeio.server.routes.manage_conversations.conversation_manager.file_store',
             file_store,
         ):
             yield
@@ -123,7 +123,7 @@ def create_new_test_conversation(
 @pytest.fixture
 def provider_handler_mock():
     with patch(
-        'openhands.server.routes.manage_conversations.ProviderHandler'
+        'codeio.server.routes.manage_conversations.ProviderHandler'
     ) as mock_cls:
         mock_instance = MagicMock()
         mock_instance.verify_repo_provider = AsyncMock(return_value=ProviderType.GITHUB)
@@ -135,11 +135,11 @@ def provider_handler_mock():
 async def test_search_conversations():
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -155,7 +155,7 @@ async def test_search_conversations():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -225,11 +225,11 @@ async def test_search_conversations_with_repository_filter():
     """Test searching conversations with repository filter."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -245,7 +245,7 @@ async def test_search_conversations_with_repository_filter():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -301,11 +301,11 @@ async def test_search_conversations_with_trigger_filter():
     """Test searching conversations with conversation trigger filter."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -321,7 +321,7 @@ async def test_search_conversations_with_trigger_filter():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -378,11 +378,11 @@ async def test_search_conversations_with_both_filters():
     """Test searching conversations with both repository and trigger filters."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -398,7 +398,7 @@ async def test_search_conversations_with_both_filters():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -457,11 +457,11 @@ async def test_search_conversations_with_pagination():
     """Test searching conversations with pagination."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -477,7 +477,7 @@ async def test_search_conversations_with_pagination():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -536,11 +536,11 @@ async def test_search_conversations_with_filters_and_pagination():
     """Test searching conversations with filters and pagination."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -556,7 +556,7 @@ async def test_search_conversations_with_filters_and_pagination():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -620,11 +620,11 @@ async def test_search_conversations_empty_results():
     """Test searching conversations that returns empty results."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -640,7 +640,7 @@ async def test_search_conversations_empty_results():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -696,7 +696,7 @@ async def test_get_conversation():
 
         # Mock the conversation manager
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_manager:
             mock_manager.is_agent_loop_running = AsyncMock(return_value=False)
             mock_manager.get_connections = AsyncMock(return_value={})
@@ -741,7 +741,7 @@ async def test_new_conversation_success(provider_handler_mock):
     with _patch_store():
         # Mock the create_new_conversation function directly
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -785,7 +785,7 @@ async def test_new_conversation_with_suggested_task(provider_handler_mock):
     with _patch_store():
         # Mock the create_new_conversation function directly
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -797,7 +797,7 @@ async def test_new_conversation_with_suggested_task(provider_handler_mock):
 
             # Mock SuggestedTask.get_prompt_for_task
             with patch(
-                'openhands.integrations.service_types.SuggestedTask.get_prompt_for_task'
+                'codeio.integrations.service_types.SuggestedTask.get_prompt_for_task'
             ) as mock_get_prompt:
                 mock_get_prompt.return_value = (
                     'Please fix the failing checks in PR #123'
@@ -852,7 +852,7 @@ async def test_new_conversation_missing_settings(provider_handler_mock):
     with _patch_store():
         # Mock the create_new_conversation function to raise MissingSettingsError
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to raise MissingSettingsError
             mock_create_conversation.side_effect = MissingSettingsError(
@@ -881,7 +881,7 @@ async def test_new_conversation_invalid_session_api_key(provider_handler_mock):
     with _patch_store():
         # Mock the create_new_conversation function to raise LLMAuthenticationError
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to raise LLMAuthenticationError
             mock_create_conversation.side_effect = LLMAuthenticationError(
@@ -913,7 +913,7 @@ async def test_delete_conversation():
     with _patch_store():
         # Mock the ConversationStoreImpl.get_instance
         with patch(
-            'openhands.server.routes.manage_conversations.ConversationStoreImpl.get_instance'
+            'codeio.server.routes.manage_conversations.ConversationStoreImpl.get_instance'
         ) as mock_get_instance:
             # Create a mock conversation store
             mock_store = MagicMock()
@@ -952,14 +952,14 @@ async def test_delete_conversation():
 
             # Mock the conversation manager
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
                 mock_manager.is_agent_loop_running = AsyncMock(return_value=False)
                 mock_manager.get_connections = AsyncMock(return_value={})
 
                 # Mock the runtime class
                 with patch(
-                    'openhands.server.routes.manage_conversations.get_runtime_cls'
+                    'codeio.server.routes.manage_conversations.get_runtime_cls'
                 ) as mock_get_runtime_cls:
                     mock_runtime_cls = MagicMock()
                     mock_runtime_cls.delete = AsyncMock()
@@ -999,21 +999,21 @@ async def test_delete_v1_conversation_success():
 
     # Mock the app conversation service
     with patch(
-        'openhands.server.routes.manage_conversations.app_conversation_service_dependency'
+        'codeio.server.routes.manage_conversations.app_conversation_service_dependency'
     ) as mock_service_dep:
         mock_service = MagicMock()
         mock_service_dep.return_value = mock_service
 
         # Mock the app conversation info service
         with patch(
-            'openhands.server.routes.manage_conversations.app_conversation_info_service_dependency'
+            'codeio.server.routes.manage_conversations.app_conversation_info_service_dependency'
         ) as mock_info_service_dep:
             mock_info_service = MagicMock()
             mock_info_service_dep.return_value = mock_info_service
 
             # Mock the sandbox service
             with patch(
-                'openhands.server.routes.manage_conversations.sandbox_service_dependency'
+                'codeio.server.routes.manage_conversations.sandbox_service_dependency'
             ) as mock_sandbox_service_dep:
                 mock_sandbox_service = MagicMock()
                 mock_sandbox_service_dep.return_value = mock_sandbox_service
@@ -1071,21 +1071,21 @@ async def test_delete_v1_conversation_not_found():
 
     # Mock the app conversation service
     with patch(
-        'openhands.server.routes.manage_conversations.app_conversation_service_dependency'
+        'codeio.server.routes.manage_conversations.app_conversation_service_dependency'
     ) as mock_service_dep:
         mock_service = MagicMock()
         mock_service_dep.return_value = mock_service
 
         # Mock the app conversation info service
         with patch(
-            'openhands.server.routes.manage_conversations.app_conversation_info_service_dependency'
+            'codeio.server.routes.manage_conversations.app_conversation_info_service_dependency'
         ) as mock_info_service_dep:
             mock_info_service = MagicMock()
             mock_info_service_dep.return_value = mock_info_service
 
             # Mock the sandbox service
             with patch(
-                'openhands.server.routes.manage_conversations.sandbox_service_dependency'
+                'codeio.server.routes.manage_conversations.sandbox_service_dependency'
             ) as mock_sandbox_service_dep:
                 mock_sandbox_service = MagicMock()
                 mock_sandbox_service_dep.return_value = mock_sandbox_service
@@ -1131,14 +1131,14 @@ async def test_delete_v1_conversation_invalid_uuid():
 
     # Mock the app conversation service
     with patch(
-        'openhands.server.routes.manage_conversations.app_conversation_service_dependency'
+        'codeio.server.routes.manage_conversations.app_conversation_service_dependency'
     ) as mock_service_dep:
         mock_service = MagicMock()
         mock_service_dep.return_value = mock_service
 
         # Mock V0 conversation logic
         with patch(
-            'openhands.server.routes.manage_conversations.ConversationStoreImpl.get_instance'
+            'codeio.server.routes.manage_conversations.ConversationStoreImpl.get_instance'
         ) as mock_get_instance:
             mock_store = MagicMock()
             mock_store.get_metadata = AsyncMock(
@@ -1156,14 +1156,14 @@ async def test_delete_v1_conversation_invalid_uuid():
 
             # Mock conversation manager
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
                 mock_manager.is_agent_loop_running = AsyncMock(return_value=False)
                 mock_manager.get_connections = AsyncMock(return_value={})
 
                 # Mock runtime
                 with patch(
-                    'openhands.server.routes.manage_conversations.get_runtime_cls'
+                    'codeio.server.routes.manage_conversations.get_runtime_cls'
                 ) as mock_get_runtime_cls:
                     mock_runtime_cls = MagicMock()
                     mock_runtime_cls.delete = AsyncMock()
@@ -1171,14 +1171,14 @@ async def test_delete_v1_conversation_invalid_uuid():
 
                     # Mock the app conversation info service
                     with patch(
-                        'openhands.server.routes.manage_conversations.app_conversation_info_service_dependency'
+                        'codeio.server.routes.manage_conversations.app_conversation_info_service_dependency'
                     ) as mock_info_service_dep:
                         mock_info_service = MagicMock()
                         mock_info_service_dep.return_value = mock_info_service
 
                         # Mock the sandbox service
                         with patch(
-                            'openhands.server.routes.manage_conversations.sandbox_service_dependency'
+                            'codeio.server.routes.manage_conversations.sandbox_service_dependency'
                         ) as mock_sandbox_service_dep:
                             mock_sandbox_service = MagicMock()
                             mock_sandbox_service_dep.return_value = mock_sandbox_service
@@ -1219,21 +1219,21 @@ async def test_delete_v1_conversation_service_error():
 
     # Mock the app conversation service
     with patch(
-        'openhands.server.routes.manage_conversations.app_conversation_service_dependency'
+        'codeio.server.routes.manage_conversations.app_conversation_service_dependency'
     ) as mock_service_dep:
         mock_service = MagicMock()
         mock_service_dep.return_value = mock_service
 
         # Mock the app conversation info service
         with patch(
-            'openhands.server.routes.manage_conversations.app_conversation_info_service_dependency'
+            'codeio.server.routes.manage_conversations.app_conversation_info_service_dependency'
         ) as mock_info_service_dep:
             mock_info_service = MagicMock()
             mock_info_service_dep.return_value = mock_info_service
 
             # Mock the sandbox service
             with patch(
-                'openhands.server.routes.manage_conversations.sandbox_service_dependency'
+                'codeio.server.routes.manage_conversations.sandbox_service_dependency'
             ) as mock_sandbox_service_dep:
                 mock_sandbox_service = MagicMock()
                 mock_sandbox_service_dep.return_value = mock_sandbox_service
@@ -1245,7 +1245,7 @@ async def test_delete_v1_conversation_service_error():
 
                 # Mock V0 conversation logic as fallback
                 with patch(
-                    'openhands.server.routes.manage_conversations.ConversationStoreImpl.get_instance'
+                    'codeio.server.routes.manage_conversations.ConversationStoreImpl.get_instance'
                 ) as mock_get_instance:
                     mock_store = MagicMock()
                     mock_store.get_metadata = AsyncMock(
@@ -1267,7 +1267,7 @@ async def test_delete_v1_conversation_service_error():
 
                     # Mock conversation manager
                     with patch(
-                        'openhands.server.routes.manage_conversations.conversation_manager'
+                        'codeio.server.routes.manage_conversations.conversation_manager'
                     ) as mock_manager:
                         mock_manager.is_agent_loop_running = AsyncMock(
                             return_value=False
@@ -1276,7 +1276,7 @@ async def test_delete_v1_conversation_service_error():
 
                         # Mock runtime
                         with patch(
-                            'openhands.server.routes.manage_conversations.get_runtime_cls'
+                            'codeio.server.routes.manage_conversations.get_runtime_cls'
                         ) as mock_get_runtime_cls:
                             mock_runtime_cls = MagicMock()
                             mock_runtime_cls.delete = AsyncMock()
@@ -1318,21 +1318,21 @@ async def test_delete_v1_conversation_with_agent_server():
 
     # Mock the app conversation service
     with patch(
-        'openhands.server.routes.manage_conversations.app_conversation_service_dependency'
+        'codeio.server.routes.manage_conversations.app_conversation_service_dependency'
     ) as mock_service_dep:
         mock_service = MagicMock()
         mock_service_dep.return_value = mock_service
 
         # Mock the app conversation info service
         with patch(
-            'openhands.server.routes.manage_conversations.app_conversation_info_service_dependency'
+            'codeio.server.routes.manage_conversations.app_conversation_info_service_dependency'
         ) as mock_info_service_dep:
             mock_info_service = MagicMock()
             mock_info_service_dep.return_value = mock_info_service
 
             # Mock the sandbox service
             with patch(
-                'openhands.server.routes.manage_conversations.sandbox_service_dependency'
+                'codeio.server.routes.manage_conversations.sandbox_service_dependency'
             ) as mock_sandbox_service_dep:
                 mock_sandbox_service = MagicMock()
                 mock_sandbox_service_dep.return_value = mock_sandbox_service
@@ -1388,7 +1388,7 @@ async def test_new_conversation_with_bearer_auth(provider_handler_mock):
     with _patch_store():
         # Mock the create_new_conversation function
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -1426,7 +1426,7 @@ async def test_new_conversation_with_null_repository():
     with _patch_store():
         # Mock the create_new_conversation function
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -1468,7 +1468,7 @@ async def test_new_conversation_with_provider_authentication_error(
     with _patch_store():
         # Mock the create_new_conversation function
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = 'test_conversation_id'
@@ -1519,7 +1519,7 @@ async def test_new_conversation_with_create_microagent(provider_handler_mock):
     with _patch_store():
         # Mock the create_new_conversation function directly
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -1578,7 +1578,7 @@ async def test_new_conversation_with_create_microagent_repository_override(
     with _patch_store():
         # Mock the create_new_conversation function directly
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -1635,7 +1635,7 @@ async def test_new_conversation_with_create_microagent_minimal(provider_handler_
     with _patch_store():
         # Mock the create_new_conversation function directly
         with patch(
-            'openhands.server.routes.manage_conversations.create_new_conversation'
+            'codeio.server.routes.manage_conversations.create_new_conversation'
         ) as mock_create_conversation:
             # Set up the mock to return a conversation ID
             mock_create_conversation.return_value = MagicMock(
@@ -1689,11 +1689,11 @@ async def test_search_conversations_with_pr_number():
     """Test searching conversations includes pr_number field in response."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1709,7 +1709,7 @@ async def test_search_conversations_with_pr_number():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -1766,11 +1766,11 @@ async def test_search_conversations_with_empty_pr_number():
     """Test searching conversations with empty pr_number field."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1786,7 +1786,7 @@ async def test_search_conversations_with_empty_pr_number():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -1843,11 +1843,11 @@ async def test_search_conversations_with_single_pr_number():
     """Test searching conversations with single PR number."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1863,7 +1863,7 @@ async def test_search_conversations_with_single_pr_number():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -1935,7 +1935,7 @@ async def test_get_conversation_with_pr_number():
 
         # Mock the conversation manager
         with patch(
-            'openhands.server.routes.manage_conversations.conversation_manager'
+            'codeio.server.routes.manage_conversations.conversation_manager'
         ) as mock_manager:
             mock_manager.is_agent_loop_running = AsyncMock(return_value=False)
             mock_manager.get_connections = AsyncMock(return_value={})
@@ -1964,11 +1964,11 @@ async def test_search_conversations_multiple_with_pr_numbers():
     """Test searching conversations with multiple conversations having different PR numbers."""
     with _patch_store():
         with patch(
-            'openhands.server.routes.manage_conversations.config'
+            'codeio.server.routes.manage_conversations.config'
         ) as mock_config:
             mock_config.conversation_max_age_seconds = 864000  # 10 days
             with patch(
-                'openhands.server.routes.manage_conversations.conversation_manager'
+                'codeio.server.routes.manage_conversations.conversation_manager'
             ) as mock_manager:
 
                 async def mock_get_running_agent_loops(*args, **kwargs):
@@ -1984,7 +1984,7 @@ async def test_search_conversations_multiple_with_pr_numbers():
                 mock_manager.get_connections = mock_get_connections
                 mock_manager.get_agent_loop_info = get_agent_loop_info
                 with patch(
-                    'openhands.server.routes.manage_conversations.datetime'
+                    'codeio.server.routes.manage_conversations.datetime'
                 ) as mock_datetime:
                     mock_datetime.now.return_value = datetime.fromisoformat(
                         '2025-01-01T00:00:00+00:00'
@@ -2563,14 +2563,14 @@ async def test_read_conversation_file_success():
     )
 
     with patch(
-        'openhands.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
+        'codeio.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
     ) as mock_workspace_class:
         mock_workspace = MagicMock(spec=AsyncRemoteWorkspace)
         mock_workspace.file_download = AsyncMock(return_value=mock_file_result)
         mock_workspace_class.return_value = mock_workspace
 
         with patch(
-            'openhands.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
+            'codeio.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
         ) as mock_tempfile:
             mock_temp_file = MagicMock()
             mock_temp_file.name = temp_file_path
@@ -2588,7 +2588,7 @@ async def test_read_conversation_file_success():
                 mock_open.return_value.__exit__ = MagicMock(return_value=None)
 
                 with patch(
-                    'openhands.app_server.app_conversation.app_conversation_router.os.unlink'
+                    'codeio.app_server.app_conversation.app_conversation_router.os.unlink'
                 ) as mock_unlink:
                     # Call the endpoint
                     result = await read_conversation_file(
@@ -2693,14 +2693,14 @@ async def test_read_conversation_file_different_path():
     )
 
     with patch(
-        'openhands.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
+        'codeio.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
     ) as mock_workspace_class:
         mock_workspace = MagicMock(spec=AsyncRemoteWorkspace)
         mock_workspace.file_download = AsyncMock(return_value=mock_file_result)
         mock_workspace_class.return_value = mock_workspace
 
         with patch(
-            'openhands.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
+            'codeio.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
         ) as mock_tempfile:
             mock_temp_file = MagicMock()
             mock_temp_file.name = temp_file_path
@@ -2718,7 +2718,7 @@ async def test_read_conversation_file_different_path():
                 mock_open.return_value.__exit__ = MagicMock(return_value=None)
 
                 with patch(
-                    'openhands.app_server.app_conversation.app_conversation_router.os.unlink'
+                    'codeio.app_server.app_conversation.app_conversation_router.os.unlink'
                 ) as mock_unlink:
                     # Call the endpoint
                     result = await read_conversation_file(
@@ -3167,14 +3167,14 @@ async def test_read_conversation_file_file_not_found():
     )
 
     with patch(
-        'openhands.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
+        'codeio.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
     ) as mock_workspace_class:
         mock_workspace = MagicMock(spec=AsyncRemoteWorkspace)
         mock_workspace.file_download = AsyncMock(return_value=mock_file_result)
         mock_workspace_class.return_value = mock_workspace
 
         with patch(
-            'openhands.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
+            'codeio.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
         ) as mock_tempfile:
             mock_temp_file = MagicMock()
             mock_temp_file.name = temp_file_path
@@ -3184,7 +3184,7 @@ async def test_read_conversation_file_file_not_found():
             mock_tempfile.return_value.__exit__ = MagicMock(return_value=None)
 
             with patch(
-                'openhands.app_server.app_conversation.app_conversation_router.os.unlink'
+                'codeio.app_server.app_conversation.app_conversation_router.os.unlink'
             ) as mock_unlink:
                 # Call the endpoint
                 result = await read_conversation_file(
@@ -3270,14 +3270,14 @@ async def test_read_conversation_file_empty_file():
     )
 
     with patch(
-        'openhands.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
+        'codeio.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
     ) as mock_workspace_class:
         mock_workspace = MagicMock(spec=AsyncRemoteWorkspace)
         mock_workspace.file_download = AsyncMock(return_value=mock_file_result)
         mock_workspace_class.return_value = mock_workspace
 
         with patch(
-            'openhands.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
+            'codeio.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
         ) as mock_tempfile:
             mock_temp_file = MagicMock()
             mock_temp_file.name = temp_file_path
@@ -3295,7 +3295,7 @@ async def test_read_conversation_file_empty_file():
                 mock_open.return_value.__exit__ = MagicMock(return_value=None)
 
                 with patch(
-                    'openhands.app_server.app_conversation.app_conversation_router.os.unlink'
+                    'codeio.app_server.app_conversation.app_conversation_router.os.unlink'
                 ) as mock_unlink:
                     # Call the endpoint
                     result = await read_conversation_file(
@@ -3374,7 +3374,7 @@ async def test_read_conversation_file_command_exception():
     temp_file_path = '/tmp/test_file_exception'
 
     with patch(
-        'openhands.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
+        'codeio.app_server.app_conversation.app_conversation_router.AsyncRemoteWorkspace'
     ) as mock_workspace_class:
         mock_workspace = MagicMock(spec=AsyncRemoteWorkspace)
         mock_workspace.file_download = AsyncMock(
@@ -3383,7 +3383,7 @@ async def test_read_conversation_file_command_exception():
         mock_workspace_class.return_value = mock_workspace
 
         with patch(
-            'openhands.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
+            'codeio.app_server.app_conversation.app_conversation_router.tempfile.NamedTemporaryFile'
         ) as mock_tempfile:
             mock_temp_file = MagicMock()
             mock_temp_file.name = temp_file_path
@@ -3393,7 +3393,7 @@ async def test_read_conversation_file_command_exception():
             mock_tempfile.return_value.__exit__ = MagicMock(return_value=None)
 
             with patch(
-                'openhands.app_server.app_conversation.app_conversation_router.os.unlink'
+                'codeio.app_server.app_conversation.app_conversation_router.os.unlink'
             ) as mock_unlink:
                 # Call the endpoint
                 result = await read_conversation_file(

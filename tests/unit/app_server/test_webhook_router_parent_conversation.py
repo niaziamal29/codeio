@@ -12,20 +12,20 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from openhands.agent_server.models import ConversationInfo, Success
-from openhands.app_server.app_conversation.app_conversation_models import (
+from codeio.agent_server.models import ConversationInfo, Success
+from codeio.app_server.app_conversation.app_conversation_models import (
     AppConversationInfo,
 )
-from openhands.app_server.app_conversation.sql_app_conversation_info_service import (
+from codeio.app_server.app_conversation.sql_app_conversation_info_service import (
     SQLAppConversationInfoService,
 )
-from openhands.app_server.event_callback.webhook_router import on_conversation_update
-from openhands.app_server.sandbox.sandbox_models import SandboxInfo, SandboxStatus
-from openhands.app_server.user.specifiy_user_context import SpecifyUserContext
-from openhands.app_server.utils.sql_utils import Base
-from openhands.integrations.provider import ProviderType
-from openhands.sdk.conversation.state import ConversationExecutionStatus
-from openhands.storage.data_models.conversation_metadata import ConversationTrigger
+from codeio.app_server.event_callback.webhook_router import on_conversation_update
+from codeio.app_server.sandbox.sandbox_models import SandboxInfo, SandboxStatus
+from codeio.app_server.user.specifiy_user_context import SpecifyUserContext
+from codeio.app_server.utils.sql_utils import Base
+from codeio.integrations.provider import ProviderType
+from codeio.sdk.conversation.state import ConversationExecutionStatus
+from codeio.storage.data_models.conversation_metadata import ConversationTrigger
 
 
 @pytest.fixture
@@ -137,7 +137,7 @@ class TestOnConversationUpdateParentConversationId:
 
         # Act - call on_conversation_update directly with mocked valid_conversation
         with patch(
-            'openhands.app_server.event_callback.webhook_router.valid_conversation',
+            'codeio.app_server.event_callback.webhook_router.valid_conversation',
             return_value=existing_conv,
         ):
             result = await on_conversation_update(
@@ -187,7 +187,7 @@ class TestOnConversationUpdateParentConversationId:
 
         # Act - call on_conversation_update directly with mocked valid_conversation
         with patch(
-            'openhands.app_server.event_callback.webhook_router.valid_conversation',
+            'codeio.app_server.event_callback.webhook_router.valid_conversation',
             return_value=existing_conv,
         ):
             result = await on_conversation_update(
@@ -234,7 +234,7 @@ class TestOnConversationUpdateParentConversationId:
 
         # Act - call on_conversation_update directly with mocked valid_conversation
         with patch(
-            'openhands.app_server.event_callback.webhook_router.valid_conversation',
+            'codeio.app_server.event_callback.webhook_router.valid_conversation',
             return_value=stub_conv,
         ):
             result = await on_conversation_update(
@@ -290,7 +290,7 @@ class TestOnConversationUpdateParentConversationId:
 
         # Act - call on_conversation_update directly with mocked valid_conversation
         with patch(
-            'openhands.app_server.event_callback.webhook_router.valid_conversation',
+            'codeio.app_server.event_callback.webhook_router.valid_conversation',
             return_value=existing_conv,
         ):
             result = await on_conversation_update(
@@ -362,7 +362,7 @@ class TestOnConversationUpdateParentConversationId:
                 existing = initial_conv
 
             with patch(
-                'openhands.app_server.event_callback.webhook_router.valid_conversation',
+                'codeio.app_server.event_callback.webhook_router.valid_conversation',
                 return_value=existing,
             ):
                 result = await on_conversation_update(
@@ -420,7 +420,7 @@ class TestOnConversationUpdateParentConversationId:
 
         # Act - call on_conversation_update directly with mocked valid_conversation
         with patch(
-            'openhands.app_server.event_callback.webhook_router.valid_conversation',
+            'codeio.app_server.event_callback.webhook_router.valid_conversation',
             return_value=existing_conv,
         ):
             result = await on_conversation_update(
@@ -473,7 +473,7 @@ class TestOnConversationUpdateParentConversationId:
 
         # Act - call on_conversation_update directly with mocked valid_conversation
         with patch(
-            'openhands.app_server.event_callback.webhook_router.valid_conversation',
+            'codeio.app_server.event_callback.webhook_router.valid_conversation',
             return_value=existing_conv,
         ):
             result = await on_conversation_update(

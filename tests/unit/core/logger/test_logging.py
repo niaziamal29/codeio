@@ -5,13 +5,13 @@ from unittest.mock import patch
 
 import pytest
 
-from openhands.core.config import LLMConfig, OpenHandsConfig
-from openhands.core.logger import (
+from codeio.core.config import LLMConfig, CodeioConfig
+from codeio.core.logger import (
     LOG_JSON_LEVEL_KEY,
-    OpenHandsLoggerAdapter,
+    CodeioLoggerAdapter,
     json_log_handler,
 )
-from openhands.core.logger import openhands_logger as openhands_logger
+from codeio.core.logger import openhands_logger as openhands_logger
 
 
 @pytest.fixture
@@ -88,7 +88,7 @@ def test_llm_config_attributes_masking(test_handler):
 
 def test_app_config_attributes_masking(test_handler):
     logger, stream = test_handler
-    app_config = OpenHandsConfig(search_api_key='search-xyz789')
+    app_config = CodeioConfig(search_api_key='search-xyz789')
     logger.info(f'App Config: {app_config}')
     log_output = stream.getvalue()
     assert 'github_token' not in log_output
@@ -107,7 +107,7 @@ def test_sensitive_env_vars_masking(test_handler):
         'JWT_SECRET': 'JWT_SECRET_VALUE',
     }
 
-    with patch.dict('openhands.core.logger.os.environ', environ, clear=True):
+    with patch.dict('codeio.core.logger.os.environ', environ, clear=True):
         log_message = ' '.join(f"{attr}='{value}'" for attr, value in environ.items())
         logger.info(log_message)
 
@@ -123,7 +123,7 @@ def test_special_cases_masking(test_handler):
         'SANDBOX_ENV_GITHUB_TOKEN': 'SANDBOX_ENV_GITHUB_TOKEN_VALUE',
     }
 
-    with patch.dict('openhands.core.logger.os.environ', environ, clear=True):
+    with patch.dict('codeio.core.logger.os.environ', environ, clear=True):
         log_message = ' '.join(
             f"{attr}={value} with no single quotes' and something"
             for attr, value in environ.items()
@@ -167,7 +167,7 @@ class TestJsonOutput:
 
     def test_extra_fields_from_adapter(self, json_handler):
         logger, string_io = json_handler
-        subject = OpenHandsLoggerAdapter(logger, extra={'context_field': '..val..'})
+        subject = CodeioLoggerAdapter(logger, extra={'context_field': '..val..'})
         subject.info('Test message', extra={'log_fied': '..val..'})
         output = json.loads(string_io.getvalue())
         del output['timestamp']
@@ -180,7 +180,7 @@ class TestJsonOutput:
 
     def test_extra_fields_from_adapter_can_override(self, json_handler):
         logger, string_io = json_handler
-        subject = OpenHandsLoggerAdapter(logger, extra={'override': 'a'})
+        subject = CodeioLoggerAdapter(logger, extra={'override': 'a'})
         subject.info('Test message', extra={'override': 'b'})
         output = json.loads(string_io.getvalue())
         del output['timestamp']

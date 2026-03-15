@@ -9,14 +9,14 @@ from conftest import (
     _load_runtime,
 )
 
-from openhands.core.logger import openhands_logger as logger
-from openhands.events.action import (
+from codeio.core.logger import openhands_logger as logger
+from codeio.events.action import (
     CmdRunAction,
     FileReadAction,
     FileWriteAction,
     IPythonRunCellAction,
 )
-from openhands.events.observation import (
+from codeio.events.observation import (
     CmdOutputObservation,
     ErrorObservation,
     FileReadObservation,
@@ -57,7 +57,7 @@ def test_simple_cmd_ipython_and_fileop(temp_dir, runtime_cls, run_as_openhands):
     assert obs.content.strip() == (
         'Hello, `World`!\n'
         '[Jupyter current working directory: /workspace]\n'
-        '[Jupyter Python interpreter: /openhands/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
+        '[Jupyter Python interpreter: /codeio/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
     )
 
     # Test read file (file should not exist)
@@ -138,7 +138,7 @@ def test_ipython_multi_user(temp_dir, runtime_cls, run_as_openhands):
         == (
             '/workspace\n'
             '[Jupyter current working directory: /workspace]\n'
-            '[Jupyter Python interpreter: /openhands/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
+            '[Jupyter Python interpreter: /codeio/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
         ).strip()
     )
 
@@ -154,7 +154,7 @@ def test_ipython_multi_user(temp_dir, runtime_cls, run_as_openhands):
         == (
             '[Code executed successfully with no output]\n'
             '[Jupyter current working directory: /workspace]\n'
-            '[Jupyter Python interpreter: /openhands/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
+            '[Jupyter Python interpreter: /codeio/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
         ).strip()
     )
 
@@ -201,7 +201,7 @@ def test_ipython_simple(temp_dir, runtime_cls):
         == (
             '1\n'
             '[Jupyter current working directory: /workspace]\n'
-            '[Jupyter Python interpreter: /openhands/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
+            '[Jupyter Python interpreter: /codeio/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
         ).strip()
     )
 
@@ -291,7 +291,7 @@ def test_ipython_package_install(temp_dir, runtime_cls, run_as_openhands):
     assert obs.content.strip() == (
         '[Code executed successfully with no output]\n'
         '[Jupyter current working directory: /workspace]\n'
-        '[Jupyter Python interpreter: /openhands/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
+        '[Jupyter Python interpreter: /codeio/poetry/openhands-ai-5O4_aCHf-py3.12/bin/python]'
     )
 
     _close_test_runtime(runtime)

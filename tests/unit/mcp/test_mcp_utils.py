@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # Import the module, not the functions directly to avoid circular imports
-import openhands.mcp.utils
-from openhands.core.config.mcp_config import MCPSSEServerConfig, MCPStdioServerConfig
-from openhands.events.action.mcp import MCPAction
-from openhands.events.observation.mcp import MCPObservation
+import codeio.mcp.utils
+from codeio.core.config.mcp_config import MCPSSEServerConfig, MCPStdioServerConfig
+from codeio.events.action.mcp import MCPAction
+from codeio.events.observation.mcp import MCPObservation
 
 
 @pytest.mark.asyncio
@@ -18,7 +18,7 @@ async def test_create_mcp_clients_empty():
 
 
 @pytest.mark.asyncio
-@patch('openhands.mcp.utils.MCPClient')
+@patch('codeio.mcp.utils.MCPClient')
 async def test_create_mcp_clients_success(mock_mcp_client):
     """Test successful creation of MCP clients."""
     # Setup mock
@@ -48,7 +48,7 @@ async def test_create_mcp_clients_success(mock_mcp_client):
 
 
 @pytest.mark.asyncio
-@patch('openhands.mcp.utils.MCPClient')
+@patch('codeio.mcp.utils.MCPClient')
 async def test_create_mcp_clients_connection_failure(mock_mcp_client):
     """Test handling of connection failures when creating MCP clients."""
     # Setup mock
@@ -164,7 +164,7 @@ async def test_call_tool_mcp_success():
 
 
 @pytest.mark.asyncio
-@patch('openhands.mcp.utils.MCPClient')
+@patch('codeio.mcp.utils.MCPClient')
 async def test_create_mcp_clients_stdio_success(mock_mcp_client):
     """Test successful creation of MCP clients with stdio servers."""
     # Setup mock
@@ -202,7 +202,7 @@ async def test_create_mcp_clients_stdio_success(mock_mcp_client):
 
 
 @pytest.mark.asyncio
-@patch('openhands.mcp.utils.MCPClient')
+@patch('codeio.mcp.utils.MCPClient')
 async def test_create_mcp_clients_stdio_connection_failure(mock_mcp_client):
     """Test handling of stdio connection failures when creating MCP clients."""
     # Setup mock
@@ -229,10 +229,10 @@ async def test_create_mcp_clients_stdio_connection_failure(mock_mcp_client):
 
 
 @pytest.mark.asyncio
-@patch('openhands.mcp.utils.create_mcp_clients')
+@patch('codeio.mcp.utils.create_mcp_clients')
 async def test_fetch_mcp_tools_from_config_with_stdio(mock_create_clients):
     """Test fetching MCP tools with stdio servers enabled."""
-    from openhands.core.config.mcp_config import MCPConfig
+    from codeio.core.config.mcp_config import MCPConfig
 
     # Setup mock clients
     mock_client = MagicMock()

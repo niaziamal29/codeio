@@ -13,9 +13,9 @@ from pytest import TempPathFactory
 
 import openhands
 from openhands import __version__ as oh_version
-from openhands.core.logger import openhands_logger as logger
-from openhands.runtime.builder.docker import DockerRuntimeBuilder
-from openhands.runtime.utils.runtime_build import (
+from codeio.core.logger import openhands_logger as logger
+from codeio.runtime.builder.docker import DockerRuntimeBuilder
+from codeio.runtime.utils.runtime_build import (
     BuildFromImageType,
     _generate_dockerfile,
     build_runtime_image,
@@ -89,7 +89,7 @@ def test_prep_build_folder(temp_dir):
             extra_deps=None,
         )
 
-    # make sure that the code (openhands/) and microagents folder were copied
+    # make sure that the code (codeio/) and microagents folder were copied
     assert shutil_mock.copytree.call_count == 2
     assert shutil_mock.copy2.call_count == 2
 
@@ -167,11 +167,11 @@ def test_generate_dockerfile_build_from_scratch():
 
     # Check the update command
     assert (
-        'COPY --chown=openhands:openhands ./code/openhands /openhands/code/openhands'
+        'COPY --chown=openhands:openhands ./code/openhands /codeio/code/openhands'
         in dockerfile_content
     )
     assert (
-        '/openhands/micromamba/bin/micromamba run -n openhands poetry install'
+        '/codeio/micromamba/bin/micromamba run -n openhands poetry install'
         in dockerfile_content
     )
 
@@ -192,7 +192,7 @@ def test_generate_dockerfile_build_from_lock():
 
     # These update commands SHOULD still in the dockerfile
     assert (
-        'COPY --chown=openhands:openhands ./code/openhands /openhands/code/openhands'
+        'COPY --chown=openhands:openhands ./code/openhands /codeio/code/openhands'
         in dockerfile_content
     )
 
@@ -213,7 +213,7 @@ def test_generate_dockerfile_build_from_versioned():
     # this SHOULD exist when build from versioned
     assert 'poetry install' in dockerfile_content
     assert (
-        'COPY --chown=openhands:openhands ./code/openhands /openhands/code/openhands'
+        'COPY --chown=openhands:openhands ./code/openhands /codeio/code/openhands'
         in dockerfile_content
     )
 
@@ -235,7 +235,7 @@ def test_generate_dockerfile_channel_alias(monkeypatch):
     assert 'https://conda.anaconda.org' not in dockerfile_content
     # The micromamba install should use the named channel, not a URL
     install_snippet = (
-        '/openhands/micromamba/bin/micromamba install -n openhands -c conda-forge'
+        '/codeio/micromamba/bin/micromamba install -n openhands -c conda-forge'
     )
     assert install_snippet in dockerfile_content
 
@@ -545,7 +545,7 @@ def live_docker_image():
     RUN mkdir -p /openhands
 
     FROM intermediate AS final
-    RUN echo "Hello, OpenHands!" > /openhands/hello.txt
+    RUN echo "Hello, Codeio!" > /codeio/hello.txt
     """
 
     with tempfile.TemporaryDirectory() as temp_dir:

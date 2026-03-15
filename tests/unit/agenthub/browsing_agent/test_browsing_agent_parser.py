@@ -1,6 +1,6 @@
 import pytest
 
-from openhands.agenthub.browsing_agent.response_parser import (
+from codeio.agenthub.browsing_agent.response_parser import (
     BrowseInteractiveAction,
     BrowsingResponseParser,
 )

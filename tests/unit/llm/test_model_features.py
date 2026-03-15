@@ -1,6 +1,6 @@
 import pytest
 
-from openhands.llm.model_features import (
+from codeio.llm.model_features import (
     ModelFeatures,
     get_features,
     model_matches,

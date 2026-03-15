@@ -4,10 +4,10 @@ from io import StringIO
 
 import pytest
 
-from openhands.core.config import (
+from codeio.core.config import (
     AgentConfig,
     LLMConfig,
-    OpenHandsConfig,
+    CodeioConfig,
     finalize_config,
     get_agent_config_arg,
     get_llm_config_arg,
@@ -15,13 +15,13 @@ from openhands.core.config import (
     load_from_toml,
     load_openhands_config,
 )
-from openhands.core.config.condenser_config import (
+from codeio.core.config.condenser_config import (
     ConversationWindowCondenserConfig,
     LLMSummarizingCondenserConfig,
     NoOpCondenserConfig,
     RecentEventsCondenserConfig,
 )
-from openhands.core.logger import openhands_logger
+from codeio.core.logger import openhands_logger
 
 
 @pytest.fixture
@@ -49,26 +49,26 @@ def temp_toml_file(tmp_path):
 
 @pytest.fixture
 def default_config(monkeypatch):
-    # Fixture to provide a default OpenHandsConfig instance
-    yield OpenHandsConfig()
+    # Fixture to provide a default CodeioConfig instance
+    yield CodeioConfig()
 
 
 def test_compat_env_to_config(monkeypatch, setup_env):
     # Use `monkeypatch` to set environment variables for this specific test
-    monkeypatch.setenv('SANDBOX_VOLUMES', '/repos/openhands/workspace:/workspace:rw')
+    monkeypatch.setenv('SANDBOX_VOLUMES', '/repos/codeio/workspace:/workspace:rw')
     monkeypatch.setenv('LLM_API_KEY', 'sk-proj-rgMV0...')
     monkeypatch.setenv('LLM_MODEL', 'gpt-4o')
     monkeypatch.setenv('DEFAULT_AGENT', 'CodeActAgent')
     monkeypatch.setenv('SANDBOX_TIMEOUT', '10')
 
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     load_from_env(config, os.environ)
     finalize_config(config)
 
-    assert config.sandbox.volumes == '/repos/openhands/workspace:/workspace:rw'
+    assert config.sandbox.volumes == '/repos/codeio/workspace:/workspace:rw'
     # Check that the old parameters are set for backward compatibility
-    assert config.workspace_base == os.path.abspath('/repos/openhands/workspace')
-    assert config.workspace_mount_path == os.path.abspath('/repos/openhands/workspace')
+    assert config.workspace_base == os.path.abspath('/repos/codeio/workspace')
+    assert config.workspace_mount_path == os.path.abspath('/repos/codeio/workspace')
     assert config.workspace_mount_path_in_sandbox == '/workspace'
     assert isinstance(config.get_llm_config(), LLMConfig)
     assert config.get_llm_config().api_key.get_secret_value() == 'sk-proj-rgMV0...'
@@ -396,7 +396,7 @@ security_analyzer = "semgrep"
 
 def test_security_config_from_dict():
     """Test creating SecurityConfig instance from dictionary."""
-    from openhands.core.config.security_config import SecurityConfig
+    from codeio.core.config.security_config import SecurityConfig
 
     # Test with all fields
     config_dict = {
@@ -417,7 +417,7 @@ def test_defaults_dict_after_updates(default_config):
     assert initial_defaults['workspace_mount_path']['default'] is None
     assert initial_defaults['default_agent']['default'] == 'CodeActAgent'
 
-    updated_config = OpenHandsConfig()
+    updated_config = CodeioConfig()
     updated_config.get_llm_config().api_key = 'updated-api-key'
     updated_config.get_llm_config('llm').api_key = 'updated-api-key'
     updated_config.get_llm_config_from_agent('agent').api_key = 'updated-api-key'
@@ -565,7 +565,7 @@ def test_load_from_toml_partial_invalid(default_config, temp_toml_file, caplog):
 debug = true
 
 [llm]
-# Not set in `openhands/core/schema/config.py`
+# Not set in `codeio/core/schema/config.py`
 invalid_field = "test"
 model = "gpt-4"
 
@@ -686,7 +686,7 @@ def test_sandbox_volumes_with_workspace_not_first(default_config):
 
 def test_agent_config_condenser_with_no_enabled():
     """Test default agent condenser with enable_default_condenser=False."""
-    config = OpenHandsConfig(enable_default_condenser=False)
+    config = CodeioConfig(enable_default_condenser=False)
     agent_config = config.get_agent_config()
     assert isinstance(agent_config.condenser, ConversationWindowCondenserConfig)
 
@@ -733,7 +733,7 @@ max_events = 15
     assert agent_config.condenser.max_events == 15
 
     # We can also verify the function works directly
-    from openhands.core.config.condenser_config import (
+    from codeio.core.config.condenser_config import (
         condenser_config_from_toml_section,
     )
 
@@ -775,7 +775,7 @@ max_size = 50
     assert agent_config.condenser.llm_config.model == 'gpt-4'
 
     # Test the condenser config with the LLM reference
-    from openhands.core.config.condenser_config import (
+    from codeio.core.config.condenser_config import (
         condenser_config_from_toml_section,
     )
 
@@ -812,7 +812,7 @@ max_size = 50
     load_from_toml(default_config, temp_toml_file)
 
     # Test the condenser config with a missing LLM reference
-    from openhands.core.config.condenser_config import (
+    from codeio.core.config.condenser_config import (
         condenser_config_from_toml_section,
     )
 
@@ -843,7 +843,7 @@ type = "invalid_type"
     load_from_toml(default_config, temp_toml_file)
 
     # Test the condenser config with an invalid type
-    from openhands.core.config.condenser_config import (
+    from codeio.core.config.condenser_config import (
         condenser_config_from_toml_section,
     )
 
@@ -870,7 +870,7 @@ max_events = 0   # Invalid: must be >= 1
     load_from_toml(default_config, temp_toml_file)
 
     # Test the condenser config with validation errors
-    from openhands.core.config.condenser_config import (
+    from codeio.core.config.condenser_config import (
         condenser_config_from_toml_section,
     )
 
@@ -994,8 +994,8 @@ def test_api_keys_repr_str():
                 f"Unexpected attribute '{attr_name}' contains 'token' in AgentConfig"
             )
 
-    # Test OpenHandsConfig
-    app_config = OpenHandsConfig(
+    # Test CodeioConfig
+    app_config = CodeioConfig(
         llms={'llm': llm_config},
         agents={'agent': agent_config},
         search_api_key='my_search_api_key',
@@ -1004,21 +1004,21 @@ def test_api_keys_repr_str():
     assert 'my_search_api_key' not in repr(app_config)
     assert 'my_search_api_key' not in str(app_config)
 
-    # Check that no other attrs in OpenHandsConfig have 'key' or 'token' in their name
+    # Check that no other attrs in CodeioConfig have 'key' or 'token' in their name
     # This will fail when new attrs are added, and attract attention
     known_key_token_attrs_app = [
         'search_api_key',
     ]
-    for attr_name in OpenHandsConfig.model_fields.keys():
+    for attr_name in CodeioConfig.model_fields.keys():
         if (
             not attr_name.startswith('__')
             and attr_name not in known_key_token_attrs_app
         ):
             assert 'key' not in attr_name.lower(), (
-                f"Unexpected attribute '{attr_name}' contains 'key' in OpenHandsConfig"
+                f"Unexpected attribute '{attr_name}' contains 'key' in CodeioConfig"
             )
             assert 'token' not in attr_name.lower() or 'tokens' in attr_name.lower(), (
-                f"Unexpected attribute '{attr_name}' contains 'token' in OpenHandsConfig"
+                f"Unexpected attribute '{attr_name}' contains 'token' in CodeioConfig"
             )
 
 
@@ -1029,7 +1029,7 @@ max_iterations = 42
 max_budget_per_task = 4.7
 """
 
-    config = OpenHandsConfig()
+    config = CodeioConfig()
     with open(temp_toml_file, 'w') as f:
         f.write(temp_toml)
 
@@ -1140,7 +1140,7 @@ enable_prompt_extensions = false
 
 def test_agent_config_from_toml_section():
     """Test that AgentConfig.from_toml_section correctly parses agent configurations from TOML."""
-    from openhands.core.config.agent_config import AgentConfig
+    from codeio.core.config.agent_config import AgentConfig
 
     # Test with base config and custom configs
     agent_section = {
@@ -1176,7 +1176,7 @@ def test_agent_config_from_toml_section():
 
 def test_agent_config_from_toml_section_with_invalid_base():
     """Test that AgentConfig.from_toml_section handles invalid base configurations gracefully."""
-    from openhands.core.config.agent_config import AgentConfig
+    from codeio.core.config.agent_config import AgentConfig
 
     # Test with invalid base config but valid custom configs
     agent_section = {

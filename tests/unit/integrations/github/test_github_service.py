@@ -4,15 +4,15 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
-from openhands.integrations.github.github_service import GitHubService
-from openhands.integrations.service_types import (
+from codeio.integrations.github.github_service import GitHubService
+from codeio.integrations.service_types import (
     AuthenticationError,
     OwnerType,
     ProviderType,
     Repository,
     User,
 )
-from openhands.server.types import AppMode
+from codeio.server.types import AppMode
 
 
 @pytest.mark.asyncio
@@ -262,11 +262,11 @@ async def test_github_search_repositories_with_organizations():
         'items': [
             {
                 'id': 1,
-                'name': 'OpenHands',
-                'full_name': 'All-Hands-AI/OpenHands',
+                'name': 'Codeio',
+                'full_name': 'All-Hands-AI/Codeio',
                 'private': False,
-                'html_url': 'https://github.com/All-Hands-AI/OpenHands',
-                'clone_url': 'https://github.com/All-Hands-AI/OpenHands.git',
+                'html_url': 'https://github.com/All-Hands-AI/Codeio',
+                'clone_url': 'https://github.com/All-Hands-AI/Codeio.git',
                 'pushed_at': '2023-01-01T00:00:00Z',
                 'owner': {'login': 'All-Hands-AI', 'type': 'Organization'},
             }
@@ -316,7 +316,7 @@ async def test_github_search_repositories_with_organizations():
 
         # Verify repositories are returned (3 copies since each call returns the same mock response)
         assert len(repositories) == 3
-        assert all(repo.full_name == 'All-Hands-AI/OpenHands' for repo in repositories)
+        assert all(repo.full_name == 'All-Hands-AI/Codeio' for repo in repositories)
 
 
 @pytest.mark.asyncio
@@ -408,7 +408,7 @@ async def test_github_service_graphql_url_enterprise_server():
 @pytest.mark.asyncio
 async def test_resolve_primary_email_selects_primary_verified():
     """_resolve_primary_email returns the email marked primary and verified."""
-    from openhands.integrations.github.service.base import GitHubMixinBase
+    from codeio.integrations.github.service.base import GitHubMixinBase
 
     emails = [
         {'email': 'secondary@example.com', 'primary': False, 'verified': True},
@@ -422,7 +422,7 @@ async def test_resolve_primary_email_selects_primary_verified():
 @pytest.mark.asyncio
 async def test_resolve_primary_email_returns_none_when_no_primary():
     """_resolve_primary_email returns None when no email is marked primary."""
-    from openhands.integrations.github.service.base import GitHubMixinBase
+    from codeio.integrations.github.service.base import GitHubMixinBase
 
     emails = [
         {'email': 'a@example.com', 'primary': False, 'verified': True},
@@ -435,7 +435,7 @@ async def test_resolve_primary_email_returns_none_when_no_primary():
 @pytest.mark.asyncio
 async def test_resolve_primary_email_returns_none_when_primary_not_verified():
     """_resolve_primary_email returns None when primary email is not verified."""
-    from openhands.integrations.github.service.base import GitHubMixinBase
+    from codeio.integrations.github.service.base import GitHubMixinBase
 
     emails = [
         {'email': 'primary@example.com', 'primary': True, 'verified': False},
@@ -448,7 +448,7 @@ async def test_resolve_primary_email_returns_none_when_primary_not_verified():
 @pytest.mark.asyncio
 async def test_resolve_primary_email_returns_none_for_empty_list():
     """_resolve_primary_email returns None for an empty list."""
-    from openhands.integrations.github.service.base import GitHubMixinBase
+    from codeio.integrations.github.service.base import GitHubMixinBase
 
     result = GitHubMixinBase._resolve_primary_email([])
     assert result is None

@@ -10,9 +10,9 @@ from types import MappingProxyType
 import pytest
 from pydantic import SecretStr
 
-from openhands.integrations.provider import CustomSecret, ProviderToken, ProviderType
-from openhands.server.session.conversation_init_data import ConversationInitData
-from openhands.storage.data_models.settings import Settings
+from codeio.integrations.provider import CustomSecret, ProviderToken, ProviderType
+from codeio.server.session.conversation_init_data import ConversationInitData
+from codeio.storage.data_models.settings import Settings
 
 
 @pytest.fixture
@@ -286,7 +286,7 @@ def test_conversation_init_data_no_pydantic_frozen_field_warning():
         # Re-import to trigger any warnings during model definition
         import importlib
 
-        import openhands.server.session.conversation_init_data
+        import codeio.server.session.conversation_init_data
 
         importlib.reload(openhands.server.session.conversation_init_data)
 
