@@ -1,0 +1,10 @@
+[project]
+name = "codeio-qa-engine"
+version = "0.1.0"
+description = "QA agent with Playwright-based automated testing"
+requires-python = ">=3.12"
+dependencies = ["playwright>=1.40"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,15 @@
+{
+  "name": "codeio",
+  "private": true,
+  "scripts": {
+    "dev:web": "pnpm --filter @codeio/web dev",
+    "dev:api": "pnpm --filter @codeio/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
