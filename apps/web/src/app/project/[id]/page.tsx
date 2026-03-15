@@ -1,54 +1,43 @@
 "use client";
 
+import { useParams } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
 import { useUIModeStore } from "@/stores/ui-mode";
+import { ModeToggle } from "@/components/shared/mode-toggle";
 import { DescribeView } from "@/components/describe-mode/describe-view";
 import { PowerView } from "@/components/power-mode/power-view";
-import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/error-boundary";
-import Link from "next/link";
 
 export default function ProjectPage() {
-  const { mode, toggleMode } = useUIModeStore();
+  const params = useParams();
+  const projectId = params.id as string;
+  const mode = useUIModeStore((s) => s.mode);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-screen">
       {/* Project Header */}
-      <header className="border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+      <header className="h-16 border-b border-slate-800 px-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-sm text-slate-400 hover:text-slate-200">
-            &larr; Dashboard
-          </Link>
-          <h1 className="text-lg font-semibold">
+          <a href="/dashboard" className="text-lg font-bold">
             Code<span className="text-brand-primary">io</span>
-          </h1>
+          </a>
+          <span className="text-slate-600">|</span>
+          <span className="text-sm text-slate-400 truncate max-w-[200px]">
+            Project {projectId.slice(0, 8)}...
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={mode === "describe" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => toggleMode()}
-            className={mode === "describe" ? "bg-brand-primary" : ""}
-          >
-            Describe
-          </Button>
-          <Button
-            variant={mode === "power" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => toggleMode()}
-            className={mode === "power" ? "bg-brand-primary" : ""}
-          >
-            Power
-          </Button>
+
+        <div className="flex items-center gap-4">
+          <ModeToggle />
+          <UserButton />
         </div>
       </header>
 
-      {/* Content */}
+      {/* Mode Content */}
       <ErrorBoundary>
-        {mode === "describe" ? (
-          <DescribeView />
-        ) : (
-          <PowerView />
-        )}
+        <div className="flex-1 min-h-0">
+          {mode === "describe" ? <DescribeView /> : <PowerView />}
+        </div>
       </ErrorBoundary>
     </div>
   );
