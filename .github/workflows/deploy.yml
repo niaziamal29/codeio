@@ -1,0 +1,43 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @codeio/web build
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.API_URL }}
+
+      - name: Build and push Docker images
+        run: |
+          docker build -t ghcr.io/niaziamal29/codeio-web:${{ github.sha }} -f apps/web/Dockerfile .
+          docker build -t ghcr.io/niaziamal29/codeio-api:${{ github.sha }} -f apps/api/Dockerfile .
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/niaziamal29/codeio-web:${{ github.sha }}
+          docker push ghcr.io/niaziamal29/codeio-api:${{ github.sha }}
+
+      - name: Deploy to staging (Helm)
+        run: |
+          helm upgrade --install codeio-staging infrastructure/helm/codeio \
+            --set web.image.tag=${{ github.sha }} \
+            --set api.image.tag=${{ github.sha }} \
+            --namespace codeio-staging \
+            --create-namespace
