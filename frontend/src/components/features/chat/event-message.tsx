@@ -1,16 +1,16 @@
 import React from "react";
-import { OpenHandsAction } from "#/types/core/actions";
+import { CodeioAction } from "#/types/core/actions";
 import {
   isUserMessage,
   isErrorObservation,
   isAssistantMessage,
-  isOpenHandsAction,
+  isCodeioAction,
   isFinishAction,
   isRejectObservation,
   isMcpObservation,
   isTaskTrackingObservation,
 } from "#/types/core/guards";
-import { OpenHandsObservation } from "#/types/core/observations";
+import { CodeioObservation } from "#/types/core/observations";
 import { MicroagentStatus } from "#/types/microagent-status";
 import { useConfig } from "#/hooks/query/use-config";
 import { useFeedbackExists } from "#/hooks/query/use-feedback-exists";
@@ -26,7 +26,7 @@ import {
 } from "./event-message-components";
 
 interface EventMessageProps {
-  event: OpenHandsAction | OpenHandsObservation;
+  event: CodeioAction | CodeioObservation;
   hasObservationPair: boolean;
   isAwaitingUserConfirmation: boolean;
   isLastMessage: boolean;
@@ -81,8 +81,8 @@ export function EventMessage({
     return <ErrorEventMessage event={event} {...commonProps} />;
   }
 
-  // Observation pairs with OpenHands actions
-  if (hasObservationPair && isOpenHandsAction(event)) {
+  // Observation pairs with Codeio actions
+  if (hasObservationPair && isCodeioAction(event)) {
     return (
       <ObservationPairEventMessage
         event={event}

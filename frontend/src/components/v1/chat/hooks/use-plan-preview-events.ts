@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { OpenHandsEvent } from "#/types/v1/core";
+import { CodeioEvent } from "#/types/v1/core";
 import {
   isUserMessageEvent,
   isPlanningFileEditorObservationEvent,
@@ -13,9 +13,9 @@ import {
  * @param events - The full list of events
  * @returns Array of phases, where each phase is an array of events
  */
-function groupEventsByPhase(events: OpenHandsEvent[]): OpenHandsEvent[][] {
-  const phases: OpenHandsEvent[][] = [];
-  let currentPhase: OpenHandsEvent[] = [];
+function groupEventsByPhase(events: CodeioEvent[]): CodeioEvent[][] {
+  const phases: CodeioEvent[][] = [];
+  let currentPhase: CodeioEvent[] = [];
 
   for (const event of events) {
     if (isUserMessageEvent(event)) {
@@ -45,7 +45,7 @@ function groupEventsByPhase(events: OpenHandsEvent[]): OpenHandsEvent[][] {
  * @returns The event ID of the last PlanningFileEditorObservation, or null
  */
 function findLastPlanningObservationInPhase(
-  phase: OpenHandsEvent[],
+  phase: CodeioEvent[],
 ): string | null {
   // Iterate backwards to find the last one
   for (let i = phase.length - 1; i >= 0; i -= 1) {
@@ -79,7 +79,7 @@ export interface PlanPreviewEventInfo {
  * @param allEvents - Full list of v1 events (for phase detection)
  * @returns Set of event IDs that should render PlanPreview
  */
-export function usePlanPreviewEvents(allEvents: OpenHandsEvent[]): Set<string> {
+export function usePlanPreviewEvents(allEvents: CodeioEvent[]): Set<string> {
   return useMemo(() => {
     const planPreviewEventIds = new Set<string>();
 

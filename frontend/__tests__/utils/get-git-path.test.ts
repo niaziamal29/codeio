@@ -8,7 +8,7 @@ describe("getGitPath", () => {
   });
 
   it("should handle standard owner/repo format (GitHub)", () => {
-    expect(getGitPath("OpenHands/OpenHands")).toBe("/workspace/project/OpenHands");
+    expect(getGitPath("Codeio/Codeio")).toBe("/workspace/project/Codeio");
     expect(getGitPath("facebook/react")).toBe("/workspace/project/react");
   });
 

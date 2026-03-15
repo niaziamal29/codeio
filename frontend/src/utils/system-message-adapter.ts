@@ -10,7 +10,7 @@ import {
 export interface SystemMessageForModal {
   content: string;
   tools: ChatCompletionToolParam[] | Record<string, unknown>[] | null;
-  openhands_version: string | null;
+  codeio_version: string | null;
   agent_class: string | null;
 }
 
@@ -34,7 +34,7 @@ export function adaptSystemMessage(
     systemMessage = {
       content: v1SystemPromptEvent.system_prompt.text,
       tools: v1SystemPromptEvent.tools ?? null,
-      openhands_version: null,
+      codeio_version: null,
       agent_class: null,
     };
   }

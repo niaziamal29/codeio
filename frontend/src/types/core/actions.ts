@@ -1,7 +1,7 @@
-import { OpenHandsActionEvent } from "./base";
+import { CodeioActionEvent } from "./base";
 import { ActionSecurityRisk } from "#/stores/security-analyzer-store";
 
-export interface UserMessageAction extends OpenHandsActionEvent<"message"> {
+export interface UserMessageAction extends CodeioActionEvent<"message"> {
   source: "user";
   args: {
     content: string;
@@ -10,17 +10,17 @@ export interface UserMessageAction extends OpenHandsActionEvent<"message"> {
   };
 }
 
-export interface SystemMessageAction extends OpenHandsActionEvent<"system"> {
+export interface SystemMessageAction extends CodeioActionEvent<"system"> {
   source: "agent" | "environment";
   args: {
     content: string;
     tools: Array<Record<string, unknown>> | null;
-    openhands_version: string | null;
+    codeio_version: string | null;
     agent_class: string | null;
   };
 }
 
-export interface CommandAction extends OpenHandsActionEvent<"run"> {
+export interface CommandAction extends CodeioActionEvent<"run"> {
   source: "agent" | "user";
   args: {
     command: string;
@@ -31,7 +31,7 @@ export interface CommandAction extends OpenHandsActionEvent<"run"> {
   };
 }
 
-export interface AssistantMessageAction extends OpenHandsActionEvent<"message"> {
+export interface AssistantMessageAction extends CodeioActionEvent<"message"> {
   source: "agent";
   args: {
     thought: string;
@@ -41,7 +41,7 @@ export interface AssistantMessageAction extends OpenHandsActionEvent<"message"> 
   };
 }
 
-export interface IPythonAction extends OpenHandsActionEvent<"run_ipython"> {
+export interface IPythonAction extends CodeioActionEvent<"run_ipython"> {
   source: "agent";
   args: {
     code: string;
@@ -52,14 +52,14 @@ export interface IPythonAction extends OpenHandsActionEvent<"run_ipython"> {
   };
 }
 
-export interface ThinkAction extends OpenHandsActionEvent<"think"> {
+export interface ThinkAction extends CodeioActionEvent<"think"> {
   source: "agent";
   args: {
     thought: string;
   };
 }
 
-export interface FinishAction extends OpenHandsActionEvent<"finish"> {
+export interface FinishAction extends CodeioActionEvent<"finish"> {
   source: "agent";
   args: {
     final_thought: string;
@@ -68,7 +68,7 @@ export interface FinishAction extends OpenHandsActionEvent<"finish"> {
   };
 }
 
-export interface DelegateAction extends OpenHandsActionEvent<"delegate"> {
+export interface DelegateAction extends CodeioActionEvent<"delegate"> {
   source: "agent";
   timeout: number;
   args: {
@@ -78,7 +78,7 @@ export interface DelegateAction extends OpenHandsActionEvent<"delegate"> {
   };
 }
 
-export interface BrowseAction extends OpenHandsActionEvent<"browse"> {
+export interface BrowseAction extends CodeioActionEvent<"browse"> {
   source: "agent";
   args: {
     url: string;
@@ -86,7 +86,7 @@ export interface BrowseAction extends OpenHandsActionEvent<"browse"> {
   };
 }
 
-export interface BrowseInteractiveAction extends OpenHandsActionEvent<"browse_interactive"> {
+export interface BrowseInteractiveAction extends CodeioActionEvent<"browse_interactive"> {
   source: "agent";
   timeout: number;
   args: {
@@ -96,7 +96,7 @@ export interface BrowseInteractiveAction extends OpenHandsActionEvent<"browse_in
   };
 }
 
-export interface FileReadAction extends OpenHandsActionEvent<"read"> {
+export interface FileReadAction extends CodeioActionEvent<"read"> {
   source: "agent";
   args: {
     path: string;
@@ -107,7 +107,7 @@ export interface FileReadAction extends OpenHandsActionEvent<"read"> {
   };
 }
 
-export interface FileWriteAction extends OpenHandsActionEvent<"write"> {
+export interface FileWriteAction extends CodeioActionEvent<"write"> {
   source: "agent";
   args: {
     path: string;
@@ -116,7 +116,7 @@ export interface FileWriteAction extends OpenHandsActionEvent<"write"> {
   };
 }
 
-export interface FileEditAction extends OpenHandsActionEvent<"edit"> {
+export interface FileEditAction extends CodeioActionEvent<"edit"> {
   source: "agent";
   args: {
     path: string;
@@ -135,14 +135,14 @@ export interface FileEditAction extends OpenHandsActionEvent<"edit"> {
   };
 }
 
-export interface RejectAction extends OpenHandsActionEvent<"reject"> {
+export interface RejectAction extends CodeioActionEvent<"reject"> {
   source: "agent";
   args: {
     thought: string;
   };
 }
 
-export interface RecallAction extends OpenHandsActionEvent<"recall"> {
+export interface RecallAction extends CodeioActionEvent<"recall"> {
   source: "agent";
   args: {
     recall_type: "workspace_context" | "knowledge";
@@ -151,7 +151,7 @@ export interface RecallAction extends OpenHandsActionEvent<"recall"> {
   };
 }
 
-export interface MCPAction extends OpenHandsActionEvent<"call_tool_mcp"> {
+export interface MCPAction extends CodeioActionEvent<"call_tool_mcp"> {
   source: "agent";
   args: {
     name: string;
@@ -160,7 +160,7 @@ export interface MCPAction extends OpenHandsActionEvent<"call_tool_mcp"> {
   };
 }
 
-export interface TaskTrackingAction extends OpenHandsActionEvent<"task_tracking"> {
+export interface TaskTrackingAction extends CodeioActionEvent<"task_tracking"> {
   source: "agent";
   args: {
     command: string;
@@ -174,7 +174,7 @@ export interface TaskTrackingAction extends OpenHandsActionEvent<"task_tracking"
   };
 }
 
-export type OpenHandsAction =
+export type CodeioAction =
   | UserMessageAction
   | AssistantMessageAction
   | SystemMessageAction

@@ -1,10 +1,10 @@
 import React from "react";
-import { OpenHandsObservation } from "#/types/core/observations";
+import { CodeioObservation } from "#/types/core/observations";
 import { isRejectObservation } from "#/types/core/guards";
 import { ChatMessage } from "../chat-message";
 
 interface RejectEventMessageProps {
-  event: OpenHandsObservation;
+  event: CodeioObservation;
 }
 
 export function RejectEventMessage({ event }: RejectEventMessageProps) {

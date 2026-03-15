@@ -1,5 +1,5 @@
 import React from "react";
-import { OpenHandsAction } from "#/types/core/actions";
+import { CodeioAction } from "#/types/core/actions";
 import { isUserMessage, isAssistantMessage } from "#/types/core/guards";
 import { ChatMessage } from "../chat-message";
 import { ImageCarousel } from "../../images/image-carousel";
@@ -11,7 +11,7 @@ import { parseMessageFromEvent } from "../event-content-helpers/parse-message-fr
 import { MicroagentStatus } from "#/types/microagent-status";
 
 interface UserAssistantEventMessageProps {
-  event: OpenHandsAction;
+  event: CodeioAction;
   shouldShowConfirmationButtons: boolean;
   microagentStatus?: MicroagentStatus | null;
   microagentConversationId?: string;

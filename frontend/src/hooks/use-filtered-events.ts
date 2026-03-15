@@ -1,5 +1,5 @@
 import React from "react";
-import { isOpenHandsAction, isActionOrObservation } from "#/types/core/guards";
+import { isCodeioAction, isActionOrObservation } from "#/types/core/guards";
 import { useEventStore } from "#/stores/use-event-store";
 import {
   shouldRenderEvent,
@@ -64,7 +64,7 @@ export function useFilteredEvents() {
     () =>
       v0Events.some(
         (event) =>
-          isOpenHandsAction(event) &&
+          isCodeioAction(event) &&
           event.source === "agent" &&
           event.action !== "system",
       ) ||

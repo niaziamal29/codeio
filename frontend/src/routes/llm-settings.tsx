@@ -32,11 +32,11 @@ import { DEFAULT_OPENHANDS_MODEL } from "#/utils/verified-models";
 import { useMe } from "#/hooks/query/use-me";
 import { usePermission } from "#/hooks/organizations/use-permissions";
 
-interface OpenHandsApiKeyHelpProps {
+interface CodeioApiKeyHelpProps {
   testId: string;
 }
 
-function OpenHandsApiKeyHelp({ testId }: OpenHandsApiKeyHelpProps) {
+function CodeioApiKeyHelp({ testId }: CodeioApiKeyHelpProps) {
   const { t } = useTranslation();
 
   return (
@@ -51,7 +51,7 @@ function OpenHandsApiKeyHelp({ testId }: OpenHandsApiKeyHelpProps) {
       <p className="text-xs">
         {t(I18nKey.SETTINGS$LLM_BILLING_INFO)}{" "}
         <a
-          href="https://docs.all-hands.dev/usage/llms/openhands-llms"
+          href="https://docs.all-hands.dev/usage/llms/codeio-llms"
           rel="noreferrer noopener"
           target="_blank"
           className="underline underline-offset-2"
@@ -120,27 +120,27 @@ function LlmSettingsScreen() {
     resources?.models || [],
   );
 
-  // Determine if we should hide the API key input and use OpenHands-managed key (when using OpenHands provider in SaaS mode)
+  // Determine if we should hide the API key input and use Codeio-managed key (when using Codeio provider in SaaS mode)
   const currentModel = currentSelectedModel || settings?.llm_model;
 
   const isSaasMode = config?.app_mode === "saas";
 
-  const isOpenHandsProvider = () => {
+  const isCodeioProvider = () => {
     if (view === "basic") {
-      return selectedProvider === "openhands";
+      return selectedProvider === "codeio";
     }
 
     if (view === "advanced") {
       if (dirtyInputs.model) {
-        return currentModel?.startsWith("openhands/");
+        return currentModel?.startsWith("codeio/");
       }
-      return settings?.llm_model?.startsWith("openhands/");
+      return settings?.llm_model?.startsWith("codeio/");
     }
 
     return false;
   };
 
-  const shouldUseOpenHandsKey = isOpenHandsProvider() && isSaasMode;
+  const shouldUseCodeioKey = isCodeioProvider() && isSaasMode;
 
   // Determine if we should hide the agent dropdown when V1 conversation API is enabled
   const isV1Enabled = settings?.v1_enabled;
@@ -235,8 +235,8 @@ function LlmSettingsScreen() {
 
     const fullLlmModel = provider && model && `${provider}/${model}`;
 
-    // Use OpenHands-managed key for OpenHands provider in SaaS mode
-    const finalApiKey = shouldUseOpenHandsKey ? null : apiKey;
+    // Use Codeio-managed key for Codeio provider in SaaS mode
+    const finalApiKey = shouldUseCodeioKey ? null : apiKey;
 
     saveSettings(
       {
@@ -286,8 +286,8 @@ function LlmSettingsScreen() {
       .get("security-analyzer-input")
       ?.toString();
 
-    // Use OpenHands-managed key for OpenHands provider in SaaS mode
-    const finalApiKey = shouldUseOpenHandsKey ? null : apiKey;
+    // Use Codeio-managed key for Codeio provider in SaaS mode
+    const finalApiKey = shouldUseCodeioKey ? null : apiKey;
 
     saveSettings(
       {
@@ -529,14 +529,14 @@ function LlmSettingsScreen() {
                     wrapperClassName="!flex-col !gap-6"
                     isDisabled={isReadOnly}
                   />
-                  {(settings.llm_model?.startsWith("openhands/") ||
-                    currentSelectedModel?.startsWith("openhands/")) && (
-                    <OpenHandsApiKeyHelp testId="openhands-api-key-help" />
+                  {(settings.llm_model?.startsWith("codeio/") ||
+                    currentSelectedModel?.startsWith("codeio/")) && (
+                    <CodeioApiKeyHelp testId="codeio-api-key-help" />
                   )}
                 </>
               )}
 
-              {!shouldUseOpenHandsKey && (
+              {!shouldUseCodeioKey && (
                 <>
                   <SettingsInput
                     testId="llm-api-key-input"
@@ -581,9 +581,9 @@ function LlmSettingsScreen() {
                 onChange={handleCustomModelIsDirty}
                 isDisabled={isReadOnly}
               />
-              {(settings.llm_model?.startsWith("openhands/") ||
-                currentSelectedModel?.startsWith("openhands/")) && (
-                <OpenHandsApiKeyHelp testId="openhands-api-key-help-2" />
+              {(settings.llm_model?.startsWith("codeio/") ||
+                currentSelectedModel?.startsWith("codeio/")) && (
+                <CodeioApiKeyHelp testId="codeio-api-key-help-2" />
               )}
 
               <SettingsInput
@@ -598,7 +598,7 @@ function LlmSettingsScreen() {
                 isDisabled={isReadOnly}
               />
 
-              {!shouldUseOpenHandsKey && (
+              {!shouldUseCodeioKey && (
                 <>
                   <SettingsInput
                     testId="llm-api-key-input"

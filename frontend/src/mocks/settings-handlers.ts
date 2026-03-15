@@ -81,10 +81,10 @@ export const SETTINGS_HANDLERS = [
       "anthropic/claude-sonnet-4-5-20250929",
       "anthropic/claude-haiku-4-5-20251001",
       "anthropic/claude-opus-4-5-20251101",
-      "openhands/claude-sonnet-4-20250514",
-      "openhands/claude-sonnet-4-5-20250929",
-      "openhands/claude-haiku-4-5-20251001",
-      "openhands/claude-opus-4-5-20251101",
+      "codeio/claude-sonnet-4-20250514",
+      "codeio/claude-sonnet-4-5-20250929",
+      "codeio/claude-haiku-4-5-20251001",
+      "codeio/claude-opus-4-5-20251101",
       "sambanova/Meta-Llama-3.1-8B-Instruct",
     ]),
   ),
@@ -122,7 +122,7 @@ export const SETTINGS_HANDLERS = [
       faulty_models: [],
       error_message: null,
       updated_at: new Date().toISOString(),
-      github_app_slug: mockSaas ? "openhands" : null,
+      github_app_slug: mockSaas ? "codeio" : null,
     };
 
     return HttpResponse.json(config);

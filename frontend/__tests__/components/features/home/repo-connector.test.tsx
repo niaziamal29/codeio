@@ -57,7 +57,7 @@ const MOCK_RESPOSITORIES: GitRepository[] = [
   },
   {
     id: "2",
-    full_name: "OpenHands/OpenHands",
+    full_name: "Codeio/Codeio",
     git_provider: "github",
     is_public: true,
     main_branch: "main",
@@ -115,7 +115,7 @@ describe("RepoConnector", () => {
     // Wait for the options to be loaded and displayed
     await waitFor(() => {
       expect(screen.getByText("rbren/polaris")).toBeInTheDocument();
-      expect(screen.getByText("OpenHands/OpenHands")).toBeInTheDocument();
+      expect(screen.getByText("Codeio/Codeio")).toBeInTheDocument();
     });
   });
 
@@ -180,7 +180,7 @@ describe("RepoConnector", () => {
     // @ts-expect-error - only return the app_mode and github_app_slug
     getConfiSpy.mockResolvedValue({
       app_mode: "saas",
-      github_app_slug: "openhands",
+      github_app_slug: "codeio",
     });
 
     const getSettingsSpy = vi.spyOn(SettingsService, "getSettings");
@@ -227,7 +227,7 @@ describe("RepoConnector", () => {
     // @ts-expect-error - only return the app_mode and github_app_slug for this test
     getConfiSpy.mockResolvedValue({
       app_mode: "saas",
-      github_app_slug: "openhands",
+      github_app_slug: "codeio",
     });
 
     const getSettingsSpy = vi.spyOn(SettingsService, "getSettings");

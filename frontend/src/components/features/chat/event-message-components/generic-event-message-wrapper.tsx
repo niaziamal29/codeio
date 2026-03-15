@@ -1,7 +1,7 @@
 import React from "react";
-import { OpenHandsAction } from "#/types/core/actions";
-import { OpenHandsObservation } from "#/types/core/observations";
-import { isOpenHandsAction, isOpenHandsObservation } from "#/types/core/guards";
+import { CodeioAction } from "#/types/core/actions";
+import { CodeioObservation } from "#/types/core/observations";
+import { isCodeioAction, isCodeioObservation } from "#/types/core/guards";
 import { ChatMessage } from "../chat-message";
 import { GenericEventMessage } from "../generic-event-message";
 import { ConfirmationButtons } from "#/components/shared/buttons/confirmation-buttons";
@@ -13,7 +13,7 @@ const hasThoughtProperty = (
 ): obj is { thought: string } => "thought" in obj && !!obj.thought;
 
 interface GenericEventMessageWrapperProps {
-  event: OpenHandsAction | OpenHandsObservation;
+  event: CodeioAction | CodeioObservation;
   shouldShowConfirmationButtons: boolean;
 }
 
@@ -23,7 +23,7 @@ export function GenericEventMessageWrapper({
 }: GenericEventMessageWrapperProps) {
   return (
     <div>
-      {isOpenHandsAction(event) &&
+      {isCodeioAction(event) &&
         hasThoughtProperty(event.args) &&
         event.action !== "think" && (
           <ChatMessage type="agent" message={event.args.thought} />
@@ -33,7 +33,7 @@ export function GenericEventMessageWrapper({
         title={getEventContent(event).title}
         details={getEventContent(event).details}
         success={
-          isOpenHandsObservation(event)
+          isCodeioObservation(event)
             ? getObservationResult(event)
             : undefined
         }

@@ -42,7 +42,7 @@ export function SystemMessageModal({
         >
           <SystemMessageHeader
             agentClass={systemMessage.agent_class}
-            openhandsVersion={systemMessage.openhands_version}
+            codeioVersion={systemMessage.codeio_version}
           />
 
           <div className="w-full">

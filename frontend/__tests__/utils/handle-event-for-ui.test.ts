@@ -4,7 +4,7 @@ import {
   ObservationEvent,
   MessageEvent,
   SecurityRisk,
-  OpenHandsEvent,
+  CodeioEvent,
 } from "#/types/v1/core";
 import { handleEventForUI } from "#/utils/handle-event-for-ui";
 
@@ -100,7 +100,7 @@ describe("handleEventForUI", () => {
   });
 
   it("should handle empty uiEvents array", () => {
-    const initialUiEvents: OpenHandsEvent[] = [];
+    const initialUiEvents: CodeioEvent[] = [];
     const result = handleEventForUI(mockObservationEvent, initialUiEvents);
 
     expect(result).toEqual([mockObservationEvent]);

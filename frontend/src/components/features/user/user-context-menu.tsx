@@ -144,7 +144,7 @@ export function UserContextMenu({
 
         <div className="flex flex-col items-start gap-0 w-full">
           <a
-            href="https://docs.openhands.dev"
+            href="https://docs.codeio.dev"
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}

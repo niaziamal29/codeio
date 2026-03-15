@@ -1,4 +1,4 @@
-export type OpenHandsEventType =
+export type CodeioEventType =
   | "message"
   | "system"
   | "agent_state_changed"
@@ -21,25 +21,25 @@ export type OpenHandsEventType =
   | "task_tracking"
   | "user_rejected";
 
-export type OpenHandsSourceType = "agent" | "user" | "environment";
+export type CodeioSourceType = "agent" | "user" | "environment";
 
-interface OpenHandsBaseEvent {
+interface CodeioBaseEvent {
   id: number;
-  source: OpenHandsSourceType;
+  source: CodeioSourceType;
   message: string;
   timestamp: string; // ISO 8601
 }
 
-export interface OpenHandsActionEvent<
-  T extends OpenHandsEventType,
-> extends OpenHandsBaseEvent {
+export interface CodeioActionEvent<
+  T extends CodeioEventType,
+> extends CodeioBaseEvent {
   action: T;
   args: Record<string, unknown>;
 }
 
-export interface OpenHandsObservationEvent<
-  T extends OpenHandsEventType,
-> extends OpenHandsBaseEvent {
+export interface CodeioObservationEvent<
+  T extends CodeioEventType,
+> extends CodeioBaseEvent {
   cause: number;
   observation: T;
   content: string;

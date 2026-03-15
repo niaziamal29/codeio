@@ -1,8 +1,8 @@
-import { OpenHandsParsedEvent } from ".";
+import { CodeioParsedEvent } from ".";
 import {
   UserMessageAction,
   AssistantMessageAction,
-  OpenHandsAction,
+  CodeioAction,
   SystemMessageAction,
   CommandAction,
   FinishAction,
@@ -13,14 +13,14 @@ import {
   CommandObservation,
   ErrorObservation,
   MCPObservation,
-  OpenHandsObservation,
+  CodeioObservation,
   TaskTrackingObservation,
 } from "./observations";
 import { StatusUpdate } from "./variances";
 
-export const isOpenHandsEvent = (
+export const isCodeioEvent = (
   event: unknown,
-): event is OpenHandsParsedEvent =>
+): event is CodeioParsedEvent =>
   typeof event === "object" &&
   event !== null &&
   "id" in event &&
@@ -28,76 +28,76 @@ export const isOpenHandsEvent = (
   "message" in event &&
   "timestamp" in event;
 
-export const isOpenHandsAction = (
-  event: OpenHandsParsedEvent,
-): event is OpenHandsAction => "action" in event;
+export const isCodeioAction = (
+  event: CodeioParsedEvent,
+): event is CodeioAction => "action" in event;
 
-export const isOpenHandsObservation = (
-  event: OpenHandsParsedEvent,
-): event is OpenHandsObservation => "observation" in event;
+export const isCodeioObservation = (
+  event: CodeioParsedEvent,
+): event is CodeioObservation => "observation" in event;
 
 export const isUserMessage = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is UserMessageAction =>
-  isOpenHandsAction(event) &&
+  isCodeioAction(event) &&
   event.source === "user" &&
   event.action === "message";
 
 export const isAssistantMessage = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is AssistantMessageAction =>
-  isOpenHandsAction(event) &&
+  isCodeioAction(event) &&
   event.source === "agent" &&
   (event.action === "message" || event.action === "finish");
 
 export const isErrorObservation = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is ErrorObservation =>
-  isOpenHandsObservation(event) && event.observation === "error";
+  isCodeioObservation(event) && event.observation === "error";
 
 export const isCommandAction = (
-  event: OpenHandsParsedEvent,
-): event is CommandAction => isOpenHandsAction(event) && event.action === "run";
+  event: CodeioParsedEvent,
+): event is CommandAction => isCodeioAction(event) && event.action === "run";
 
 export const isAgentStateChangeObservation = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is AgentStateChangeObservation =>
-  isOpenHandsObservation(event) && event.observation === "agent_state_changed";
+  isCodeioObservation(event) && event.observation === "agent_state_changed";
 
 export const isCommandObservation = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is CommandObservation =>
-  isOpenHandsObservation(event) && event.observation === "run";
+  isCodeioObservation(event) && event.observation === "run";
 
 export const isFinishAction = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is FinishAction =>
-  isOpenHandsAction(event) && event.action === "finish";
+  isCodeioAction(event) && event.action === "finish";
 
 export const isSystemMessage = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is SystemMessageAction =>
-  isOpenHandsAction(event) && event.action === "system";
+  isCodeioAction(event) && event.action === "system";
 
 export const isRejectObservation = (
-  event: OpenHandsParsedEvent,
-): event is OpenHandsObservation =>
-  isOpenHandsObservation(event) && event.observation === "user_rejected";
+  event: CodeioParsedEvent,
+): event is CodeioObservation =>
+  isCodeioObservation(event) && event.observation === "user_rejected";
 
 export const isMcpObservation = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is MCPObservation =>
-  isOpenHandsObservation(event) && event.observation === "mcp";
+  isCodeioObservation(event) && event.observation === "mcp";
 
 export const isTaskTrackingAction = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is TaskTrackingAction =>
-  isOpenHandsAction(event) && event.action === "task_tracking";
+  isCodeioAction(event) && event.action === "task_tracking";
 
 export const isTaskTrackingObservation = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is TaskTrackingObservation =>
-  isOpenHandsObservation(event) && event.observation === "task_tracking";
+  isCodeioObservation(event) && event.observation === "task_tracking";
 
 export const isStatusUpdate = (event: unknown): event is StatusUpdate =>
   typeof event === "object" &&
@@ -107,6 +107,6 @@ export const isStatusUpdate = (event: unknown): event is StatusUpdate =>
   "id" in event;
 
 export const isActionOrObservation = (
-  event: OpenHandsParsedEvent,
-): event is OpenHandsAction | OpenHandsObservation =>
-  isOpenHandsAction(event) || isOpenHandsObservation(event);
+  event: CodeioParsedEvent,
+): event is CodeioAction | CodeioObservation =>
+  isCodeioAction(event) || isCodeioObservation(event);

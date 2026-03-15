@@ -6,7 +6,7 @@ import EventLogger from "#/utils/event-logger";
 import { handleAssistantMessage } from "#/services/actions";
 import { showChatError, trackError } from "#/utils/error-handler";
 import { useRate } from "#/hooks/use-rate";
-import { OpenHandsParsedEvent } from "#/types/core";
+import { CodeioParsedEvent } from "#/types/core";
 import {
   AssistantMessageAction,
   CommandAction,
@@ -20,8 +20,8 @@ import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import {
   isAgentStateChangeObservation,
   isErrorObservation,
-  isOpenHandsAction,
-  isOpenHandsObservation,
+  isCodeioAction,
+  isCodeioObservation,
   isStatusUpdate,
   isUserMessage,
 } from "#/types/core/guards";
@@ -42,7 +42,7 @@ const hasValidMessageProperty = (obj: unknown): obj is { message: string } =>
   "message" in obj &&
   typeof obj.message === "string";
 
-const isOpenHandsEvent = (event: unknown): event is OpenHandsParsedEvent =>
+const isCodeioEvent = (event: unknown): event is CodeioParsedEvent =>
   typeof event === "object" &&
   event !== null &&
   "id" in event &&
@@ -51,18 +51,18 @@ const isOpenHandsEvent = (event: unknown): event is OpenHandsParsedEvent =>
   "timestamp" in event;
 
 const isFileWriteAction = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is FileWriteAction => "action" in event && event.action === "write";
 
 const isFileEditAction = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is FileEditAction => "action" in event && event.action === "edit";
 
-const isCommandAction = (event: OpenHandsParsedEvent): event is CommandAction =>
+const isCommandAction = (event: CodeioParsedEvent): event is CommandAction =>
   "action" in event && event.action === "run";
 
 const isAssistantMessage = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is AssistantMessageAction =>
   "source" in event &&
   "type" in event &&
@@ -70,7 +70,7 @@ const isAssistantMessage = (
   event.type === "message";
 
 const isMessageAction = (
-  event: OpenHandsParsedEvent,
+  event: CodeioParsedEvent,
 ): event is UserMessageAction | AssistantMessageAction =>
   isUserMessage(event) || isAssistantMessage(event);
 
@@ -188,7 +188,7 @@ export function WsClientProvider({
   function handleMessage(event: Record<string, unknown>) {
     handleAssistantMessage(event);
 
-    if (isOpenHandsEvent(event)) {
+    if (isCodeioEvent(event)) {
       const isStatusUpdateError =
         isStatusUpdate(event) && event.type === "error";
 
@@ -212,8 +212,8 @@ export function WsClientProvider({
         return;
       }
 
-      if (isOpenHandsAction(event) || isOpenHandsObservation(event)) {
-        addEvent(event); // Event is already OpenHandsParsedEvent
+      if (isCodeioAction(event) || isCodeioObservation(event)) {
+        addEvent(event); // Event is already CodeioParsedEvent
       }
 
       if (isErrorObservation(event)) {

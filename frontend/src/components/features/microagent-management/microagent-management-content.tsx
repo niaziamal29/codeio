@@ -12,7 +12,7 @@ import {
 import { AgentState } from "#/types/agent-state";
 import { getPR, getProviderName, getPRShort } from "#/utils/utils";
 import {
-  isOpenHandsEvent,
+  isCodeioEvent,
   isAgentStateChangeObservation,
   isFinishAction,
 } from "#/types/core/guards";
@@ -37,7 +37,7 @@ const isErrorEvent = (evt: unknown): evt is { error: true; message: string } =>
   evt.error === true;
 
 const isAgentStatusError = (evt: unknown): boolean =>
-  isOpenHandsEvent(evt) &&
+  isCodeioEvent(evt) &&
   isAgentStateChangeObservation(evt) &&
   evt.extras.agent_state === AgentState.ERROR;
 
@@ -45,10 +45,10 @@ const shouldInvalidateConversationsList = (currentSocketEvent: unknown) => {
   const hasError =
     isErrorEvent(currentSocketEvent) || isAgentStatusError(currentSocketEvent);
   const hasStateChanged =
-    isOpenHandsEvent(currentSocketEvent) &&
+    isCodeioEvent(currentSocketEvent) &&
     isAgentStateChangeObservation(currentSocketEvent);
   const hasFinished =
-    isOpenHandsEvent(currentSocketEvent) && isFinishAction(currentSocketEvent);
+    isCodeioEvent(currentSocketEvent) && isFinishAction(currentSocketEvent);
 
   return hasError || hasStateChanged || hasFinished;
 };
@@ -61,7 +61,7 @@ const getConversationInstructions = (
   gitProvider: Provider,
 ) => `Create a microagent for the repository ${repositoryName} by following the steps below:
 
-- Step 1: Create a markdown file inside the .openhands/microagents folder with the name of the microagent (The microagent must be created in the .openhands/microagents folder and should be able to perform the described task when triggered). This is the instructions about what the microagent should do: ${formData.query}. ${
+- Step 1: Create a markdown file inside the .codeio/microagents folder with the name of the microagent (The microagent must be created in the .codeio/microagents folder and should be able to perform the described task when triggered). This is the instructions about what the microagent should do: ${formData.query}. ${
   formData.triggers && formData.triggers.length > 0
     ? `This is the triggers of the microagent: ${formData.triggers.join(", ")}`
     : "Please be noted that the microagent doesn't have any triggers."
@@ -81,7 +81,7 @@ const getUpdateConversationInstructions = (
 ) => `Update the microagent for the repository ${repositoryName} by following the steps below:
 
 
-- Step 1: Update the microagent. This is the path of the microagent: ${formData.microagentPath} (The updated microagent must be in the .openhands/microagents folder and should be able to perform the described task when triggered). This is the updated instructions about what the microagent should do: ${formData.query}. ${
+- Step 1: Update the microagent. This is the path of the microagent: ${formData.microagentPath} (The updated microagent must be in the .codeio/microagents folder and should be able to perform the described task when triggered). This is the updated instructions about what the microagent should do: ${formData.query}. ${
   formData.triggers && formData.triggers.length > 0
     ? `This is the triggers of the microagent: ${formData.triggers.join(", ")}`
     : "Please be noted that the microagent doesn't have any triggers."
@@ -145,7 +145,7 @@ export function MicroagentManagementContent() {
 
       // Check if agent is running and ready to work
       if (
-        isOpenHandsEvent(socketEvent) &&
+        isCodeioEvent(socketEvent) &&
         isAgentStateChangeObservation(socketEvent) &&
         socketEvent.extras.agent_state === AgentState.RUNNING
       ) {
@@ -155,7 +155,7 @@ export function MicroagentManagementContent() {
       }
 
       // Check if agent has finished and we have a PR
-      if (isOpenHandsEvent(socketEvent) && isFinishAction(socketEvent)) {
+      if (isCodeioEvent(socketEvent) && isFinishAction(socketEvent)) {
         const prUrl = getFirstPRUrl(socketEvent.args.final_thought || "");
         if (!prUrl) {
           // Agent finished but no PR found

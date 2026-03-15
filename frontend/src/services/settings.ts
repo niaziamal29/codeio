@@ -3,7 +3,7 @@ import { Settings } from "#/types/settings";
 export const LATEST_SETTINGS_VERSION = 5;
 
 export const DEFAULT_SETTINGS: Settings = {
-  llm_model: "openhands/claude-opus-4-5-20251101",
+  llm_model: "codeio/claude-opus-4-5-20251101",
   llm_base_url: "",
   agent: "CodeActAgent",
   language: "en",
@@ -30,8 +30,8 @@ export const DEFAULT_SETTINGS: Settings = {
     stdio_servers: [],
     shttp_servers: [],
   },
-  git_user_name: "openhands",
-  git_user_email: "openhands@all-hands.dev",
+  git_user_name: "codeio",
+  git_user_email: "codeio@all-hands.dev",
   v1_enabled: false,
 };
 

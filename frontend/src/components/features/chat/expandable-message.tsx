@@ -6,8 +6,8 @@ import { I18nKey } from "#/i18n/declaration";
 import ArrowDown from "#/icons/angle-down-solid.svg?react";
 import ArrowUp from "#/icons/angle-up-solid.svg?react";
 import CheckCircle from "#/icons/check-circle-solid.svg?react";
-import { OpenHandsAction } from "#/types/core/actions";
-import { OpenHandsObservation } from "#/types/core/observations";
+import { CodeioAction } from "#/types/core/actions";
+import { CodeioObservation } from "#/types/core/observations";
 import { cn } from "#/utils/utils";
 import { MarkdownRenderer } from "../markdown/markdown-renderer";
 import { MonoComponent } from "./mono-component";
@@ -23,8 +23,8 @@ interface ExpandableMessageProps {
   message: string;
   type: string;
   success?: boolean;
-  observation?: { payload: OpenHandsObservation };
-  action?: { payload: OpenHandsAction };
+  observation?: { payload: CodeioObservation };
+  action?: { payload: CodeioAction };
 }
 
 export function ExpandableMessage({

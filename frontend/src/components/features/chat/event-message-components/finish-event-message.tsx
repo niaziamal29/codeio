@@ -1,5 +1,5 @@
 import React from "react";
-import { OpenHandsAction } from "#/types/core/actions";
+import { CodeioAction } from "#/types/core/actions";
 import { isFinishAction } from "#/types/core/guards";
 import { ChatMessage } from "../chat-message";
 import { MicroagentStatusWrapper } from "./microagent-status-wrapper";
@@ -8,7 +8,7 @@ import { getEventContent } from "../event-content-helpers/get-event-content";
 import { MicroagentStatus } from "#/types/microagent-status";
 
 interface FinishEventMessageProps {
-  event: OpenHandsAction;
+  event: CodeioAction;
   microagentStatus?: MicroagentStatus | null;
   microagentConversationId?: string;
   microagentPRUrl?: string;

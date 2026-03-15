@@ -7,7 +7,7 @@ import {
   BrowseInteractiveAction,
   MCPAction,
   ThinkAction,
-  OpenHandsAction,
+  CodeioAction,
   FinishAction,
   TaskTrackingAction,
 } from "#/types/core/actions";
@@ -114,7 +114,7 @@ const getTaskTrackingActionContent = (event: TaskTrackingAction): string => {
 
 const getNoContentActionContent = (): string => "";
 
-export const getActionContent = (event: OpenHandsAction): string => {
+export const getActionContent = (event: CodeioAction): string => {
   switch (event.action) {
     case "read":
     case "edit":

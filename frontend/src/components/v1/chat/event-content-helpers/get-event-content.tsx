@@ -1,6 +1,6 @@
 import { Trans } from "react-i18next";
 import React from "react";
-import { OpenHandsEvent, ObservationEvent } from "#/types/v1/core";
+import { CodeioEvent, ObservationEvent } from "#/types/v1/core";
 import { isActionEvent, isObservationEvent } from "#/types/v1/type-guards";
 import { MonoComponent } from "../../../features/chat/mono-component";
 import { PathComponent } from "../../../features/chat/path-component";
@@ -38,7 +38,7 @@ const createTitleFromKey = (
 };
 
 // Action Event Processing
-const getActionEventTitle = (event: OpenHandsEvent): React.ReactNode => {
+const getActionEventTitle = (event: CodeioEvent): React.ReactNode => {
   // Early return if not an action event
   if (!isActionEvent(event)) {
     return "";
@@ -109,7 +109,7 @@ const getActionEventTitle = (event: OpenHandsEvent): React.ReactNode => {
 };
 
 // Observation Event Processing
-const getObservationEventTitle = (event: OpenHandsEvent): React.ReactNode => {
+const getObservationEventTitle = (event: CodeioEvent): React.ReactNode => {
   // Early return if not an observation event
   if (!isObservationEvent(event)) {
     return "";
@@ -190,7 +190,7 @@ const getObservationEventTitle = (event: OpenHandsEvent): React.ReactNode => {
   return observationType;
 };
 
-export const getEventContent = (event: OpenHandsEvent | SkillReadyEvent) => {
+export const getEventContent = (event: CodeioEvent | SkillReadyEvent) => {
   let title: React.ReactNode = "";
   let details: string | React.ReactNode = "";
 

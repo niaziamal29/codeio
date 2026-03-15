@@ -40,7 +40,7 @@ const generateMockBranches = (count: number): Branch[] =>
 const generateMockMicroagents = (count: number): RepositoryMicroagent[] =>
   Array.from({ length: count }, (_, i) => ({
     name: `microagent-${i + 1}`,
-    path: `.openhands/microagents/microagent-${i + 1}.md`,
+    path: `.codeio/microagents/microagent-${i + 1}.md`,
     created_at: new Date(
       Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
     ).toISOString(),

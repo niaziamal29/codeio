@@ -1,5 +1,5 @@
 import React from "react";
-import { OpenHandsObservation } from "#/types/core/observations";
+import { CodeioObservation } from "#/types/core/observations";
 import { isMcpObservation } from "#/types/core/guards";
 import { GenericEventMessage } from "../generic-event-message";
 import { MCPObservationContent } from "../mcp-observation-content";
@@ -8,7 +8,7 @@ import { getEventContent } from "../event-content-helpers/get-event-content";
 import { getObservationResult } from "../event-content-helpers/get-observation-result";
 
 interface McpEventMessageProps {
-  event: OpenHandsObservation;
+  event: CodeioObservation;
   shouldShowConfirmationButtons: boolean;
 }
 

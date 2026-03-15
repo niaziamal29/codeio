@@ -1,4 +1,4 @@
-import { OpenHandsEvent } from "#/types/v1/core";
+import { CodeioEvent } from "#/types/v1/core";
 import { isObservationEvent } from "#/types/v1/type-guards";
 
 /**
@@ -7,9 +7,9 @@ import { isObservationEvent } from "#/types/v1/type-guards";
  * Exception: ThinkAction is NOT replaced because the thought content is in the action, not in the observation
  */
 export const handleEventForUI = (
-  event: OpenHandsEvent,
-  uiEvents: OpenHandsEvent[],
-): OpenHandsEvent[] => {
+  event: CodeioEvent,
+  uiEvents: CodeioEvent[],
+): CodeioEvent[] => {
   const newUiEvents = [...uiEvents];
 
   if (isObservationEvent(event)) {

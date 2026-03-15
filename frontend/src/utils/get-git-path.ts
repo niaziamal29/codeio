@@ -3,7 +3,7 @@
  * If a repository is selected, returns /workspace/project/{repo-name}
  * Otherwise, returns /workspace/project
  *
- * @param selectedRepository The selected repository (e.g., "OpenHands/OpenHands", "owner/repo", or "group/subgroup/repo")
+ * @param selectedRepository The selected repository (e.g., "Codeio/Codeio", "owner/repo", or "group/subgroup/repo")
  * @returns The git path to use
  */
 export function getGitPath(

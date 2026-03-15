@@ -47,7 +47,7 @@ export function ModelSelector({
 
   // Get the appropriate verified models array based on the selected provider
   const getVerifiedModels = () => {
-    if (selectedProvider === "openhands") {
+    if (selectedProvider === "codeio") {
       return VERIFIED_OPENHANDS_MODELS;
     }
     return VERIFIED_MODELS;
@@ -157,9 +157,9 @@ export function ModelSelector({
         </Autocomplete>
       </fieldset>
 
-      {selectedProvider === "openhands" && (
+      {selectedProvider === "codeio" && (
         <HelpLink
-          testId="openhands-account-help"
+          testId="codeio-account-help"
           text={t(I18nKey.SETTINGS$NEED_OPENHANDS_ACCOUNT)}
           linkText={t(I18nKey.SETTINGS$CLICK_HERE)}
           href={PRODUCT_URL.PRODUCTION}

@@ -1,5 +1,5 @@
 import React from "react";
-import { OpenHandsEvent, MessageEvent, ActionEvent } from "#/types/v1/core";
+import { CodeioEvent, MessageEvent, ActionEvent } from "#/types/v1/core";
 import { FinishAction } from "#/types/v1/core/base/action";
 import {
   isActionEvent,
@@ -27,8 +27,8 @@ import { PlanPreview } from "../../features/chat/plan-preview";
 import { shouldShowPlanPreview } from "./hooks/use-plan-preview-events";
 
 interface EventMessageProps {
-  event: OpenHandsEvent & { isFromPlanningAgent?: boolean };
-  messages: OpenHandsEvent[];
+  event: CodeioEvent & { isFromPlanningAgent?: boolean };
+  messages: CodeioEvent[];
   isLastMessage: boolean;
   microagentStatus?: MicroagentStatus | null;
   microagentConversationId?: string;

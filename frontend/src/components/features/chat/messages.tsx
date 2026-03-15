@@ -1,12 +1,12 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import { OpenHandsAction } from "#/types/core/actions";
-import { OpenHandsObservation } from "#/types/core/observations";
+import { CodeioAction } from "#/types/core/actions";
+import { CodeioObservation } from "#/types/core/observations";
 import {
-  isOpenHandsAction,
-  isOpenHandsObservation,
-  isOpenHandsEvent,
+  isCodeioAction,
+  isCodeioObservation,
+  isCodeioEvent,
   isAgentStateChangeObservation,
   isFinishAction,
 } from "#/types/core/guards";
@@ -33,12 +33,12 @@ const isErrorEvent = (evt: unknown): evt is { error: true; message: string } =>
   evt.error === true;
 
 const isAgentStatusError = (evt: unknown): boolean =>
-  isOpenHandsEvent(evt) &&
+  isCodeioEvent(evt) &&
   isAgentStateChangeObservation(evt) &&
   evt.extras.agent_state === AgentState.ERROR;
 
 interface MessagesProps {
-  messages: (OpenHandsAction | OpenHandsObservation)[];
+  messages: (CodeioAction | CodeioObservation)[];
   isAwaitingUserConfirmation: boolean;
 }
 
@@ -72,10 +72,10 @@ export const Messages: React.FC<MessagesProps> = React.memo(
     const { t } = useTranslation();
 
     const actionHasObservationPair = React.useCallback(
-      (event: OpenHandsAction | OpenHandsObservation): boolean => {
-        if (isOpenHandsAction(event)) {
+      (event: CodeioAction | CodeioObservation): boolean => {
+        if (isCodeioAction(event)) {
           return !!messages.some(
-            (msg) => isOpenHandsObservation(msg) && msg.cause === event.id,
+            (msg) => isCodeioObservation(msg) && msg.cause === event.id,
           );
         }
 
@@ -125,7 +125,7 @@ export const Messages: React.FC<MessagesProps> = React.memo(
             ),
           );
         } else if (
-          isOpenHandsEvent(socketEvent) &&
+          isCodeioEvent(socketEvent) &&
           isAgentStateChangeObservation(socketEvent)
         ) {
           // Handle completion states
@@ -144,7 +144,7 @@ export const Messages: React.FC<MessagesProps> = React.memo(
             unsubscribeFromConversation(microagentConversationId);
           }
         } else if (
-          isOpenHandsEvent(socketEvent) &&
+          isCodeioEvent(socketEvent) &&
           isFinishAction(socketEvent)
         ) {
           // Check if the finish action contains a PR URL
