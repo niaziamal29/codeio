@@ -1,0 +1,15 @@
+# Codeio Code Owners
+# Default owners for everything
+* @niaziamal29
+
+# Frontend
+apps/web/ @niaziamal29
+
+# Agent core
+packages/agent-core/ @niaziamal29
+
+# QA Engine
+packages/qa-engine/ @niaziamal29
+
+# Infrastructure
+infrastructure/ @niaziamal29

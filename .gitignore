@@ -267,3 +267,39 @@ test-results
 
 # Worktrees
 .worktrees/
+
+# === Codeio Additions ===
+
+# Node.js
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+
+# Environment (never commit)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker overrides
+docker-compose.override.yml
+
+# Secrets (never commit)
+*.pem
+*.key
+credentials.json
+
+# Turborepo
+.turbo/
