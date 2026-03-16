@@ -1,0 +1,47 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Codeio Web (Next.js)",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@codeio/web", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "Codeio API (Express)",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@codeio/api", "dev"],
+      "port": 4000
+    },
+    {
+      "name": "OpenHands Backend (FastAPI)",
+      "runtimeExecutable": "poetry",
+      "runtimeArgs": ["run", "uvicorn", "openhands.server.listen:app", "--host", "127.0.0.1", "--port", "3000", "--reload", "--reload-exclude", "./workspace"],
+      "port": 3000
+    },
+    {
+      "name": "OpenHands Frontend (React Router)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "port": 3001
+    },
+    {
+      "name": "Storybook (UI Components)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "openhands-ui"],
+      "port": 6006
+    },
+    {
+      "name": "Dev Infrastructure (Postgres + Redis + Mailpit)",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "infrastructure/docker-compose.dev.yml", "up"],
+      "port": 5432
+    },
+    {
+      "name": "Mailpit Web UI",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "infrastructure/docker-compose.dev.yml", "up", "mailpit"],
+      "port": 8025
+    }
+  ]
+}
